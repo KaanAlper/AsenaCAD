@@ -89,6 +89,23 @@ pub fn drawing_tab_entries(app: &CadApp, index: usize) -> Vec<Vec<Entry>> {
     groups
 }
 
+/// The document tab bar's "≡" menu: Start and the open drawings ("*" while modified), then New,
+/// Open, Save All and Close All.
+pub fn file_tabs_menu_entries(app: &CadApp) -> Vec<Vec<Entry>> {
+    let mut docs: Vec<Entry> = item(app, "ui.start", None).into_iter().collect();
+    docs.extend(
+        app.session
+            .docs
+            .iter()
+            .enumerate()
+            .map(|(i, d)| action(&format!("{}{}", d.title, if d.is_dirty() { "*" } else { "" }), format!("drawing:switch:{i}"), true)),
+    );
+    let mut groups = Vec::new();
+    push(&mut groups, docs);
+    push(&mut groups, ["new", "ui.open", "saveall", "closeall"].iter().filter_map(|id| item(app, id, None)).collect());
+    groups
+}
+
 /// A layout tab's menu (`name` is the layout, "Model" the model tab): New Layout, From Template,
 /// Delete, Rename and Copy (layouts only), Page Setup Manager and Print. Delete, Rename and Copy
 /// go through LAYOUT's prompts, so Rename and Copy ask for the new name on the command line.
@@ -169,6 +186,12 @@ pub fn choose(app: &mut CadApp, ctx: &egui::Context, id: &str) {
 
 fn drawing_action(app: &mut CadApp, ctx: &egui::Context, op: &str, index: usize) {
     match op {
+        "switch" => {
+            if index != app.session.active {
+                let _ = app.run("document.switch", json!({ "index": index }));
+            }
+            app.ui.start_tab = false;
+        }
         "close" => app.request_close(Some(index)),
         "closeothers" => app.request_close_others(index),
         "copypath" => {

@@ -164,84 +164,138 @@ pub fn toolbar(app: &mut CadApp, ui: &mut egui::Ui) {
     });
 }
 
-/// File tabs: switcher, "+", Start, open drawings.
+/// The document tab bar's height: the bar and the strip under it that the active tab joins.
+pub const FILE_TABS_H: f32 = FILE_BAR_H + FILE_BASE_H;
+const FILE_BAR_H: f32 = 26.0;
+const FILE_BASE_H: f32 = 4.0;
+/// Tabs are parallelograms leaning right by this much, standing 3 px below the bar's top.
+const FILE_TAB_SLANT: f32 = 8.0;
+const FILE_TAB_TOP: f32 = 3.0;
+/// Room left of a tab's name (after the slant) and right of it (or of its ×).
+const FILE_TAB_PAD: f32 = 10.0;
+/// The × inside a document tab, and the gap before it.
+const FILE_TAB_CLOSE: f32 = 12.0;
+const FILE_TAB_CLOSE_GAP: f32 = 8.0;
+/// A document tab is never wider; a longer name ends in "…".
+const FILE_TAB_MAX_W: f32 = 170.0;
+/// The "≡" file-tabs menu button and the "+" new-tab button.
+const FILE_MENU_W: f32 = 32.0;
+const FILE_PLUS_W: f32 = 41.0;
+const FILE_BUTTON_H: f32 = 24.0;
+
+/// A tab of the document tab bar: its parallelogram's left edge at the bar's bottom, its width.
+fn tab_shape(left: f32, top: f32, bottom: f32, w: f32) -> Vec<egui::Pos2> {
+    vec![pos2(left, bottom), pos2(left + FILE_TAB_SLANT, top), pos2(left + w, top), pos2(left + w - FILE_TAB_SLANT, bottom)]
+}
+
+/// The "/" AutoCAD draws between tabs, at a tab's left edge.
+fn tab_separator(p: &egui::Painter, left: f32, top: f32, bottom: f32) {
+    let t = Tokens::get();
+    p.line_segment([pos2(left + 2.0, bottom - 4.0), pos2(left + FILE_TAB_SLANT - 2.0, top + 4.0)], Stroke::new(1.0, t.text_faint));
+}
+
+/// One tab of the document tab bar, laid out.
+struct DocTab {
+    /// The drawing's index, `None` for Start.
+    doc: Option<usize>,
+    label: String,
+    dirty: bool,
+    active: bool,
+    left: f32,
+    width: f32,
+    galley: std::sync::Arc<egui::Galley>,
+    cut: bool,
+}
+
+/// AutoCAD's document tab bar, in its order: the "≡" menu (open documents, Start, and New, Open,
+/// Save All, Close All), the Start tab (no ×), one tab per drawing (its name, "*" while it has
+/// unsaved changes, × inside) and "+" for a new drawing.
 pub fn file_tabs(app: &mut CadApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
-    egui::Panel::top("cc_file_tabs").exact_size(26.0).frame(egui::Frame::NONE.fill(t.chrome_dark)).show(ui, |ui| {
+    egui::Panel::top("cc_file_tabs").exact_size(FILE_TABS_H).frame(egui::Frame::NONE.fill(t.ribbon_tab_row)).show(ui, |ui| {
         let r = ui.max_rect();
-        let mut x = r.left() + 4.0;
-        let ib = Rect::from_min_size(pos2(x, r.top() + 4.0), vec2(18.0, 18.0));
-        icons::paint(ui.painter(), ib.shrink(1.0), Icon::Switcher, false);
-        x += 24.0;
-        let plus = Rect::from_min_size(pos2(x, r.top() + 4.0), vec2(18.0, 18.0));
+        let bottom = r.top() + FILE_BAR_H;
+        let top = r.top() + FILE_TAB_TOP;
+        ui.painter().rect_filled(Rect::from_min_max(pos2(r.left(), bottom), r.max), 0.0, t.ribbon_bg);
+        let menu = Rect::from_min_size(pos2(r.left() + 4.0, bottom - FILE_BUTTON_H), vec2(FILE_MENU_W, FILE_BUTTON_H));
+        file_tabs_menu(app, ui, menu);
+        let tabs = lay_out_doc_tabs(app, ui, menu.right() + 4.0);
+        let p = ui.painter();
+        // Inactive tabs: a "/" at their left edge, a fill under the pointer. The active tab joins
+        // the strip below and covers its neighbours' separators.
+        let responses: Vec<egui::Response> = tabs
+            .iter()
+            .map(|tab| {
+                let id = tab.doc.map_or(ui.id().with("tab_start"), |i| ui.id().with(("tab", i)));
+                ui.interact(Rect::from_min_max(pos2(tab.left, top), pos2(tab.left + tab.width, bottom)), id, Sense::click())
+            })
+            .collect();
+        for (tab, resp) in tabs.iter().zip(&responses) {
+            if !tab.active {
+                tab_separator(p, tab.left, top, bottom);
+                if resp.hovered() {
+                    p.add(egui::Shape::convex_polygon(tab_shape(tab.left, top, bottom, tab.width), t.ribbon_hover, Stroke::NONE));
+                }
+            }
+        }
+        for tab in tabs.iter().filter(|tab| tab.active) {
+            p.add(egui::Shape::convex_polygon(tab_shape(tab.left, top, bottom + 1.0, tab.width), t.ribbon_bg, Stroke::NONE));
+        }
+        let font = crate::theme::ribbon_font(ui.ctx());
+        let mut switch_to = None;
+        let mut close = None;
+        for (tab, resp) in tabs.iter().zip(responses) {
+            let color = if tab.active { t.text } else { t.text_dim };
+            let text_x = tab.left + FILE_TAB_SLANT + FILE_TAB_PAD;
+            let cy = (top + bottom) / 2.0;
+            let name_w = tab.galley.size().x;
+            p.galley(pos2(text_x, cy - tab.galley.size().y / 2.0), tab.galley.clone(), color);
+            let mark = if tab.dirty { "*" } else { "" };
+            let mark_w =
+                if tab.dirty { p.text(pos2(text_x + name_w, cy), egui::Align2::LEFT_CENTER, mark, font.clone(), color).width() } else { 0.0 };
+            let resp = if tab.cut { resp.on_hover_text(format!("{}{mark}", tab.label)) } else { resp };
+            if let Some(i) = tab.doc
+                && (tab.active || resp.hovered())
+            {
+                let cr = Rect::from_center_size(
+                    pos2(text_x + name_w + mark_w + FILE_TAB_CLOSE_GAP + FILE_TAB_CLOSE / 2.0, cy),
+                    vec2(FILE_TAB_CLOSE, FILE_TAB_CLOSE),
+                );
+                let cresp = ui.interact(cr, resp.id.with("x"), Sense::click());
+                icons::paint(ui.painter(), cr, Icon::Close, false);
+                icons::describe_control(ui, &cresp, &format!("Close {}", tab.label), None, false);
+                if cresp.clicked() {
+                    close = Some(i);
+                }
+            }
+            icons::describe_control(ui, &resp, &tab.label, Some(tab.active), true);
+            match tab.doc {
+                Some(i) => {
+                    crate::shortcut_menus::attach(app, &resp, |app| crate::shortcut_menus::drawing_tab_entries(app, i));
+                    if resp.clicked() {
+                        switch_to = Some(i);
+                    }
+                }
+                None if resp.clicked() => app.ui.start_tab = true,
+                None => {}
+            }
+        }
+        // "+": a new drawing, then the bar's closing "/".
+        let x = tabs.last().map_or(menu.right() + 4.0, |tab| tab.left + tab.width);
+        let plus = Rect::from_min_size(pos2(x, bottom - FILE_BUTTON_H), vec2(FILE_PLUS_W, FILE_BUTTON_H));
         let presp = ui.interact(plus, ui.id().with("tab+"), Sense::click());
-        icons::paint(ui.painter(), plus.shrink(2.0), Icon::Plus, false);
+        if !tabs.last().is_some_and(|tab| tab.active) {
+            tab_separator(ui.painter(), x, top, bottom);
+        }
+        if presp.hovered() {
+            ui.painter().rect_filled(plus.shrink2(vec2(FILE_TAB_SLANT, 0.0)), 2.0, t.ribbon_hover);
+        }
+        icons::paint(ui.painter(), Rect::from_center_size(plus.center(), vec2(16.0, 16.0)), Icon::Plus, false);
+        tab_separator(ui.painter(), plus.right(), top, bottom);
         icons::describe_control(ui, &presp, "New Drawing", None, false);
         if presp.on_hover_text(crate::tl!("New Drawing")).clicked() {
             app.start("new");
             app.ui.start_tab = false;
-        }
-        x += 24.0;
-        // `label` is the drawing's name; `dirty` adds the unsaved-changes mark, kept visible when a
-        // long name is cut short.
-        let mut tab =
-            |ui: &mut egui::Ui, label: &str, dirty: bool, active: bool, closable: bool, w: f32, id: egui::Id| -> (bool, bool, egui::Response) {
-                let tr = Rect::from_min_size(pos2(x, r.top()), vec2(w, r.height()));
-                let resp = ui.interact(tr, id, Sense::click());
-                ui.painter().rect_filled(
-                    tr,
-                    0.0,
-                    if active {
-                        t.tab_active
-                    } else if resp.hovered() {
-                        t.chrome
-                    } else {
-                        t.chrome_dark
-                    },
-                );
-                // The name ends in "…" when it doesn't fit before the close button (#513).
-                let color = if active { t.text } else { t.text_dim };
-                let mark = if dirty { "*" } else { "" };
-                let text_w = (w - 8.0 - if closable { 24.0 } else { 8.0 }).max(0.0);
-                let mark_w = ui.painter().layout_no_wrap(mark.to_string(), crate::theme::body(), color).size().x;
-                let (galley, cut) = elided(ui.painter(), label, crate::theme::body(), color, text_w - mark_w);
-                let pos = pos2(tr.left() + 8.0, tr.center().y - galley.size().y / 2.0);
-                let name_w = galley.size().x;
-                ui.painter().galley(pos, galley, color);
-                if dirty {
-                    ui.painter().text(pos2(pos.x + name_w, tr.center().y), egui::Align2::LEFT_CENTER, mark, crate::theme::body(), color);
-                }
-                let resp = if cut { resp.on_hover_text(format!("{label}{mark}")) } else { resp };
-                let mut close = false;
-                if closable && (active || resp.hovered()) {
-                    let cr = Rect::from_center_size(pos2(tr.right() - 11.0, tr.center().y), vec2(12.0, 12.0));
-                    let cresp = ui.interact(cr, id.with("x"), Sense::click());
-                    icons::paint(ui.painter(), cr, Icon::Close, false);
-                    icons::describe_control(ui, &cresp, &format!("Close {label}"), None, false);
-                    close = cresp.clicked();
-                }
-                icons::describe_control(ui, &resp, label, Some(active), true);
-                ui.painter().vline(tr.right(), tr.y_range(), Stroke::new(1.0, t.border));
-                x += w;
-                (resp.clicked(), close, resp)
-            };
-        let (c, _, _) = tab(ui, crate::tl!("Start"), false, app.ui.start_tab || app.session.docs.is_empty(), false, 110.0, ui.id().with("tab_start"));
-        if c {
-            app.ui.start_tab = true;
-        }
-        let mut switch_to = None;
-        let mut close = None;
-        let titles: Vec<(usize, String, bool, bool)> =
-            app.session.docs.iter().enumerate().map(|(i, d)| (i, d.title.clone(), d.is_dirty(), i == app.session.active)).collect();
-        for (i, title, dirty, active) in titles {
-            let (c, x, resp) = tab(ui, &title, dirty, active && !app.ui.start_tab, true, 170.0, ui.id().with(("tab", i)));
-            crate::shortcut_menus::attach(app, &resp, |app| crate::shortcut_menus::drawing_tab_entries(app, i));
-            if c {
-                switch_to = Some(i);
-            }
-            if x {
-                close = Some(i);
-            }
         }
         if let Some(i) = switch_to {
             let _ = app.run("document.switch", json!({ "index": i }));
@@ -251,6 +305,50 @@ pub fn file_tabs(app: &mut CadApp, ui: &mut egui::Ui) {
             app.request_close(Some(i));
         }
     });
+}
+
+/// The Start tab and the drawings' tabs from `x`, each as wide as its name (and ×) needs, up to
+/// [`FILE_TAB_MAX_W`].
+fn lay_out_doc_tabs(app: &CadApp, ui: &egui::Ui, mut x: f32) -> Vec<DocTab> {
+    let t = Tokens::get();
+    let font = crate::theme::ribbon_font(ui.ctx());
+    let on_start = app.ui.start_tab || app.session.docs.is_empty();
+    let start = (None, crate::tl!("Start").to_string(), false, on_start);
+    let docs = app.session.docs.iter().enumerate().map(|(i, d)| (Some(i), d.title.clone(), d.is_dirty(), i == app.session.active && !on_start));
+    std::iter::once(start)
+        .chain(docs)
+        .map(|(doc, label, dirty, active)| {
+            let mark_w = if dirty { ui.painter().layout_no_wrap("*".into(), font.clone(), t.text).size().x } else { 0.0 };
+            let close_w = if doc.is_some() { FILE_TAB_CLOSE_GAP + FILE_TAB_CLOSE } else { 0.0 };
+            let chrome_w = FILE_TAB_SLANT + 2.0 * FILE_TAB_PAD + close_w + mark_w;
+            let color = if active { t.text } else { t.text_dim };
+            let (galley, cut) = elided(ui.painter(), &label, font.clone(), color, FILE_TAB_MAX_W - chrome_w);
+            let width = chrome_w + galley.size().x;
+            let tab = DocTab { doc, label, dirty, active, left: x, width, galley, cut };
+            x += width;
+            tab
+        })
+        .collect()
+}
+
+/// The "≡" button at `rect` and its menu.
+fn file_tabs_menu(app: &mut CadApp, ui: &mut egui::Ui, rect: Rect) {
+    let t = Tokens::get();
+    let resp = ui.interact(rect, ui.id().with("file-tabs-menu"), Sense::click());
+    if resp.hovered() {
+        ui.painter().rect_filled(rect, 2.0, t.ribbon_hover);
+    }
+    icons::paint(ui.painter(), Rect::from_center_size(rect.center(), vec2(18.0, 18.0)), Icon::Menu, false);
+    icons::describe_control(ui, &resp, "File Tabs", None, false);
+    let resp = resp.on_hover_text(crate::tl!("File Tabs"));
+    let mut chosen = None;
+    egui::Popup::from_toggle_button_response(&resp).show(|ui| {
+        ui.set_min_width(200.0);
+        crate::context_menu::groups_ui(ui, &crate::shortcut_menus::file_tabs_menu_entries(app), &mut chosen);
+    });
+    if let Some(id) = chosen {
+        crate::shortcut_menus::choose(app, ui.ctx(), &id);
+    }
 }
 
 /// `text` laid out on one line no wider than `max_width`, ending in "…" when it had to be cut;
@@ -602,6 +700,12 @@ mod tests {
         let margin = (MAC_TITLE_BAR - MAC_LIGHT) / 2.0;
         let lights_end = MAC_LIGHTS_LEFT + 2.0 * MAC_LIGHT_PITCH + MAC_LIGHT;
         assert_eq!(MAC_CONTENT_LEFT - lights_end, margin);
+    }
+
+    #[test]
+    fn document_tabs_are_parallelograms_leaning_right() {
+        let shape = tab_shape(10.0, 3.0, 26.0, 100.0);
+        assert_eq!(shape, [pos2(10.0, 26.0), pos2(18.0, 3.0), pos2(110.0, 3.0), pos2(102.0, 26.0)]);
     }
 
     #[test]
