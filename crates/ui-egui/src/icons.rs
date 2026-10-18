@@ -10,6 +10,7 @@ use crate::theme::Tokens;
 
 mod pen;
 mod ribbon;
+mod shell;
 
 use pen::Pen;
 
@@ -250,6 +251,23 @@ pub enum Icon {
     ViewBase,
     SectionViewStyle,
     DetailViewStyle,
+    AutoScale,
+    AnnoMonitor,
+    Isolate,
+    CleanScreen,
+    SelCycling,
+    Osnap3d,
+    DynUcs,
+    SelFilter,
+    Gizmo,
+    GraphicsPerf,
+    Units,
+    Wrench,
+    Prompt,
+    NavWheel,
+    ShowMotion,
+    VpMinimize,
+    VpRestore,
 }
 
 /// Paint `icon` into `rect` (square), with `dim` for disabled.
@@ -258,6 +276,19 @@ pub fn paint(p: &Painter, rect: Rect, icon: Icon, dim: bool) {
     let alpha = |c: Color32| if dim { c.gamma_multiply(0.4) } else { c };
     let pen =
         Pen { p, r: rect, w: (rect.width() / 16.0).clamp(1.0, 1.6), base: alpha(t.icon), acc: alpha(t.icon_accent), pt: alpha(t.icon_point), dim };
+    paint_pen(&pen, icon);
+}
+
+/// Paint `icon` into `rect` in one colour (every stroke, accent and point), for glyphs on a
+/// surface of their own such as the navigation bar's light strip.
+pub fn paint_tinted(p: &Painter, rect: Rect, icon: Icon, color: Color32) {
+    let pen = Pen { p, r: rect, w: (rect.width() / 16.0).clamp(1.0, 1.6), base: color, acc: color, pt: color, dim: false };
+    paint_pen(&pen, icon);
+}
+
+fn paint_pen(pen: &Pen, icon: Icon) {
+    let p = pen.p;
+    let alpha = |c: Color32| if pen.dim { c.gamma_multiply(0.4) } else { c };
     let (b, a) = (pen.base, pen.acc);
     use Icon::*;
     match icon {
@@ -479,7 +510,7 @@ pub fn paint(p: &Painter, rect: Rect, icon: Icon, dim: bool) {
         Gradient => {
             for i in 0..9 {
                 let c = Color32::from_rgb(40 + i * 22, 80 + i * 16, 160 + i * 9);
-                pen.fill_rect(3.0 + i as f32 * 2.0, 3.0, 2.0, 18.0, if dim { c.gamma_multiply(0.4) } else { c });
+                pen.fill_rect(3.0 + i as f32 * 2.0, 3.0, 2.0, 18.0, if pen.dim { c.gamma_multiply(0.4) } else { c });
             }
             pen.rect(3.0, 3.0, 18.0, 18.0, b);
         }
@@ -865,7 +896,9 @@ pub fn paint(p: &Painter, rect: Rect, icon: Icon, dim: bool) {
         | LayerUnlock | LayerCur | CopyToLayer | LayerWalk | LayerVpFreeze | LayerMerge | LayerDelete | LockedLayerFade | DetectBlocks
         | ConvertBlocks | AttEdit | AttEditMultiple | BlockReplace | AttManager | AttSync | BasePoint | Group | Ungroup | GroupEdit | GroupSelect
         | GroupManager | GroupBox | MeasureRadius | MeasureAngle | Volume | SelectAll | QuickCalc | IdPoint | PointStyle | Paste | PasteBlock
-        | PasteHyperlink | PasteOrig | PasteSpecial | Cut | CopyClip | ViewBase | SectionViewStyle | DetailViewStyle => ribbon::paint(&pen, icon),
+        | PasteHyperlink | PasteOrig | PasteSpecial | Cut | CopyClip | ViewBase | SectionViewStyle | DetailViewStyle => ribbon::paint(pen, icon),
+        AutoScale | AnnoMonitor | Isolate | CleanScreen | SelCycling | Osnap3d | DynUcs | SelFilter | Gizmo | GraphicsPerf | Units | Wrench
+        | Prompt | NavWheel | ShowMotion | VpMinimize | VpRestore => shell::paint(pen, icon),
     }
 }
 

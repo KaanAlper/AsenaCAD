@@ -137,6 +137,17 @@ pub struct Tokens {
     pub ribbon_pressed: Color32,
     /// The face of a collapsed panel's button.
     pub ribbon_collapsed_bg: Color32,
+    /// The bottom bar (layout tabs and status bar items) and the band along its top edge that
+    /// separates it from the drawing area (the active layout tab joins the band).
+    pub status_bg: Color32,
+    pub status_band: Color32,
+    /// The command line's left block (grip, close and customize).
+    pub cmd_block: Color32,
+    /// The navigation bar: its translucent strip, outline, glyphs and the glyph under the pointer.
+    pub navbar_bg: Color32,
+    pub navbar_border: Color32,
+    pub navbar_icon: Color32,
+    pub navbar_hover: Color32,
 }
 
 impl Tokens {
@@ -191,6 +202,13 @@ impl Tokens {
         ribbon_hover: Color32::from_rgb(0x4e, 0x56, 0x62),
         ribbon_pressed: Color32::from_rgb(0x2f, 0x5a, 0x8a),
         ribbon_collapsed_bg: Color32::from_rgb(0x50, 0x58, 0x65),
+        status_bg: Color32::from_rgb(0x2a, 0x2f, 0x36),
+        status_band: Color32::from_rgb(0x4a, 0x51, 0x5b),
+        cmd_block: Color32::from_rgb(0x48, 0x50, 0x5c),
+        navbar_bg: Color32::from_rgba_unmultiplied_const(0xc4, 0xc9, 0xd0, 0x90),
+        navbar_border: Color32::from_rgba_unmultiplied_const(0xdc, 0xe0, 0xe6, 0xa0),
+        navbar_icon: Color32::from_rgb(0x33, 0x39, 0x42),
+        navbar_hover: Color32::from_rgba_unmultiplied_const(0xf2, 0xf4, 0xf7, 0xb0),
     };
 
     /// Light grey chrome with dark text. The drawing-area colours (canvas, grid, axes, selection,
@@ -227,6 +245,9 @@ impl Tokens {
         ribbon_hover: Color32::from_rgb(0xd8, 0xe1, 0xec),
         ribbon_pressed: Color32::from_rgb(0xb6, 0xd3, 0xfb),
         ribbon_collapsed_bg: Color32::from_rgb(0xdf, 0xe3, 0xe9),
+        status_bg: Color32::from_rgb(0xd6, 0xda, 0xe0),
+        status_band: Color32::from_rgb(0xf1, 0xf3, 0xf5),
+        cmd_block: Color32::from_rgb(0xe1, 0xe4, 0xe9),
         ..Tokens::DARK
     };
 
