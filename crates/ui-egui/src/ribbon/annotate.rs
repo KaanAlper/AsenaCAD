@@ -22,6 +22,7 @@ const TEXT_PANEL: Panel = Panel {
     ],
     slideout: &[labeled(Icon::ScaleText, "Scale", "scaletext", 1), combo(Combo::TextLayer, 200.0, 2)],
     launcher: Some("style"),
+    launcher_name: Some("Text Style..."),
 };
 
 // ---- Dimensions ----
@@ -68,6 +69,7 @@ const DIMENSIONS: Panel = Panel {
         icon(Icon::DimOverride, "Override", "dimoverride", 1),
     ],
     launcher: Some("dimstyle"),
+    launcher_name: Some("Dimension, Dimension Style..."),
 };
 
 // ---- Centerlines ----
@@ -77,6 +79,7 @@ const CENTERLINES: Panel = Panel {
     items: &[large(Icon::CenterMark, "Center Mark", "centermark"), large(Icon::Centerline, "Centerline", "centerline")],
     slideout: &[combo(Combo::CenterLayer, 200.0, 1)],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Leaders ----
@@ -94,6 +97,7 @@ const LEADERS: Panel = Panel {
     ],
     slideout: &[],
     launcher: Some("mleaderstyle"),
+    launcher_name: Some("Multileader Style Manager"),
 };
 
 // ---- Tables ----
@@ -110,6 +114,7 @@ const TABLES: Panel = Panel {
     ],
     slideout: &[],
     launcher: Some("tablestyle"),
+    launcher_name: Some("Table Style..."),
 };
 
 // ---- Markup ----
@@ -119,6 +124,7 @@ const MARKUP: Panel = Panel {
     items: &[large(Icon::Wipeout, "Wipeout", "wipeout"), large_split(Some("Revision Cloud"), super::home::REVCLOUD)],
     slideout: &[],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Annotation Scaling ----
@@ -136,6 +142,7 @@ const SCALING: Panel = Panel {
     ],
     slideout: &[],
     launcher: None,
+    launcher_name: None,
 };
 
 pub const ANNOTATE: Tab = Tab { label: "Annotate", panels: &[TEXT_PANEL, DIMENSIONS, CENTERLINES, LEADERS, TABLES, MARKUP, SCALING] };

@@ -292,7 +292,7 @@ fn title_bar(app: &mut CadApp, ui: &mut Ui, bar: Rect, key: &str, panel: &Panel,
     }
     ui.painter().galley(pos2(x, bar.center().y - galley.size().y / 2.0), galley, t.text);
     if let Some((cmd, rect)) = launcher {
-        let label = widgets::command_label(ui, app, cmd).unwrap_or(panel.label);
+        let label = panel.launcher_name.or_else(|| widgets::command_label(ui, app, cmd)).unwrap_or(panel.label);
         widgets::launcher(ui, app, rect, key, label, cmd);
     }
 }
@@ -319,6 +319,7 @@ fn item(ui: &mut Ui, app: &mut CadApp, key: &str, item: &Item, compact: bool) ->
         Item::Toggle { icon, label, cmd, size: s, state, .. } => widgets::toggle(ui, app, icon, label, cmd, size(s), state),
         Item::Split { label, size: s, menu, default, .. } => widgets::split_button(ui, app, key, label, size(s), menu, default),
         Item::Combo { kind, width, .. } => combo(ui, app, kind, width),
+        Item::Menu { icon, label, size: s, menu, .. } => widgets::menu_button(ui, app, key, icon, label, size(s), menu),
         Item::Slider { kind, width, .. } => slider(ui, app, kind, width),
     }
 }
@@ -326,7 +327,7 @@ fn item(ui: &mut Ui, app: &mut CadApp, key: &str, item: &Item, compact: bool) ->
 /// A panel's own icon (its panel button's): the first large item's icon, else the first item's.
 pub fn panel_icon(ctx: &egui::Context, key: &str, panel: &Panel) -> Icon {
     let icon_of = |(i, it): (usize, &Item)| match *it {
-        Item::Button { icon, .. } | Item::Toggle { icon, .. } => Some(icon),
+        Item::Button { icon, .. } | Item::Toggle { icon, .. } | Item::Menu { icon, .. } => Some(icon),
         Item::Split { menu, default, .. } => Some(widgets::split_face(ctx, &layout::item_key(key, i), menu, default).0),
         Item::Combo { .. } | Item::Slider { .. } => None,
     };

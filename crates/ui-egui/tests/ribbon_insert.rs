@@ -74,14 +74,14 @@ fn items_without_a_command_are_disabled() {
 #[test]
 fn the_lists_show_the_drawings_values_and_unmodelled_ones_are_disabled() {
     let h = harness("Block");
-    let display = h.get_by_role_and_label(Role::ComboBox, "Attribute Display");
+    let display = h.get_by_role_and_label(Role::ComboBox, "Retain Attribute Display");
     assert_eq!(display.value().as_deref(), Some("Retain Attribute Display"));
     assert!(!display.accesskit_node().is_disabled());
     let h = harness("Reference");
-    let frames = h.get_by_role_and_label(Role::ComboBox, "Frames");
+    let frames = h.get_by_role_and_label(Role::ComboBox, "*Frames vary*");
     assert_eq!(frames.value().as_deref(), Some("*Frames vary*"));
     assert!(frames.accesskit_node().is_disabled());
-    assert!(h.get_by_role_and_label(Role::ComboBox, "Snap to Underlays").accesskit_node().is_disabled());
+    assert!(h.get_by_role_and_label(Role::ComboBox, "Snap to Underlays ON").accesskit_node().is_disabled());
     let fading = h.get_by_role_and_label(Role::Slider, "Xref fading");
     assert!(fading.accesskit_node().is_disabled());
 }
@@ -94,4 +94,29 @@ fn the_reference_launcher_opens_the_external_references_palette() {
     launcher.click();
     h.run_steps(3);
     assert!(h.state().ui.docking.layout.contains(&Palette::ExternalRefs), "the launcher runs XREF");
+}
+
+#[test]
+fn set_location_is_one_drop_down_button_disabled_until_an_entry_has_a_command() {
+    let mut h = harness("Location");
+    // One button, no separate face and ▾ part.
+    assert!(h.query_by_label("Set Location options").is_none());
+    let button = h.get_by_role_and_label(Role::Button, "Set Location");
+    assert!(button.accesskit_node().is_disabled(), "none of From Esri Maps, From File, From Bing Maps exists yet");
+    button.click();
+    h.run_steps(3);
+    assert!(h.query_by_label("From File").is_none(), "a disabled drop-down doesn't open");
+}
+
+#[test]
+fn the_insert_gallery_opens_a_list_leading_to_the_insert_command() {
+    let mut h = harness("Block");
+    assert!(!h.get_by_role_and_label(Role::Button, "Insert").accesskit_node().is_disabled());
+    h.get_by_role_and_label(Role::Button, "Insert").click();
+    h.run_steps(3);
+    h.get_by_label("More Options...").click();
+    h.run_steps(3);
+    assert!(h.query_by_label("More Options...").is_none(), "the list closes");
+    let started = running(&h).as_deref() == Some("insert") || h.state().ui.dialog.is_some();
+    assert!(started, "More Options... starts INSERT");
 }

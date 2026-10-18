@@ -18,6 +18,14 @@ fn ribbon_icons() -> Vec<Icon> {
             for item in panel.items.iter().chain(panel.slideout) {
                 match item {
                     Item::Button { icon, .. } | Item::Toggle { icon, .. } => push(*icon),
+                    Item::Menu { icon, menu, .. } => {
+                        push(*icon);
+                        menu.iter().for_each(|e| {
+                            if let Entry::Command { icon, .. } = e {
+                                push(*icon)
+                            }
+                        })
+                    }
                     Item::Split { menu, .. } => menu.iter().for_each(|e| {
                         if let Entry::Command { icon, .. } = e {
                             push(*icon)

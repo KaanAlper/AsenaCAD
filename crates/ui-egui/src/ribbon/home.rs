@@ -80,6 +80,7 @@ const DRAW: Panel = Panel {
         small_split(Some("Revision Cloud"), false, 2, REVCLOUD),
     ],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Modify ----
@@ -141,6 +142,7 @@ const MODIFY: Panel = Panel {
         small_split(None, false, 2, DRAWORDER),
     ],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Annotation ----
@@ -190,6 +192,7 @@ const ANNOTATION: Panel = Panel {
         combo(Combo::TableStyle, 200.0, 4),
     ],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Layers ----
@@ -223,6 +226,7 @@ const LAYERS: Panel = Panel {
         slider(Slider::LockedLayerFade, 200.0, 3),
     ],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Block ----
@@ -234,7 +238,7 @@ const EDIT_ATTRIBUTES: &[Entry] = &[e(Icon::AttEdit, "Single", "attedit"), e(Ico
 const BLOCK: Panel = Panel {
     label: "Block",
     items: &[
-        large(Icon::Insert, "Insert", "insert"),
+        large_menu(Icon::Insert, "Insert", INSERT_GALLERY),
         large_split(None, DETECT),
         labeled(Icon::BlockCreate, "Create", "block", 1),
         labeled(Icon::BlockEdit, "Edit", "bedit", 2),
@@ -249,6 +253,7 @@ const BLOCK: Panel = Panel {
         icon(Icon::BasePoint, "Set Base Point", "base", 1),
     ],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Properties ----
@@ -268,6 +273,7 @@ const PROPERTIES: Panel = Panel {
         labeled(Icon::List, "List", "list", 3),
     ],
     launcher: Some("properties"),
+    launcher_name: Some("Properties"),
 };
 
 // ---- Groups ----
@@ -285,6 +291,7 @@ const GROUPS: Panel = Panel {
         toggle(Icon::GroupBox, "Group Bounding Box", "groupdisplaymode", Size::Small { label: true }, 2, Toggle::GroupBox),
     ],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Utilities ----
@@ -308,6 +315,7 @@ const UTILITIES: Panel = Panel {
     ],
     slideout: &[labeled(Icon::IdPoint, "ID Point", "id", 1), labeled(Icon::PointStyle, "Point Style...", "ddptype", 2)],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Clipboard ----
@@ -327,6 +335,7 @@ const CLIPBOARD: Panel = Panel {
     items: &[large_split(None, PASTE), icon(Icon::Cut, "Cut", "cutclip", 1), icon(Icon::CopyClip, "Copy Clip", "copyclip", 2)],
     slideout: &[],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- View ----
@@ -341,6 +350,7 @@ const VIEW: Panel = Panel {
         combo(Combo::DetailViewStyle, 140.0, 2),
     ],
     launcher: Some("viewstd"),
+    launcher_name: Some("Drafting Standard"),
 };
 
 pub const HOME: Tab = Tab { label: "Home", panels: &[DRAW, MODIFY, ANNOTATION, LAYERS, BLOCK, PROPERTIES, GROUPS, UTILITIES, CLIPBOARD, VIEW] };

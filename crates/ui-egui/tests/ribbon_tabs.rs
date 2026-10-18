@@ -1,6 +1,8 @@
 //! Every ribbon tab against AutoCAD 2026's (Windows) layout: panels in order, and per panel the
-//! items in order with their control type, size and row, split-menu entries, slide-out items and
-//! the dialog launcher. The expected data is transcribed from our own notes of AutoCAD's ribbon.
+//! items in order with their control type, size, row and command, split and drop-down menu
+//! entries with their commands, combo and slider kinds and widths, slide-out items and the dialog
+//! launcher with its name. The expected data is transcribed from our own notes of AutoCAD's
+//! ribbon.
 
 use std::sync::{Arc, Mutex};
 
@@ -11,77 +13,107 @@ use cadcraft_ui_egui::{CadApp, Services};
 use egui::vec2;
 use egui_kittest::Harness;
 
-/// What one item must be. `kind`: "button", "split", "combo", "slider", "toggle".
+/// What one item must be.
 pub struct Want {
     /// The item's accessible name: a split's face label (its fixed label, else its default
     /// entry's), a combo's or slider's control name.
     pub label: &'static str,
+    /// "button", "toggle", "split", "menu" (a drop-down button), "combo", "slider".
     pub kind: &'static str,
-    /// "large", "small" (icon only), "small+label".
+    /// Buttons, toggles, splits and menus: "large", "small" (icon only), "small+label".
+    /// Combos and sliders: their `Combo` / `Slider` kind.
     pub size: &'static str,
     pub row: u8,
-    /// Split menus: the entries' labels in order, "---" for a separator. Empty otherwise.
-    pub menu: &'static [&'static str],
+    /// Buttons and toggles: the command they run. Empty otherwise.
+    pub cmd: &'static str,
+    /// Splits and menus: (label, command) of each entry in order, ("---", "") for a separator.
+    pub menu: &'static [(&'static str, &'static str)],
+    /// Splits: the entry the face starts with.
+    pub default: usize,
+    /// Combos and sliders: their width.
+    pub width: f32,
 }
 
 pub struct WantPanel<'a> {
     pub label: &'static str,
     pub items: &'a [Want],
     pub slideout: &'a [Want],
-    /// The command the dialog launcher runs, if the panel has one.
-    pub launcher: Option<&'static str>,
+    /// The dialog launcher, if the panel has one: (command, accessible name).
+    pub launcher: Option<(&'static str, &'static str)>,
 }
 
-const fn b(label: &'static str, size: &'static str, row: u8) -> Want {
-    Want { label, kind: "button", size, row, menu: &[] }
+const fn want(label: &'static str, kind: &'static str, size: &'static str, row: u8) -> Want {
+    Want { label, kind, size, row, cmd: "", menu: &[], default: 0, width: 0.0 }
 }
 
-const fn tg(label: &'static str, size: &'static str, row: u8) -> Want {
-    Want { label, kind: "toggle", size, row, menu: &[] }
+const fn b(label: &'static str, size: &'static str, row: u8, cmd: &'static str) -> Want {
+    Want { cmd, ..want(label, "button", size, row) }
 }
 
-const fn sp(label: &'static str, size: &'static str, row: u8, menu: &'static [&'static str]) -> Want {
-    Want { label, kind: "split", size, row, menu }
+const fn tg(label: &'static str, size: &'static str, row: u8, cmd: &'static str) -> Want {
+    Want { cmd, ..want(label, "toggle", size, row) }
 }
 
-const fn cb(label: &'static str, row: u8) -> Want {
-    Want { label, kind: "combo", size: "small", row, menu: &[] }
+const fn sp(label: &'static str, size: &'static str, row: u8, menu: &'static [(&'static str, &'static str)], default: usize) -> Want {
+    Want { menu, default, ..want(label, "split", size, row) }
 }
 
-const fn sl(label: &'static str, row: u8) -> Want {
-    Want { label, kind: "slider", size: "small", row, menu: &[] }
+const fn mn(label: &'static str, size: &'static str, row: u8, menu: &'static [(&'static str, &'static str)]) -> Want {
+    Want { menu, ..want(label, "menu", size, row) }
 }
+
+const fn cb(label: &'static str, kind: &'static str, row: u8, width: f32) -> Want {
+    Want { width, ..want(label, "combo", kind, row) }
+}
+
+const fn sl(label: &'static str, kind: &'static str, row: u8, width: f32) -> Want {
+    Want { width, ..want(label, "slider", kind, row) }
+}
+
+const SEP: (&str, &str) = ("---", "");
 
 fn tab(label: &str) -> &'static Tab {
     tabs().iter().find(|t| t.label == label).unwrap_or_else(|| panic!("no tab {label}"))
 }
 
-fn size_name(size: Size) -> &'static str {
+fn size_name(size: Size) -> String {
     match size {
         Size::Large => "large",
         Size::Small { label: false } => "small",
         Size::Small { label: true } => "small+label",
     }
+    .into()
 }
 
-fn entry_label(e: &Entry) -> String {
-    match e {
-        Entry::Command { label, .. } => label.to_string(),
-        Entry::Separator => "---".into(),
-    }
+fn entries(menu: &[Entry]) -> Vec<(String, String)> {
+    menu.iter()
+        .map(|e| match e {
+            Entry::Command { label, cmd, .. } => (label.to_string(), cmd.to_string()),
+            Entry::Separator => ("---".into(), String::new()),
+        })
+        .collect()
 }
 
-fn describe(item: &Item) -> (String, &'static str, &'static str, u8, Vec<String>) {
+/// An item as the harness compares it: (label, kind, size, row, command, menu, default, width).
+type Got = (String, &'static str, String, u8, String, Vec<(String, String)>, usize, f32);
+
+fn describe(item: &Item) -> Got {
     match item {
-        Item::Button { label, size, row, .. } => (label.to_string(), "button", size_name(*size), *row, vec![]),
+        Item::Button { label, size, row, cmd, .. } => (label.to_string(), "button", size_name(*size), *row, cmd.to_string(), vec![], 0, 0.0),
+        Item::Toggle { label, size, row, cmd, .. } => (label.to_string(), "toggle", size_name(*size), *row, cmd.to_string(), vec![], 0, 0.0),
         Item::Split { label, size, row, menu, default } => {
-            let face = label.map(str::to_string).or_else(|| menu.get(*default).map(entry_label)).unwrap_or_default();
-            (face, "split", size_name(*size), *row, menu.iter().map(entry_label).collect())
+            let face = label.map(str::to_string).or_else(|| entries(menu).get(*default).map(|e| e.0.clone())).unwrap_or_default();
+            (face, "split", size_name(*size), *row, String::new(), entries(menu), *default, 0.0)
         }
-        Item::Combo { kind, row, .. } => (kind.label().to_string(), "combo", "small", *row, vec![]),
-        Item::Slider { kind, row, .. } => (kind.label().to_string(), "slider", "small", *row, vec![]),
-        Item::Toggle { label, size, row, .. } => (label.to_string(), "toggle", size_name(*size), *row, vec![]),
+        Item::Menu { label, size, row, menu, .. } => (label.to_string(), "menu", size_name(*size), *row, String::new(), entries(menu), 0, 0.0),
+        Item::Combo { kind, row, width } => (kind.label().to_string(), "combo", format!("{kind:?}"), *row, String::new(), vec![], 0, *width),
+        Item::Slider { kind, row, width } => (kind.label().to_string(), "slider", format!("{kind:?}"), *row, String::new(), vec![], 0, *width),
     }
+}
+
+fn expected(w: &Want) -> Got {
+    let menu = w.menu.iter().map(|(l, c)| (l.to_string(), c.to_string())).collect();
+    (w.label.to_string(), w.kind, w.size.to_string(), w.row, w.cmd.to_string(), menu, w.default, w.width)
 }
 
 fn check_items(where_: &str, got: &[Item], want: &[Want]) {
@@ -90,9 +122,7 @@ fn check_items(where_: &str, got: &[Item], want: &[Want]) {
     let want_names: Vec<_> = want.iter().map(|w| w.label).collect();
     assert_eq!(names, want_names, "{where_}: items in AutoCAD's order");
     for (g, w) in got.iter().zip(want) {
-        assert_eq!((g.1, g.2, g.3), (w.kind, w.size, w.row), "{where_} ▸ {}: kind/size/row", w.label);
-        let menu: Vec<_> = w.menu.iter().map(|s| s.to_string()).collect();
-        assert_eq!(g.4, menu, "{where_} ▸ {}: menu entries", w.label);
+        assert_eq!(*g, expected(w), "{where_} ▸ {}: (label, kind, size, row, command, menu, default, width)", w.label);
     }
 }
 
@@ -105,12 +135,12 @@ pub fn check_tab(label: &str, want: &[WantPanel]) {
         let at = format!("{label} ▸ {}", w.label);
         check_items(&at, p.items, w.items);
         check_items(&format!("{at} (slide-out)"), p.slideout, w.slideout);
-        assert_eq!(launcher(p), w.launcher, "{at}: dialog launcher");
+        assert_eq!(launcher(p), w.launcher, "{at}: dialog launcher (command, name)");
     }
 }
 
-fn launcher(p: &Panel) -> Option<&'static str> {
-    p.launcher
+fn launcher(p: &Panel) -> Option<(&'static str, &'static str)> {
+    p.launcher.zip(p.launcher_label())
 }
 
 /// Each panel's natural width (full labels, no divider) in the ribbon font, as the strip lays
@@ -155,29 +185,47 @@ fn check_widths(label: &str, autocad: &[(&str, f32)]) {
     assert!(off.is_empty(), "{label}: panels more than 8 % off AutoCAD's width: {off:?}");
 }
 
+/// The block gallery's stand-in list (both Home and Insert).
+const INSERT_GALLERY: &[(&str, &str)] = &[("More Options...", "insert")];
+
 #[test]
-fn the_harness_accepts_the_home_clipboard_panel() {
-    // Clipboard is the smallest Home panel; this proves the harness against data M1a verified.
+fn the_harness_accepts_home_panels() {
+    // Data M1a verified, through the same harness.
     let home = tab("Home");
-    let clip = home.panels.iter().find(|p| p.label == "Clipboard").expect("Clipboard");
+    let panel = |l: &str| home.panels.iter().find(|p| p.label == l).unwrap_or_else(|| panic!("{l}"));
+    let paste = &[
+        ("Paste", "pasteclip"),
+        ("Paste as Block", "pasteblock"),
+        ("Paste as Hyperlink", "pastehlnk"),
+        ("Paste to Original Coordinates", "pasteorig"),
+        ("Paste Special", "pastespec"),
+    ];
     check_items(
         "Home ▸ Clipboard",
-        clip.items,
-        &[
-            sp("Paste", "large", 0, &["Paste", "Paste as Block", "Paste as Hyperlink", "Paste to Original Coordinates", "Paste Special"]),
-            b("Cut", "small", 1),
-            b("Copy Clip", "small", 2),
-        ],
+        panel("Clipboard").items,
+        &[sp("Paste", "large", 0, paste, 0), b("Cut", "small", 1, "cutclip"), b("Copy Clip", "small", 2, "copyclip")],
     );
-    let props = home.panels.iter().find(|p| p.label == "Properties").expect("Properties");
-    assert_eq!(launcher(props), Some("properties"));
+    let props = panel("Properties");
+    assert_eq!(launcher(props), Some(("properties", "Properties")));
     check_items(
         "Home ▸ Properties (slide-out)",
         props.slideout,
-        &[cb("Plot Style", 1), cb("Transparency Mode", 2), sl("Transparency", 2), b("List", "small+label", 3)],
+        &[
+            cb("Plot Style", "PlotStyle", 1, 200.0),
+            cb("Transparency Mode", "Transparency", 2, 35.0),
+            sl("Transparency", "Transparency", 2, 158.0),
+            b("List", "small+label", 3, "list"),
+        ],
     );
-    let groups = home.panels.iter().find(|p| p.label == "Groups").expect("Groups");
-    check_items("Home ▸ Groups (slide-out)", groups.slideout, &[b("Group Manager", "small+label", 1), tg("Group Bounding Box", "small+label", 2)]);
+    check_items(
+        "Home ▸ Groups (slide-out)",
+        panel("Groups").slideout,
+        &[b("Group Manager", "small+label", 1, "classicgroup"), tg("Group Bounding Box", "small+label", 2, "groupdisplaymode")],
+    );
+    assert_eq!(launcher(panel("View")), Some(("viewstd", "Drafting Standard")));
+    let block = panel("Block");
+    let insert = block.items.first().map(describe);
+    assert_eq!(insert, Some(expected(&mn("Insert", "large", 0, INSERT_GALLERY))));
 }
 
 #[test]
@@ -211,12 +259,12 @@ fn insert_matches_autocad() {
             WantPanel {
                 label: "Block",
                 items: &[
-                    // AutoCAD's Insert is a gallery; here it is a button running INSERT.
-                    b("Insert", "large", 0),
-                    sp("Detect and Convert", "large", 0, &["Detect and Convert", "Search and Convert"]),
-                    sp("Edit Attribute", "small+label", 1, &["Single", "Multiple"]),
-                    cb("Attribute Display", 2),
-                    b("Replace", "small+label", 3),
+                    // AutoCAD's Insert is a gallery of the drawing's blocks (a drop-down button).
+                    mn("Insert", "large", 0, INSERT_GALLERY),
+                    sp("Detect and Convert", "large", 0, &[("Detect and Convert", "bdetect"), ("Search and Convert", "bconvert")], 0),
+                    sp("Edit Attribute", "small+label", 1, &[("Single", "attedit"), ("Multiple", "-attedit")], 0),
+                    cb("Retain Attribute Display", "AttributeDisplay", 2, 165.0),
+                    b("Replace", "small+label", 3, "breplace"),
                 ],
                 slideout: &[],
                 launcher: None,
@@ -224,34 +272,38 @@ fn insert_matches_autocad() {
             WantPanel {
                 label: "Block Definition",
                 items: &[
-                    sp("Create Block", "large", 0, &["Create Block", "Write Block"]),
-                    b("Define Attributes", "large", 0),
-                    b("Manage Attributes", "large", 0),
-                    b("Block Editor", "large", 0),
+                    sp("Create Block", "large", 0, &[("Create Block", "block"), ("Write Block", "wblock")], 0),
+                    b("Define Attributes", "large", 0, "attdef"),
+                    b("Manage Attributes", "large", 0, "battman"),
+                    b("Block Editor", "large", 0, "bedit"),
                 ],
-                slideout: &[b("Set Base Point", "small+label", 1), b("Synchronize", "small+label", 2)],
+                slideout: &[b("Set Base Point", "small+label", 1, "base"), b("Synchronize", "small+label", 2, "attsync")],
                 launcher: None,
             },
             WantPanel {
                 label: "Reference",
                 items: &[
-                    b("Attach", "large", 0),
-                    b("Clip", "large", 0),
-                    b("Adjust", "large", 0),
-                    b("Underlay Layers", "small+label", 1),
-                    cb("Frames", 2),
-                    cb("Snap to Underlays", 3),
+                    b("Attach", "large", 0, "attach"),
+                    b("Clip", "large", 0, "clip"),
+                    b("Adjust", "large", 0, "adjust"),
+                    b("Underlay Layers", "small+label", 1, "ulayers"),
+                    cb("*Frames vary*", "XrefFrames", 2, 114.0),
+                    cb("Snap to Underlays ON", "UnderlaySnap", 3, 157.0),
                 ],
-                slideout: &[b("Edit Reference", "small+label", 1), tg("Xref Fading", "small", 2), sl("Xref fading", 2)],
-                launcher: Some("xref"),
+                slideout: &[
+                    b("Edit Reference", "small+label", 1, "refedit"),
+                    tg("Xref Fading Toggle Button", "small", 2, "xdwgfadectl"),
+                    sl("Xref fading", "XrefFade", 2, 200.0),
+                ],
+                launcher: Some(("xref", "External References")),
             },
             WantPanel {
                 label: "Import",
                 items: &[
-                    sp("PDF Import", "large", 0, &["PDF Import", "DGN Import", "Import"]),
-                    b("Recognize SHX Text", "small+label", 1),
-                    b("Recognition Settings", "small+label", 2),
-                    b("Combine Text", "large", 0),
+                    sp("PDF Import", "large", 0, &[("PDF Import", "pdfimport"), ("DGN Import", "dgnimport"), ("Import", "import")], 0),
+                    b("Recognize SHX Text", "small+label", 1, "pdfshxtext"),
+                    b("Recognition Settings", "small+label", 2, "pdfshxtext.settings"),
+                    b("Combine Text", "large", 0, "txt2mtxt"),
                 ],
                 slideout: &[],
                 launcher: None,
@@ -259,10 +311,10 @@ fn insert_matches_autocad() {
             WantPanel {
                 label: "Data",
                 items: &[
-                    b("Field", "large", 0),
-                    b("Update Fields", "small+label", 1),
-                    b("OLE Object", "small+label", 2),
-                    b("Hyperlink", "small+label", 3),
+                    b("Field", "large", 0, "field"),
+                    b("Update Fields", "small+label", 1, "updatefield"),
+                    b("OLE Object", "small+label", 2, "insertobj"),
+                    b("Hyperlink", "small+label", 3, "hyperlink"),
                 ],
                 slideout: &[],
                 launcher: None,
@@ -270,19 +322,29 @@ fn insert_matches_autocad() {
             WantPanel {
                 label: "Linking & Extraction",
                 items: &[
-                    b("Data Link", "large", 0),
-                    b("Download from Source", "small+label", 1),
-                    b("Upload to Source", "small+label", 2),
+                    b("Data Link", "large", 0, "datalink"),
+                    b("Download from Source", "small+label", 1, "datalinkupdate"),
+                    b("Upload to Source", "small+label", 2, "datalinkupdate.write"),
                     // AutoCAD's label has two spaces.
-                    b("Extract  Data", "small+label", 3),
+                    b("Extract  Data", "small+label", 3, "dataextraction"),
                 ],
                 slideout: &[],
                 launcher: None,
             },
             WantPanel {
                 label: "Location",
-                // The screenshot shows a ▾ under Set Location: a split button.
-                items: &[sp("Set Location", "large", 0, &["From Map", "From File"])],
+                // A drop-down button (inventory §6, observed after the first pass).
+                items: &[mn(
+                    "Set Location",
+                    "large",
+                    0,
+                    &[
+                        ("From Esri Maps", "geographiclocation.esri"),
+                        ("From File", "geographiclocation.file"),
+                        SEP,
+                        ("From Bing Maps", "geographiclocation.bing"),
+                    ],
+                )],
                 slideout: &[],
                 launcher: None,
             },
@@ -308,7 +370,18 @@ fn insert_is_as_wide_as_autocads() {
 
 // ---- Annotate ----
 
-const DIM_LINEAR: &[&str] = &["Linear", "Aligned", "Angular", "---", "Arc Length", "Radius", "Diameter", "---", "Jogged", "Ordinate"];
+const DIM_LINEAR: &[(&str, &str)] = &[
+    ("Linear", "dimlinear"),
+    ("Aligned", "dimaligned"),
+    ("Angular", "dimangular"),
+    SEP,
+    ("Arc Length", "dimarc"),
+    ("Radius", "dimradius"),
+    ("Diameter", "dimdiameter"),
+    SEP,
+    ("Jogged", "dimjogged"),
+    ("Ordinate", "dimordinate"),
+];
 
 #[test]
 fn annotate_matches_autocad() {
@@ -318,90 +391,105 @@ fn annotate_matches_autocad() {
             WantPanel {
                 label: "Text",
                 items: &[
-                    sp("Multiline Text", "large", 0, &["Multiline Text", "Single Line"]),
-                    b("Check Spelling", "small", 1),
-                    b("Text Align", "small", 2),
-                    b("Justify", "small", 3),
-                    cb("Text Style", 1),
-                    cb("Find Text", 2),
-                    cb("Annotation Text Height", 3),
+                    sp("Multiline Text", "large", 0, &[("Multiline Text", "mtext"), ("Single Line", "text")], 0),
+                    b("Check Spelling", "small", 1, "spell"),
+                    b("Text Align", "small", 2, "textalign"),
+                    b("Justify", "small", 3, "justifytext"),
+                    cb("Text Style", "TextStyle", 1, 200.0),
+                    cb("Find Text", "FindText", 2, 200.0),
+                    cb("Annotation Text Height", "TextHeight", 3, 200.0),
                 ],
-                slideout: &[b("Scale", "small+label", 1), cb("Text Layer Gallery", 2)],
-                launcher: Some("style"),
+                slideout: &[b("Scale", "small+label", 1, "scaletext"), cb("Text Layer Gallery", "TextLayer", 2, 200.0)],
+                launcher: Some(("style", "Text Style...")),
             },
             WantPanel {
                 label: "Dimensions",
                 items: &[
-                    b("Dimension", "large", 0),
-                    cb("Dimension Style", 1),
-                    b("Break", "small", 1),
-                    b("Adjust Space", "small", 1),
-                    b("Jog Line", "small", 1),
-                    cb("Dim Layer Gallery", 2),
-                    b("Inspect", "small", 2),
-                    b("Update", "small", 2),
-                    b("Reassociate", "small", 2),
-                    sp("Linear", "small+label", 3, DIM_LINEAR),
-                    b("Quick", "small+label", 3),
-                    sp("Continue", "small+label", 3, &["Continue", "Baseline"]),
+                    b("Dimension", "large", 0, "dim"),
+                    cb("Dimension Style", "DimStyle", 1, 200.0),
+                    b("Break", "small", 1, "dimbreak"),
+                    b("Adjust Space", "small", 1, "dimspace"),
+                    b("Jog Line", "small", 1, "dimjogline"),
+                    cb("Dim Layer Gallery", "DimLayer", 2, 200.0),
+                    b("Inspect", "small", 2, "diminspect"),
+                    b("Update", "small", 2, "dimstyle.update"),
+                    b("Reassociate", "small", 2, "dimreassociate"),
+                    sp("Linear", "small+label", 3, DIM_LINEAR, 0),
+                    b("Quick", "small+label", 3, "qdim"),
+                    sp("Continue", "small+label", 3, &[("Continue", "dimcontinue"), ("Baseline", "dimbaseline")], 0),
                 ],
                 slideout: &[
-                    b("Tolerance", "small", 1),
-                    b("Oblique", "small", 1),
-                    b("Text Angle", "small", 1),
-                    b("Left Justify", "small", 1),
-                    b("Center Justify", "small", 1),
-                    b("Right Justify", "small", 1),
-                    b("Override", "small", 1),
+                    b("Tolerance", "small", 1, "tolerance"),
+                    b("Oblique", "small", 1, "dimedit.oblique"),
+                    b("Text Angle", "small", 1, "dimtedit.angle"),
+                    b("Left Justify", "small", 1, "dimtedit.left"),
+                    b("Center Justify", "small", 1, "dimtedit.center"),
+                    b("Right Justify", "small", 1, "dimtedit.right"),
+                    b("Override", "small", 1, "dimoverride"),
                 ],
-                launcher: Some("dimstyle"),
+                launcher: Some(("dimstyle", "Dimension, Dimension Style...")),
             },
             WantPanel {
                 label: "Centerlines",
-                items: &[b("Center Mark", "large", 0), b("Centerline", "large", 0)],
-                slideout: &[cb("Center Layer Gallery", 1)],
+                items: &[b("Center Mark", "large", 0, "centermark"), b("Centerline", "large", 0, "centerline")],
+                slideout: &[cb("Center Layer Gallery", "CenterLayer", 1, 200.0)],
                 launcher: None,
             },
             WantPanel {
                 label: "Leaders",
                 items: &[
-                    b("Multileader", "large", 0),
-                    cb("Multileader Style", 1),
-                    cb("Mleader Layer Gallery", 2),
-                    b("Align", "small", 3),
-                    b("Collect", "small", 3),
-                    b("Add Leader", "small", 3),
-                    b("Remove Leader", "small", 3),
+                    b("Multileader", "large", 0, "mleader"),
+                    cb("Multileader Style", "MLeaderStyle", 1, 200.0),
+                    cb("Mleader Layer Gallery", "MLeaderLayer", 2, 200.0),
+                    b("Align", "small", 3, "mleaderalign"),
+                    b("Collect", "small", 3, "mleadercollect"),
+                    b("Add Leader", "small", 3, "mleaderedit.add"),
+                    b("Remove Leader", "small", 3, "mleaderedit.remove"),
                 ],
                 slideout: &[],
-                launcher: Some("mleaderstyle"),
+                launcher: Some(("mleaderstyle", "Multileader Style Manager")),
             },
             WantPanel {
                 label: "Tables",
                 items: &[
-                    b("Table", "large", 0),
-                    cb("Table Style", 1),
-                    b("Download from Source", "small", 2),
-                    b("Extract Data", "small+label", 2),
-                    b("Upload to Source", "small", 3),
-                    b("Link Data", "small+label", 3),
+                    b("Table", "large", 0, "table"),
+                    cb("Table Style", "TableStyle", 1, 200.0),
+                    b("Download from Source", "small", 2, "datalinkupdate"),
+                    b("Extract Data", "small+label", 2, "dataextraction"),
+                    b("Upload to Source", "small", 3, "datalinkupdate.write"),
+                    b("Link Data", "small+label", 3, "datalink"),
                 ],
                 slideout: &[],
-                launcher: Some("tablestyle"),
+                launcher: Some(("tablestyle", "Table Style...")),
             },
             WantPanel {
                 label: "Markup",
-                items: &[b("Wipeout", "large", 0), sp("Revision Cloud", "large", 0, &["Rectangular", "Polygonal", "Freehand"])],
+                items: &[
+                    b("Wipeout", "large", 0, "wipeout"),
+                    sp(
+                        "Revision Cloud",
+                        "large",
+                        0,
+                        &[("Rectangular", "revcloud"), ("Polygonal", "revcloud.polygonal"), ("Freehand", "revcloud.freehand")],
+                        0,
+                    ),
+                ],
                 slideout: &[],
                 launcher: None,
             },
             WantPanel {
                 label: "Annotation Scaling",
                 items: &[
-                    sp("Add Current Scale", "large", 0, &["Add Current Scale", "Delete Current Scale"]),
-                    b("Scale List", "small+label", 1),
-                    b("Add/Delete Scales", "small+label", 2),
-                    b("Sync Scale Positions", "small+label", 3),
+                    sp(
+                        "Add Current Scale",
+                        "large",
+                        0,
+                        &[("Add Current Scale", "aiobjectscaleadd"), ("Delete Current Scale", "aiobjectscaleremove")],
+                        0,
+                    ),
+                    b("Scale List", "small+label", 1, "scalelistedit"),
+                    b("Add/Delete Scales", "small+label", 2, "objectscale"),
+                    b("Sync Scale Positions", "small+label", 3, "annoreset"),
                 ],
                 slideout: &[],
                 launcher: None,

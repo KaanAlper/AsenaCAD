@@ -286,7 +286,7 @@ fn item_labels(items: &[Item]) -> Vec<&'static str> {
     items
         .iter()
         .map(|it| match *it {
-            Item::Button { label, .. } | Item::Toggle { label, .. } => label,
+            Item::Button { label, .. } | Item::Toggle { label, .. } | Item::Menu { label, .. } => label,
             Item::Split { label: Some(l), .. } => l,
             Item::Split { label: None, menu, default, .. } => match menu.get(default) {
                 Some(Entry::Command { label, .. }) => label,
@@ -344,8 +344,7 @@ fn at_1280_px_the_rightmost_panels_collapse_into_panel_buttons() {
             let found = h.query_all_by_label(label).any(|n| n.rect().top() >= button.bottom() - 0.5);
             assert!(found, "{}'s popup shows {label}", p.label);
         }
-        if let Some(cmd) = p.launcher {
-            let label = cadcraft_engine::find_command(cmd).map_or(p.label, |c| c.label);
+        if let Some(label) = p.launcher_label() {
             assert!(h.query_all_by_label(label).any(|n| n.rect().width() <= 14.5), "{}: launcher", p.label);
         }
         assert!(h.query_all_by_label(p.label).count() >= 2, "{}: the popup has its title bar", p.label);

@@ -63,7 +63,9 @@ pub enum Combo {
 }
 
 impl Combo {
-    /// The control's name (accessibility, control channel). The box itself shows the value.
+    /// The control's name (accessibility, control channel), AutoCAD's UI Automation name. The
+    /// box itself shows the value; some of AutoCAD's controls are named after their default value
+    /// ("Retain Attribute Display", "*Frames vary*").
     pub const fn label(self) -> &'static str {
         match self {
             Self::Layer => "Layer",
@@ -77,11 +79,11 @@ impl Combo {
             Self::LayerState => "Layer State",
             Self::PlotStyle => "Plot Style",
             Self::Transparency => "Transparency Mode",
-            Self::AttributeDisplay => "Attribute Display",
+            Self::AttributeDisplay => "Retain Attribute Display",
             Self::SectionViewStyle => "Section View Style",
             Self::DetailViewStyle => "Detail View Style",
-            Self::XrefFrames => "Frames",
-            Self::UnderlaySnap => "Snap to Underlays",
+            Self::XrefFrames => "*Frames vary*",
+            Self::UnderlaySnap => "Snap to Underlays ON",
             Self::FindText => "Find Text",
             Self::TextHeight => "Annotation Text Height",
             Self::TextLayer => "Text Layer Gallery",
@@ -158,6 +160,16 @@ pub enum Item {
         menu: &'static [Entry],
         default: usize,
     },
+    /// A drop-down button: the whole button opens `menu`, it has no face that runs a command.
+    /// Its ▾ sits under a one-line label and right of a two-line one (Set Location, Insert's
+    /// block gallery).
+    Menu {
+        icon: Icon,
+        label: &'static str,
+        size: Size,
+        row: u8,
+        menu: &'static [Entry],
+    },
     Combo {
         kind: Combo,
         width: f32,
@@ -177,6 +189,18 @@ pub struct Panel {
     pub slideout: &'static [Item],
     /// Dialog launcher arrow in the title bar: the command it runs.
     pub launcher: Option<&'static str>,
+    /// The launcher's accessible name and tooltip, AutoCAD's (the dialog it opens); `None` uses
+    /// the command's label.
+    pub launcher_name: Option<&'static str>,
+}
+
+impl Panel {
+    /// The launcher's accessible name: [`Panel::launcher_name`], else its command's label, else
+    /// the panel's name.
+    pub fn launcher_label(&self) -> Option<&'static str> {
+        let cmd = self.launcher?;
+        Some(self.launcher_name.or_else(|| cadcraft_engine::find_command(cmd).map(|c| c.label)).unwrap_or(self.label))
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -227,7 +251,7 @@ pub fn command_ids() -> Vec<&'static str> {
             for item in panel.items.iter().chain(panel.slideout) {
                 match item {
                     Item::Button { cmd, .. } | Item::Toggle { cmd, .. } => ids.push(*cmd),
-                    Item::Split { menu, .. } => ids.extend(entry_commands(menu)),
+                    Item::Split { menu, .. } | Item::Menu { menu, .. } => ids.extend(entry_commands(menu)),
                     Item::Combo { .. } | Item::Slider { .. } => {}
                 }
             }
@@ -246,9 +270,17 @@ pub fn labels() -> Vec<&'static str> {
         out.push(tab.label);
         for panel in tab.panels {
             out.push(panel.label);
+            out.extend(panel.launcher_name);
             for item in panel.items.iter().chain(panel.slideout) {
                 match item {
                     Item::Button { label, .. } | Item::Toggle { label, .. } => out.push(*label),
+                    Item::Menu { label, menu, .. } => {
+                        out.push(*label);
+                        out.extend(menu.iter().filter_map(|e| match e {
+                            Entry::Command { label, .. } => Some(*label),
+                            Entry::Separator => None,
+                        }));
+                    }
                     Item::Split { label, menu, .. } => {
                         out.extend(*label);
                         out.extend(menu.iter().filter_map(|e| match e {
@@ -307,8 +339,9 @@ mod tests {
         "insertobj",               // Data ▸ OLE Object
         "hyperlink",               // Data ▸ Hyperlink
         "datalinkupdate.write",    // Linking & Extraction ▸ Upload to Source
-        "geographiclocation",      // Location ▸ Set Location ▸ From Map
+        "geographiclocation.esri", // Location ▸ Set Location ▸ From Esri Maps (online map service)
         "geographiclocation.file", // Location ▸ Set Location ▸ From File
+        "geographiclocation.bing", // Location ▸ Set Location ▸ From Bing Maps (online map service)
         // ---- Annotate ----
         "spell",       // Text ▸ Check Spelling
         "textalign",   // Text ▸ Text Align
@@ -367,13 +400,15 @@ mod tests {
                     Item::Button { size: Size::Small { .. }, row, .. }
                     | Item::Toggle { size: Size::Small { .. }, row, .. }
                     | Item::Split { size: Size::Small { .. }, row, .. }
+                    | Item::Menu { size: Size::Small { .. }, row, .. }
                     | Item::Combo { row, .. }
                     | Item::Slider { row, .. } => {
                         assert!((1..=3).contains(row), "{}: row {row}", p.label)
                     }
                     Item::Button { size: Size::Large, row, .. }
                     | Item::Toggle { size: Size::Large, row, .. }
-                    | Item::Split { size: Size::Large, row, .. } => {
+                    | Item::Split { size: Size::Large, row, .. }
+                    | Item::Menu { size: Size::Large, row, .. } => {
                         assert_eq!(*row, 0, "{}: large items use row 0", p.label)
                     }
                 }
@@ -382,11 +417,15 @@ mod tests {
                 let (Item::Button { row, .. }
                 | Item::Toggle { row, .. }
                 | Item::Split { row, .. }
+                | Item::Menu { row, .. }
                 | Item::Combo { row, .. }
                 | Item::Slider { row, .. }) = item;
                 assert!((1..=4).contains(row), "{} slide-out: row {row}", p.label);
             }
             for item in p.items.iter().chain(p.slideout) {
+                if let Item::Split { menu, .. } | Item::Menu { menu, .. } = item {
+                    assert!(menu.iter().any(|e| matches!(e, Entry::Command { .. })), "{}: an empty menu", p.label);
+                }
                 if let Item::Split { menu, default, .. } = item {
                     assert!(matches!(menu.get(*default), Some(Entry::Command { .. })), "{}: bad split default", p.label);
                     assert!(!matches!(menu.first(), Some(Entry::Separator)), "{}: menu starts with a separator", p.label);

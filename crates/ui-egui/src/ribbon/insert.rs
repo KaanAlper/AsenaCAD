@@ -14,8 +14,7 @@ const EDIT_ATTRIBUTE: &[Entry] = &[e(Icon::AttEdit, "Single", "attedit"), e(Icon
 const BLOCK: Panel = Panel {
     label: "Block",
     items: &[
-        // AutoCAD's Insert opens a gallery of the drawing's blocks; here it runs INSERT.
-        large(Icon::Insert, "Insert", "insert"),
+        large_menu(Icon::Insert, "Insert", INSERT_GALLERY),
         large_split(None, DETECT),
         small_split(Some("Edit Attribute"), true, 1, EDIT_ATTRIBUTE),
         combo(Combo::AttributeDisplay, 165.0, 2),
@@ -23,6 +22,7 @@ const BLOCK: Panel = Panel {
     ],
     slideout: &[],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Block Definition ----
@@ -39,6 +39,7 @@ const BLOCK_DEFINITION: Panel = Panel {
     ],
     slideout: &[labeled(Icon::BasePoint, "Set Base Point", "base", 1), labeled(Icon::AttSync, "Synchronize", "attsync", 2)],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Reference ----
@@ -55,11 +56,12 @@ const REFERENCE: Panel = Panel {
     ],
     slideout: &[
         labeled(Icon::RefEdit, "Edit Reference", "refedit", 1),
-        toggle(Icon::XrefFade, "Xref Fading", "xdwgfadectl", Size::Small { label: false }, 2, Toggle::XrefFade),
+        toggle(Icon::XrefFade, "Xref Fading Toggle Button", "xdwgfadectl", Size::Small { label: false }, 2, Toggle::XrefFade),
         slider(Slider::XrefFade, 200.0, 2),
     ],
     // AutoCAD's launcher opens the External References palette (XREF).
     launcher: Some("xref"),
+    launcher_name: Some("External References"),
 };
 
 // ---- Import ----
@@ -77,6 +79,7 @@ const IMPORT: Panel = Panel {
     ],
     slideout: &[],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Data ----
@@ -91,6 +94,7 @@ const DATA: Panel = Panel {
     ],
     slideout: &[],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Linking & Extraction ----
@@ -106,12 +110,20 @@ const LINKING: Panel = Panel {
     ],
     slideout: &[],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Location ----
 
-const SET_LOCATION: &[Entry] = &[e(Icon::GeoMap, "From Map", "geographiclocation"), e(Icon::GeoFile, "From File", "geographiclocation.file")];
+/// Esri and Bing are online map services.
+const SET_LOCATION: &[Entry] = &[
+    e(Icon::GeoMap, "From Esri Maps", "geographiclocation.esri"),
+    e(Icon::GeoFile, "From File", "geographiclocation.file"),
+    SEP,
+    e(Icon::GeoMap, "From Bing Maps", "geographiclocation.bing"),
+];
 
-const LOCATION: Panel = Panel { label: "Location", items: &[large_split(Some("Set Location"), SET_LOCATION)], slideout: &[], launcher: None };
+const LOCATION: Panel =
+    Panel { label: "Location", items: &[large_menu(Icon::GeoMap, "Set Location", SET_LOCATION)], slideout: &[], launcher: None, launcher_name: None };
 
 pub const INSERT: Tab = Tab { label: "Insert", panels: &[BLOCK, BLOCK_DEFINITION, REFERENCE, IMPORT, DATA, LINKING, LOCATION] };

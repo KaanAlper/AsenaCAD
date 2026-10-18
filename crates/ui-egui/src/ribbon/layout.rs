@@ -113,10 +113,16 @@ pub fn fit(full: &[f32], compact: &[f32], buttons: &[f32], available: f32) -> Ve
 /// Small items' row (1-based), or None for a large item.
 pub fn small_row(item: &Item) -> Option<u8> {
     match *item {
-        Item::Button { size: Size::Large, .. } | Item::Toggle { size: Size::Large, .. } | Item::Split { size: Size::Large, .. } => None,
-        Item::Button { row, .. } | Item::Toggle { row, .. } | Item::Split { row, .. } | Item::Combo { row, .. } | Item::Slider { row, .. } => {
-            Some(row)
-        }
+        Item::Button { size: Size::Large, .. }
+        | Item::Toggle { size: Size::Large, .. }
+        | Item::Split { size: Size::Large, .. }
+        | Item::Menu { size: Size::Large, .. } => None,
+        Item::Button { row, .. }
+        | Item::Toggle { row, .. }
+        | Item::Split { row, .. }
+        | Item::Menu { row, .. }
+        | Item::Combo { row, .. }
+        | Item::Slider { row, .. } => Some(row),
     }
 }
 

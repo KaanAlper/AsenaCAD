@@ -309,8 +309,19 @@ pub fn split_button(ui: &mut Ui, app: &mut CadApp, key: &str, label: Option<&str
     let menu_label = crate::tf!("{label} options", label = shown);
     icons::describe_control(ui, &arrow, &menu_label, None, false);
     let arrow = tooltips(arrow, &menu_label, &Availability::Missing);
+    if let Some((i, cmd)) = menu_popup(app, &arrow, menu) {
+        RibbonState::remember(ui.ctx(), key, i);
+        start(app, cmd);
+    } else if face.clicked() {
+        start(app, cmd);
+    }
+    face
+}
+
+/// The menu `anchor` toggles open: `menu`'s entries; returns the one chosen (index, command).
+fn menu_popup(app: &CadApp, anchor: &Response, menu: &[Entry]) -> Option<(usize, &'static str)> {
     let mut chosen = None;
-    egui::Popup::from_toggle_button_response(&arrow).close_behavior(egui::PopupCloseBehavior::CloseOnClick).show(|ui| {
+    egui::Popup::from_toggle_button_response(anchor).close_behavior(egui::PopupCloseBehavior::CloseOnClick).show(|ui| {
         ui.set_min_width(MENU_W);
         for (i, e) in menu.iter().enumerate() {
             match e {
@@ -325,13 +336,36 @@ pub fn split_button(ui: &mut Ui, app: &mut CadApp, key: &str, label: Option<&str
             }
         }
     });
-    if let Some((i, cmd)) = chosen {
-        RibbonState::remember(ui.ctx(), key, i);
-        start(app, cmd);
-    } else if face.clicked() {
+    chosen
+}
+
+/// A drop-down button: the whole button opens `menu`, whose entries start their commands. It is
+/// enabled while any entry's command exists; `key` keeps equal buttons apart.
+pub fn menu_button(ui: &mut Ui, app: &mut CadApp, key: &str, icon: Icon, label: &str, size: Size, menu: &[Entry]) -> Response {
+    let enabled = menu.iter().any(|e| matches!(e, Entry::Command { cmd, .. } if availability(ui, app, cmd).is_known()));
+    let shown = crate::i18n::t(label);
+    let (w, h) = match size {
+        Size::Large => (large_split_width(ui, shown), LARGE_H),
+        Size::Small { label } => (small_width(ui, label.then_some(shown)) + SMALL_SPLIT_ARROW_W, SMALL_H),
+    };
+    let (_, rect) = ui.allocate_space(vec2(w, h));
+    let resp = ui.add_enabled_ui(enabled, |ui| ui.interact(rect, ui.id().with(("ribbon-menu", key)), Sense::click())).inner;
+    let open = egui::Popup::is_id_open(ui.ctx(), egui::Popup::default_response_id(&resp));
+    paint_state(ui, rect, &resp, open);
+    match size {
+        Size::Large => paint_large(ui, rect, icon, shown, enabled, true),
+        Size::Small { label } => {
+            let face = Rect::from_min_max(rect.min, pos2(rect.right() - SMALL_SPLIT_ARROW_W, rect.bottom()));
+            paint_small(ui, face, icon, label.then_some(shown), enabled);
+            paint_chevron(ui, pos2(rect.right() - SMALL_SPLIT_ARROW_W / 2.0, rect.center().y), enabled);
+        }
+    }
+    icons::describe_control(ui, &resp, label, None, false);
+    let resp = tooltips(resp, shown, &Availability::Missing);
+    if let Some((_, cmd)) = menu_popup(app, &resp, menu) {
         start(app, cmd);
     }
-    face
+    resp
 }
 
 /// The entry a split's face shows and runs: its icon, label and command.
@@ -366,6 +400,10 @@ pub fn item_width(ui: &Ui, key: &str, item: &Item, compact: bool) -> f32 {
                 Size::Small { .. } => width(size, face) + SMALL_SPLIT_ARROW_W,
             }
         }
+        Item::Menu { label, size, .. } => match shown_size(size, compact) {
+            Size::Large => large_split_width(ui, crate::i18n::t(label)),
+            Size::Small { .. } => width(size, label) + SMALL_SPLIT_ARROW_W,
+        },
         Item::Combo { width, .. } | Item::Slider { width, .. } => width,
     }
 }

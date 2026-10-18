@@ -39,6 +39,15 @@ pub(crate) const fn small_split(label: Option<&'static str>, show_label: bool, r
     Item::Split { label, size: Size::Small { label: show_label }, row, menu, default: 0 }
 }
 
+/// A large drop-down button: the whole button opens `menu`.
+pub(crate) const fn large_menu(icon: Icon, label: &'static str, menu: &'static [Entry]) -> Item {
+    Item::Menu { icon, label, size: Size::Large, row: 0, menu }
+}
+
+/// AutoCAD's Insert opens a gallery of the drawing's blocks; ours lists only the way to the
+/// Insert dialog until the gallery is built.
+pub(crate) const INSERT_GALLERY: &[Entry] = &[e(Icon::Insert, "More Options...", "insert")];
+
 pub(crate) const fn combo(kind: Combo, width: f32, row: u8) -> Item {
     Item::Combo { kind, width, row }
 }
