@@ -140,7 +140,7 @@ fn large_label(ui: &Ui, text: &str, enabled: bool) -> std::sync::Arc<egui::Galle
 /// broken at the last space that keeps the first line within [`LARGE_WRAP`] ("Detect and /
 /// Convert", "Layer / Properties", "Data / Link"), or after the first word when even that is
 /// wider ("Add / Current Scale"). Balancing the two lines would give "Add Current / Scale",
-/// which AutoCAD doesn't (`tests/ribbon_tabs.rs` lists every large label of the built tabs).
+/// which AutoCAD doesn't (`tests/ribbon_tabs/labels.rs` lists every large label of the built tabs).
 fn large_lines(ui: &Ui, text: &str) -> String {
     let width = |s: &str| ui.painter().layout_no_wrap(s.to_string(), crate::theme::ribbon_font(ui.ctx()), text_color(true)).size().x;
     let spaces = text.match_indices(' ').map(|(i, _)| i);
