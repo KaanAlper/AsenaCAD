@@ -113,6 +113,11 @@ pub struct UiState {
     pub ribbon_tab: String,
     /// How far the ribbon is minimized (AutoCAD's minimize button cycle).
     pub ribbon_min: ribbon::RibbonMin,
+    /// The Quick Access Toolbar's items (command ids, in AutoCAD's order); Customize ▾ changes
+    /// them through `ui.qat`.
+    pub qat_shown: Vec<String>,
+    /// The Quick Access Toolbar shows in a strip under the ribbon instead of the title row.
+    pub qat_below_ribbon: bool,
 }
 
 /// A DXF/DWG file version (2000 … 2018).
@@ -186,6 +191,8 @@ impl Default for UiState {
             recent_files: Vec::new(),
             ribbon_tab: "Home".into(),
             ribbon_min: ribbon::RibbonMin::Full,
+            qat_shown: chrome::qat::default_shown(),
+            qat_below_ribbon: false,
         }
     }
 }

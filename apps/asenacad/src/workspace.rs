@@ -42,6 +42,9 @@ fn snapshot(ui: &UiState) -> Result<Value, String> {
     if ui.history_lines > 12 {
         return Err("historyLines must be between 0 and 12".into());
     }
+    if ui.qat_shown.len() > 64 || ui.qat_shown.iter().any(|id| id.len() > 64) {
+        return Err("qatShown exceeds the workspace size limit".into());
+    }
     Ok(json!({
         "docking": ui.docking,
         "showToolsets": ui.show_toolsets,
@@ -58,6 +61,8 @@ fn snapshot(ui: &UiState) -> Result<Value, String> {
         "propertiesAll": ui.properties_all,
         "inWindowMenu": ui.in_window_menu,
         "historyLines": ui.history_lines,
+        "qatShown": ui.qat_shown,
+        "qatBelowRibbon": ui.qat_below_ribbon,
     }))
 }
 
@@ -212,6 +217,8 @@ mod tests {
             toolset_tab: "Modeling".into(),
             collapsed_groups: vec!["Solid".into()],
             history_lines: 5,
+            qat_shown: vec!["open".into(), "u".into(), "preview".into()],
+            qat_below_ribbon: true,
             dialog: Some("layers".into()),
             start_tab: true,
             ..Default::default()
@@ -267,6 +274,9 @@ mod tests {
             br#"{"version":2,"workspace":{}}"#.to_vec(),
             br#"{"version":1,"workspace":{"toolsetTab":"unknown"}}"#.to_vec(),
             br#"{"version":1,"workspace":{"historyLines":18446744073709551615}}"#.to_vec(),
+            br#"{"version":1,"workspace":{"qatShown":"new"}}"#.to_vec(),
+            br#"{"version":1,"workspace":{"qatBelowRibbon":1}}"#.to_vec(),
+            format!(r#"{{"version":1,"workspace":{{"qatShown":[{}]}}}}"#, vec![r#""new""#; 65].join(",")).into_bytes(),
         ] {
             fs::write(&path, &bytes).unwrap();
             let (mut store, ui, error) = Workspace::at(Some(path.clone()));

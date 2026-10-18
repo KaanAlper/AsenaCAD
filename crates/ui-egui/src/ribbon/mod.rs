@@ -6,7 +6,7 @@
 //! wherever the panel is shown (strip, collapsed-panel popup, slide-out): split buttons remember
 //! their last entry by it, and its egui id scope keeps equally named items apart.
 
-mod avail;
+pub(crate) mod avail;
 mod bind;
 pub mod home;
 pub mod layout;

@@ -8,6 +8,8 @@ use crate::icons::{self, Icon};
 use crate::theme::Tokens;
 
 pub mod annoscale;
+pub mod qat;
+pub mod titlerow;
 
 const TOOLBAR: &[&[(Icon, &str, &str, Option<&str>)]] = &[
     &[
@@ -61,6 +63,19 @@ fn title_left(left: f32, width: f32, text_w: f32) -> f32 {
     (left + (width - text_w) / 2.0).max(left + MAC_CONTENT_LEFT)
 }
 
+/// Dragging `rect` moves the window and double-clicking it maximizes or restores it, like the
+/// title bar the integrated macOS title row replaces.
+fn window_drag(ui: &mut egui::Ui, rect: Rect) {
+    let resp = ui.interact(rect, ui.id().with("titledrag"), Sense::CLICK | Sense::DRAG);
+    if resp.drag_started() {
+        ui.ctx().send_viewport_cmd(egui::ViewportCommand::StartDrag);
+    }
+    if resp.double_clicked() {
+        let max = ui.ctx().input(|i| i.viewport().maximized.unwrap_or(false));
+        ui.ctx().send_viewport_cmd(egui::ViewportCommand::Maximized(!max));
+    }
+}
+
 /// Title row (with the integrated macOS title bar) and the Tool Bar.
 pub fn title_and_toolbar(app: &mut CadApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
@@ -78,16 +93,7 @@ pub fn title_and_toolbar(app: &mut CadApp, ui: &mut egui::Ui) {
             let galley = ui.painter().layout_no_wrap(title, egui::FontId::proportional(13.0), t.text_dim);
             let x = title_left(r.left(), r.width(), galley.size().x);
             ui.painter().galley(pos2(x, r.top() + (title_h - galley.size().y) / 2.0), galley, t.text_dim);
-            // Allow dragging the window by the title row.
-            let tr = Rect::from_min_size(r.min, vec2(r.width(), title_h));
-            let resp = ui.interact(tr, ui.id().with("titledrag"), Sense::CLICK | Sense::DRAG);
-            if resp.drag_started() {
-                ui.ctx().send_viewport_cmd(egui::ViewportCommand::StartDrag);
-            }
-            if resp.double_clicked() {
-                let max = ui.ctx().input(|i| i.viewport().maximized.unwrap_or(false));
-                ui.ctx().send_viewport_cmd(egui::ViewportCommand::Maximized(!max));
-            }
+            window_drag(ui, Rect::from_min_size(r.min, vec2(r.width(), title_h)));
         }
         if tb_h > 0.0 {
             let row = Rect::from_min_size(pos2(r.left(), r.top() + title_h), vec2(r.width(), tb_h));
