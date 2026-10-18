@@ -236,7 +236,7 @@ pub(super) fn paint(pen: &Pen, icon: Icon) {
 }
 
 /// A small linear dimension: extension lines from `y1` up to `y0`, dimension line at `dy`.
-fn dim(pen: &Pen, x0: f32, x1: f32, dy: f32, y0: f32, y1: f32) {
+pub(super) fn dim(pen: &Pen, x0: f32, x1: f32, dy: f32, y0: f32, y1: f32) {
     let a = pen.acc;
     pen.la(x0, y1, x0, y0);
     pen.la(x1, y1, x1, y0);

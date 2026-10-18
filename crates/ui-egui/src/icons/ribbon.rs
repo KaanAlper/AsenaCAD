@@ -7,6 +7,7 @@
 //! layer stack, the edit tools add a pencil, the style tools a brush, the clipboard tools a badge
 //! over the clipboard.
 
+mod annotate;
 mod draw;
 mod insert;
 mod panels;
@@ -24,7 +25,7 @@ const GREEN: Color32 = Color32::from_rgb(0x6f, 0xe0, 0x6f);
 /// Paint one of the ribbon icons `icons::paint` hands over: each tab's module paints its own
 /// and says false for the others; the Home panel tools come last.
 pub(super) fn paint(pen: &Pen, icon: Icon) {
-    if !(draw::paint(pen, icon) || insert::paint(pen, icon)) {
+    if !(draw::paint(pen, icon) || insert::paint(pen, icon) || annotate::paint(pen, icon)) {
         panels::paint(pen, icon);
     }
 }

@@ -273,6 +273,31 @@ pub enum Icon {
     DataExtract,
     GeoMap,
     GeoFile,
+    // Annotate tab tools, drawn in `icons/ribbon/annotate.rs`.
+    CheckSpelling,
+    TextAlign,
+    Justify,
+    ScaleText,
+    DimBreak,
+    DimSpace,
+    DimJogLine,
+    DimInspect,
+    DimUpdate,
+    DimReassociate,
+    Tolerance,
+    DimOblique,
+    DimTextAngle,
+    DimTextLeft,
+    DimTextCenter,
+    DimTextRight,
+    DimOverride,
+    CenterMark,
+    Centerline,
+    AddScale,
+    DeleteScale,
+    ScaleList,
+    AddDeleteScales,
+    SyncScales,
     AutoScale,
     AnnoMonitor,
     Isolate,
@@ -925,7 +950,10 @@ fn paint_pen(pen: &Pen, icon: Icon) {
         | GroupManager | GroupBox | MeasureRadius | MeasureAngle | Volume | SelectAll | QuickCalc | IdPoint | PointStyle | Paste | PasteBlock
         | PasteHyperlink | PasteOrig | PasteSpecial | Cut | CopyClip | ViewBase | SectionViewStyle | DetailViewStyle | WriteBlock | XClip
         | UnderlayAdjust | UnderlayLayers | RefEdit | XrefFade | PdfImport | DgnImport | RecognizeShx | ShxSettings | CombineText | Field
-        | UpdateFields | OleObject | Hyperlink | DataLink | DataDownload | DataUpload | DataExtract | GeoMap | GeoFile => ribbon::paint(pen, icon),
+        | UpdateFields | OleObject | Hyperlink | DataLink | DataDownload | DataUpload | DataExtract | GeoMap | GeoFile | CheckSpelling
+        | TextAlign | Justify | ScaleText | DimBreak | DimSpace | DimJogLine | DimInspect | DimUpdate | DimReassociate | Tolerance | DimOblique
+        | DimTextAngle | DimTextLeft | DimTextCenter | DimTextRight | DimOverride | CenterMark | Centerline | AddScale | DeleteScale | ScaleList
+        | AddDeleteScales | SyncScales => ribbon::paint(pen, icon),
         AutoScale | AnnoMonitor | Isolate | CleanScreen | SelCycling | Osnap3d | DynUcs | SelFilter | Gizmo | GraphicsPerf | Units | Wrench
         | Prompt | NavWheel | ShowMotion | VpMinimize | VpRestore | ZoomIn | ZoomOut | ZoomAll | ZoomPrevious | ZoomRealtime => {
             shell::paint(pen, icon)

@@ -71,6 +71,8 @@ const HEADER: &[(&str, Kind, Def)] = &[
     ("SPLINESEGS", Kind::Int(-32768, 32767), Def::Int(8)),
     ("SPLKNOTS", Kind::Choice(&[0, 1, 2]), Def::Int(0)),
     ("TEXTFILL", Kind::Choice(&[0, 1]), Def::Int(1)),
+    // The height TEXT and MTEXT start with (the ribbon's Annotation Text Height).
+    ("TEXTSIZE", Kind::Real { min: 0.0, strict: true }, Def::Units(0.2, 2.5)),
     ("TRIMEXTENDMODE", Kind::Choice(&[0, 1]), Def::Int(1)),
     ("TRIMMODE", Kind::Choice(&[0, 1]), Def::Int(1)),
     ("WIPEOUTFRAME", Kind::Choice(&[0, 1, 2]), Def::Int(1)),

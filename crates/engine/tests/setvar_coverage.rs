@@ -33,6 +33,7 @@ fn defaults_are_the_ones_the_commands_use() {
         ("CPLOTSTYLE", json!("ByLayer")),
         ("TRANSPARENCYDISPLAY", json!(1)),
         ("PLOTTRANSPARENCYOVERRIDE", json!(1)),
+        ("TEXTSIZE", json!(0.2)),
     ] {
         assert_eq!(getvar(&mut s, name), v, "{name}");
     }
@@ -64,6 +65,9 @@ fn values_reach_the_commands() {
     assert!(setvar(&mut s, "INSNAME", json!("Valve")));
     assert!(setvar(&mut s, "INSNAME", json!(".")));
     assert_eq!(getvar(&mut s, "INSNAME"), json!(""));
+    // The text height TEXT and MTEXT start with (the ribbon's Annotation Text Height).
+    assert!(setvar(&mut s, "TEXTSIZE", json!(3.5)));
+    assert_eq!(s.doc().unwrap().header.f64("TEXTSIZE", 0.0), 3.5);
 }
 
 #[test]
@@ -75,6 +79,8 @@ fn bad_values_and_unknown_names_are_refused() {
         ("TRIMMODE", json!(3)),
         ("LWDEFAULT", json!(26)),
         ("HPSCALE", json!(0)),
+        ("TEXTSIZE", json!(0)),
+        ("TEXTSIZE", json!(-2.5)),
         ("HPNAME", json!("NO-SUCH-PATTERN")),
         ("DONUTOD", json!(0)),
         ("CIRCLERAD", json!(-1)),

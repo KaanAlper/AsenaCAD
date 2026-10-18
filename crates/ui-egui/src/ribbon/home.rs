@@ -47,7 +47,7 @@ const ELLIPSE: &[Entry] = &[
 
 const HATCH: &[Entry] = &[e(Icon::Hatch, "Hatch", "hatch"), e(Icon::Gradient, "Gradient", "gradient"), e(Icon::Boundary, "Boundary", "boundary")];
 
-const REVCLOUD: &[Entry] = &[
+pub(super) const REVCLOUD: &[Entry] = &[
     e(Icon::RevCloud, "Rectangular", "revcloud"),
     e(Icon::RevCloudPolygonal, "Polygonal", "revcloud.polygonal"),
     e(Icon::RevCloudFreehand, "Freehand", "revcloud.freehand"),

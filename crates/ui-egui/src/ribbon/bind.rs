@@ -96,6 +96,11 @@ fn current(app: &CadApp, kind: Combo) -> (String, bool) {
         // FRAME and UOSNAP aren't modelled yet: AutoCAD's defaults, shown disabled.
         Combo::XrefFrames => (crate::tl!("*Frames vary*").to_string(), false),
         Combo::UnderlaySnap => (crate::tl!("Snap to Underlays ON").to_string(), false),
+        Combo::FindText => (String::new(), true),
+        Combo::TextHeight => (height_text(h.f64("TEXTSIZE", 0.2)), true),
+        // TEXTLAYER, DIMLAYER, CENTERLAYER and the multileader layer aren't modelled yet: new
+        // annotations go on the current layer, which is what "Use Current" means.
+        Combo::TextLayer | Combo::DimLayer | Combo::CenterLayer | Combo::MLeaderLayer => (crate::tl!("Use Current").to_string(), false),
     }
 }
 
@@ -132,12 +137,76 @@ fn choices(app: &CadApp, kind: Combo) -> Vec<Choice> {
             })
         }
         Combo::AttributeDisplay => ATTMODES.iter().map(|(_, l, k)| (crate::i18n::t(l).to_string(), "attdisp", json!({ "mode": k }))).collect(),
-        Combo::Transparency | Combo::SectionViewStyle | Combo::DetailViewStyle | Combo::XrefFrames | Combo::UnderlaySnap => Vec::new(),
+        Combo::Transparency
+        | Combo::SectionViewStyle
+        | Combo::DetailViewStyle
+        | Combo::XrefFrames
+        | Combo::UnderlaySnap
+        | Combo::FindText
+        | Combo::TextHeight
+        | Combo::TextLayer
+        | Combo::DimLayer
+        | Combo::CenterLayer
+        | Combo::MLeaderLayer => Vec::new(),
     }
+}
+
+/// A text height as AutoCAD's box shows it: up to four decimals, no trailing zeros ("2.5").
+fn height_text(v: f64) -> String {
+    let text = format!("{v:.4}");
+    let text = text.trim_end_matches('0').trim_end_matches('.');
+    if text.is_empty() || text == "-" { "0".to_string() } else { text.to_string() }
+}
+
+/// The editable boxes: Find Text (Enter finds the typed text with FIND, which selects the
+/// objects it is in) and Annotation Text Height (Enter sets TEXTSIZE). While it isn't being
+/// edited, the height box shows the drawing's value.
+fn text_field(ui: &mut Ui, app: &mut CadApp, kind: Combo, width: f32) -> Response {
+    let label = crate::i18n::t(kind.label());
+    let id = egui::Id::new(("ribbon-field", kind));
+    let buffer = id.with("text");
+    let (value, _) = current(app, kind);
+    let focused = ui.memory(|m| m.has_focus(id));
+    let mut text = match kind {
+        Combo::TextHeight if !focused => value,
+        _ => ui.data(|d| d.get_temp::<String>(buffer)).unwrap_or_default(),
+    };
+    let enabled = app.session.doc().is_ok();
+    let hint = if kind == Combo::FindText { crate::tl!("Find text") } else { "" };
+    let edit = egui::TextEdit::singleline(&mut text).id(id).hint_text(hint);
+    let resp = ui.add_enabled_ui(enabled, |ui| ui.add_sized(egui::vec2(width, ui.available_height()), edit)).inner;
+    let entered = resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
+    resp.widget_info(|| {
+        let mut info = WidgetInfo::labeled(WidgetType::TextEdit, resp.enabled(), label);
+        info.current_text_value = Some(text.clone());
+        info
+    });
+    crate::control::record_widget(ui, &resp, label, "textbox", None);
+    let typed = text.trim().to_string();
+    ui.data_mut(|d| d.insert_temp(buffer, text));
+    if entered {
+        // Errors are echoed to the command history by `run`; a height that isn't a positive
+        // number is left alone and the box shows the drawing's value again.
+        match kind {
+            Combo::FindText if !typed.is_empty() => {
+                let _ = app.run("find", json!({ "find": typed }));
+            }
+            Combo::TextHeight => {
+                if let Some(v) = typed.parse::<f64>().ok().filter(|v| v.is_finite() && *v > 0.0) {
+                    let _ = app.run("setvar", json!({ "name": "TEXTSIZE", "value": v }));
+                }
+            }
+            _ => {}
+        }
+    }
+    resp.on_hover_text(label)
 }
 
 /// A combo box of `width` showing the current value of `kind`; choosing an entry runs its command.
 pub fn combo(ui: &mut Ui, app: &mut CadApp, kind: Combo, width: f32) -> Response {
+    if matches!(kind, Combo::FindText | Combo::TextHeight) {
+        return text_field(ui, app, kind, width);
+    }
     let (current, editable) = current(app, kind);
     let label = crate::i18n::t(kind.label());
     let mut picked = None;

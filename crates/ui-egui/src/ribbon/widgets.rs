@@ -23,8 +23,10 @@ const LARGE_ICON: f32 = 32.0;
 const SMALL_ICON: f32 = 16.0;
 /// Icon-only small buttons are this wide.
 const SMALL_W: f32 = 24.0;
-/// What a large split's ▾ adds to its two-line label's last line: the gap and the ▾.
-const LARGE_SPLIT_CHEVRON: f32 = 20.0;
+/// A large split with a two-line label: room either side of its widest line, and what its ▾
+/// adds to its last line (the gap and the ▾).
+const LARGE_SPLIT_PAD: f32 = 12.0;
+const LARGE_SPLIT_CHEVRON: f32 = 16.0;
 /// The lower part of a large split button that opens its menu (label and ▾).
 const LARGE_SPLIT_ARROW_H: f32 = 35.0;
 /// The ▾ part of a small split button.
@@ -153,15 +155,19 @@ fn paint_large(ui: &Ui, rect: Rect, icon: Icon, label: &str, enabled: bool, chev
     let top = rect.top() + 4.0 + LARGE_ICON + 3.0;
     let bottom = top + galley.size().y;
     // Centre-aligned rows are laid out around x = 0. Under a one-line label the ▾ goes below
-    // it; a two-line label ("Detect and / Convert") has it right of its last line.
-    let chevron_at = match galley.rows.as_slice() {
-        [_, .., last] => {
+    // it; a two-line label ("Detect and / Convert") has it right of its last line, and moves
+    // the label left as far as the ▾ needs room in the button.
+    let (shift, chevron_at) = match galley.rows.as_slice() {
+        [_, .., last] if chevron => {
             let row = last.rect();
-            pos2((rect.center().x + row.right() + 7.0).min(rect.right() - 5.0), top + row.center().y)
+            let at = rect.center().x + row.right() + 7.0;
+            let room = ((rect.width() - galley.size().x) / 2.0).max(0.0);
+            let shift = (at + 5.0 - rect.right()).clamp(0.0, room);
+            (shift, pos2((at - shift).min(rect.right() - 5.0), top + row.center().y))
         }
-        _ => pos2(rect.center().x, (bottom + 5.0).min(rect.bottom() - 5.0)),
+        _ => (0.0, pos2(rect.center().x, (bottom + 5.0).min(rect.bottom() - 5.0))),
     };
-    ui.painter().galley(pos2(rect.center().x, top), galley, text_color(enabled));
+    ui.painter().galley(pos2(rect.center().x - shift, top), galley, text_color(enabled));
     if chevron {
         paint_chevron(ui, chevron_at, enabled);
     }
@@ -174,15 +180,14 @@ fn large_width(ui: &Ui, label: &str) -> f32 {
     (large_label(ui, label, true).size().x + 6.0).max(LARGE_ICON + 10.0)
 }
 
-/// A large split button's width: a two-line label also needs room for the ▾ right of its last
-/// line ("PDF / Import ▾", "Set / Location ▾").
+/// A large split button's width. With a two-line label AutoCAD's button is wider than the
+/// label ("Revision / Cloud ▾", "Set / Location ▾") and its ▾ sits right of the last line.
 fn large_split_width(ui: &Ui, label: &str) -> f32 {
     let galley = large_label(ui, label, true);
-    let last = match galley.rows.as_slice() {
-        [_, .., last] => last.rect().width() + LARGE_SPLIT_CHEVRON,
-        _ => 0.0,
-    };
-    large_width(ui, label).max(last)
+    match galley.rows.as_slice() {
+        [_, .., last] => (galley.size().x + LARGE_SPLIT_PAD).max(last.rect().width() + LARGE_SPLIT_CHEVRON).max(LARGE_ICON + 10.0),
+        _ => large_width(ui, label),
+    }
 }
 
 /// Paint a small face (16 px icon, optionally the label right of it) into `rect`.

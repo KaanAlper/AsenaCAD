@@ -50,6 +50,16 @@ pub enum Combo {
     XrefFrames,
     /// Whether object snaps find points on underlays (UOSNAP).
     UnderlaySnap,
+    /// A text field: Enter finds the typed text in the drawing (FIND).
+    FindText,
+    /// An editable box: the height new text starts with (TEXTSIZE).
+    TextHeight,
+    /// The layer new text, dimensions, centerlines and multileaders go on (AutoCAD's "Use
+    /// Current" or a layer).
+    TextLayer,
+    DimLayer,
+    CenterLayer,
+    MLeaderLayer,
 }
 
 impl Combo {
@@ -72,6 +82,12 @@ impl Combo {
             Self::DetailViewStyle => "Detail View Style",
             Self::XrefFrames => "Frames",
             Self::UnderlaySnap => "Snap to Underlays",
+            Self::FindText => "Find Text",
+            Self::TextHeight => "Annotation Text Height",
+            Self::TextLayer => "Text Layer Gallery",
+            Self::DimLayer => "Dim Layer Gallery",
+            Self::CenterLayer => "Center Layer Gallery",
+            Self::MLeaderLayer => "Mleader Layer Gallery",
         }
     }
 }
@@ -182,7 +198,7 @@ pub fn tabs() -> &'static [Tab] {
 const TABS: &[Tab] = &[
     crate::ribbon::home::HOME,
     crate::ribbon::insert::INSERT,
-    unbuilt("Annotate"),
+    crate::ribbon::annotate::ANNOTATE,
     unbuilt("Parametric"),
     unbuilt("View"),
     unbuilt("Manage"),
@@ -293,6 +309,11 @@ mod tests {
         "datalinkupdate.write",    // Linking & Extraction ▸ Upload to Source
         "geographiclocation",      // Location ▸ Set Location ▸ From Map
         "geographiclocation.file", // Location ▸ Set Location ▸ From File
+        // ---- Annotate ----
+        "spell",       // Text ▸ Check Spelling
+        "textalign",   // Text ▸ Text Align
+        "justifytext", // Text ▸ Justify
+        "scaletext",   // Text ▸ Scale (slide-out)
     ];
 
     #[test]
@@ -328,7 +349,7 @@ mod tests {
     fn the_tab_row_has_autocads_nine_tabs_in_order() {
         let labels: Vec<_> = tabs().iter().map(|t| t.label).collect();
         assert_eq!(labels, ["Home", "Insert", "Annotate", "Parametric", "View", "Manage", "Output", "Collaborate", "Express Tools"]);
-        assert!(tabs()[..2].iter().all(|t| !t.panels.is_empty()), "Home and Insert are built");
+        assert!(tabs()[..3].iter().all(|t| !t.panels.is_empty()), "Home, Insert and Annotate are built");
         assert!(is_tab("Express Tools") && !is_tab("Tool Sets") && !is_tab(""));
     }
 

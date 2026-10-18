@@ -305,3 +305,123 @@ fn insert_is_as_wide_as_autocads() {
         ],
     );
 }
+
+// ---- Annotate ----
+
+const DIM_LINEAR: &[&str] = &["Linear", "Aligned", "Angular", "---", "Arc Length", "Radius", "Diameter", "---", "Jogged", "Ordinate"];
+
+#[test]
+fn annotate_matches_autocad() {
+    check_tab(
+        "Annotate",
+        &[
+            WantPanel {
+                label: "Text",
+                items: &[
+                    sp("Multiline Text", "large", 0, &["Multiline Text", "Single Line"]),
+                    b("Check Spelling", "small", 1),
+                    b("Text Align", "small", 2),
+                    b("Justify", "small", 3),
+                    cb("Text Style", 1),
+                    cb("Find Text", 2),
+                    cb("Annotation Text Height", 3),
+                ],
+                slideout: &[b("Scale", "small+label", 1), cb("Text Layer Gallery", 2)],
+                launcher: Some("style"),
+            },
+            WantPanel {
+                label: "Dimensions",
+                items: &[
+                    b("Dimension", "large", 0),
+                    cb("Dimension Style", 1),
+                    b("Break", "small", 1),
+                    b("Adjust Space", "small", 1),
+                    b("Jog Line", "small", 1),
+                    cb("Dim Layer Gallery", 2),
+                    b("Inspect", "small", 2),
+                    b("Update", "small", 2),
+                    b("Reassociate", "small", 2),
+                    sp("Linear", "small+label", 3, DIM_LINEAR),
+                    b("Quick", "small+label", 3),
+                    sp("Continue", "small+label", 3, &["Continue", "Baseline"]),
+                ],
+                slideout: &[
+                    b("Tolerance", "small", 1),
+                    b("Oblique", "small", 1),
+                    b("Text Angle", "small", 1),
+                    b("Left Justify", "small", 1),
+                    b("Center Justify", "small", 1),
+                    b("Right Justify", "small", 1),
+                    b("Override", "small", 1),
+                ],
+                launcher: Some("dimstyle"),
+            },
+            WantPanel {
+                label: "Centerlines",
+                items: &[b("Center Mark", "large", 0), b("Centerline", "large", 0)],
+                slideout: &[cb("Center Layer Gallery", 1)],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Leaders",
+                items: &[
+                    b("Multileader", "large", 0),
+                    cb("Multileader Style", 1),
+                    cb("Mleader Layer Gallery", 2),
+                    b("Align", "small", 3),
+                    b("Collect", "small", 3),
+                    b("Add Leader", "small", 3),
+                    b("Remove Leader", "small", 3),
+                ],
+                slideout: &[],
+                launcher: Some("mleaderstyle"),
+            },
+            WantPanel {
+                label: "Tables",
+                items: &[
+                    b("Table", "large", 0),
+                    cb("Table Style", 1),
+                    b("Download from Source", "small", 2),
+                    b("Extract Data", "small+label", 2),
+                    b("Upload to Source", "small", 3),
+                    b("Link Data", "small+label", 3),
+                ],
+                slideout: &[],
+                launcher: Some("tablestyle"),
+            },
+            WantPanel {
+                label: "Markup",
+                items: &[b("Wipeout", "large", 0), sp("Revision Cloud", "large", 0, &["Rectangular", "Polygonal", "Freehand"])],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Annotation Scaling",
+                items: &[
+                    sp("Add Current Scale", "large", 0, &["Add Current Scale", "Delete Current Scale"]),
+                    b("Scale List", "small+label", 1),
+                    b("Add/Delete Scales", "small+label", 2),
+                    b("Sync Scale Positions", "small+label", 3),
+                ],
+                slideout: &[],
+                launcher: None,
+            },
+        ],
+    );
+}
+
+#[test]
+fn annotate_is_as_wide_as_autocads() {
+    check_widths(
+        "Annotate",
+        &[
+            ("Text", 300.0),
+            ("Dimensions", 341.0),
+            ("Centerlines", 106.0),
+            ("Leaders", 272.0),
+            ("Tables", 244.0),
+            ("Markup", 122.0),
+            ("Annotation Scaling", 234.0),
+        ],
+    );
+}
