@@ -967,7 +967,7 @@
 	Specify center point of array	Indica el centro de la matriz
 	Specify center point of base	Indica el centro de la base
 	Specify corner of viewport	Indica una esquina de la ventana gráfica
-	Specify corner of window, enter a scale factor (nX or nXP)	Indica una esquina de ventana o un factor de escala (nX o nXP)
+	Specify corner of window, enter a scale factor (nX or nXP),	Indica una esquina de ventana o un factor de escala (nX o nXP),
 	Specify diameter of circle	Indica el diámetro del círculo
 	Specify dimension arc line location	Indica la posición del arco de cota
 	Specify dimension line location	Indica la posición de la línea de cota

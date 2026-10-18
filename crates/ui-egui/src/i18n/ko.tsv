@@ -882,7 +882,7 @@
 	Specify center point of array	배열 중심점 지정
 	Specify center point of base	밑면 중심점 지정
 	Specify corner of viewport	뷰포트 구석 지정
-	Specify corner of window, enter a scale factor (nX or nXP)	창 구석 지정, 축척 비율 입력(nX 또는 nXP)
+	Specify corner of window, enter a scale factor (nX or nXP),	창 구석 지정, 축척 비율 입력(nX 또는 nXP),
 	Specify diameter of circle	원 지름 지정
 	Specify dimension arc line location	치수 호선 위치 지정
 	Specify dimension line location	치수선 위치 지정
