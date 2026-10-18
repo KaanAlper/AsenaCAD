@@ -128,7 +128,7 @@ fn read(bytes: &[u8], _name: &str) -> Result<cadcraft_engine::doc::Drawing, Stri
 fn opening_a_drawing_with_authoring_elements_offers_the_block_editor() {
     use cadcraft_engine::cmd::file::{IoHooks, set_io};
     set_io(IoHooks { read, write: |_, _| Ok(Vec::new()), plot: None });
-    let dir = std::env::temp_dir().join(format!("cadcraft-authoring-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-authoring-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let symbol = dir.join("Symbol.dxf");
     std::fs::write(&symbol, "authoring").unwrap();

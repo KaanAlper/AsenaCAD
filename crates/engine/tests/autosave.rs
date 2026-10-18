@@ -105,7 +105,7 @@ fn file_names_round_trip() {
 
 #[test]
 fn files_of_other_programs_in_the_autosave_folder_are_never_deleted() {
-    // SAVEFILEPATH may point at a project folder: only CADCraft's own lock and autosave names
+    // SAVEFILEPATH may point at a project folder: only AsenaCAD's own lock and autosave names
     // (built from an instance id) are ever pruned or discarded.
     let dir = temp_dir("foreign");
     let old = SystemTime::now() - Duration::from_secs(3600);
@@ -129,7 +129,7 @@ fn files_of_other_programs_in_the_autosave_folder_are_never_deleted() {
 }
 
 fn temp_dir(tag: &str) -> std::path::PathBuf {
-    let d = std::env::temp_dir().join(format!("cadcraft-autosave-{tag}-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("asenacad-autosave-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     d

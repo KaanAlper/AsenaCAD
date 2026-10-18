@@ -1,6 +1,6 @@
 //! OPTIONS: the user's preferences, in one dialog and one JSON form.
 //!
-//! Typed (OPTIONS, OP), chosen from Tools ▸ Options… or, on macOS, CADCraft ▸ Settings… (⌘,),
+//! Typed (OPTIONS, OP), chosen from Tools ▸ Options… or, on macOS, AsenaCAD ▸ Settings… (⌘,),
 //! OPTIONS opens the Options dialog ([`dialog`]). A JSON call never opens it: `options {}` reports
 //! every preference and `options {"PICKBOX": 5, "modelBackground": "#ffffff"}` changes some (all
 //! or nothing; `"reset": true` restores the defaults first). Upper-case names are the engine's
@@ -41,7 +41,7 @@ use crate::animation::AnimationPref;
 use crate::theme::{self, ThemePref};
 
 /// The host storage key for [`CadApp::profile_json`].
-pub const PROFILE_KEY: &str = "cadcraft.profile";
+pub const PROFILE_KEY: &str = "asenacad.profile";
 
 /// The largest saved profile [`CadApp::load_profile`] reads.
 const MAX_PROFILE_BYTES: usize = 64 * 1024;

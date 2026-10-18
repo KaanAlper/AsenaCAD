@@ -91,7 +91,7 @@ fn part_grips_move_parts() {
 
 #[test]
 fn data_links_fill_and_update() {
-    let dir = std::env::temp_dir().join(format!("cadcraft-datalink-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-datalink-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("parts.csv");
     std::fs::write(&path, "Part,Qty,Note\r\nbolt,4,\"M6, zinc\"\nnut,8,\n").unwrap();
@@ -133,7 +133,7 @@ fn data_links_saved_in_a_drawing_are_read_beside_it_or_on_this_computer_only() {
         write: |d, name| cadcraft_io::write(d, name).map_err(|e| e.to_string()),
         plot: None,
     });
-    let base = std::env::temp_dir().join(format!("cadcraft-datalink-saved-{}", std::process::id()));
+    let base = std::env::temp_dir().join(format!("asenacad-datalink-saved-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&base);
     let (dir, elsewhere) = (base.join("plans"), base.join("elsewhere"));
     std::fs::create_dir_all(&dir).unwrap();

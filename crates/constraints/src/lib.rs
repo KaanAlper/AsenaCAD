@@ -1,4 +1,4 @@
-//! CADCraft parametric solver.
+//! AsenaCAD parametric solver.
 //!
 //! Maps constrained lines, arcs, circles, points, polyline vertices, ellipses, splines and block
 //! references to a parameter vector

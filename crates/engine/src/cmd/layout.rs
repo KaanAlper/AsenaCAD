@@ -826,7 +826,7 @@ fn run_plot(s: &mut Session, p: &Value, cmd: &str) -> Result<Value> {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let path = _path;
-                let tmp = format!("{path}.cadcraft-tmp");
+                let tmp = format!("{path}.asenacad-tmp");
                 std::fs::write(&tmp, &bytes).map_err(|e| bad(cmd, format!("{path}: {e}")))?;
                 std::fs::rename(&tmp, path).map_err(|e| bad(cmd, format!("{path}: {e}")))?;
                 Ok(json!({ "path": path, "bytes": bytes.len(), "layout": layout, "pages": pages }))
@@ -1106,7 +1106,7 @@ mod tests {
         assert!(s.execute("plot", &json!({"layout": "Model", "scale": -1})).is_err());
         #[cfg(not(target_arch = "wasm32"))]
         {
-            let path = std::env::temp_dir().join(format!("cadcraft-plot-test-{}.pdf", std::process::id()));
+            let path = std::env::temp_dir().join(format!("asenacad-plot-test-{}.pdf", std::process::id()));
             let ps = path.to_string_lossy().to_string();
             let r = s.execute("plot", &json!({"path": ps})).unwrap();
             assert!(r["bytes"].as_u64().unwrap() > 0);

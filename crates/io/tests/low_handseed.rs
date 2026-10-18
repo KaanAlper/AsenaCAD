@@ -1,4 +1,4 @@
-//! Another program's file can name a $HANDSEED below handles it uses. Entities CADCraft makes
+//! Another program's file can name a $HANDSEED below handles it uses. Entities AsenaCAD makes
 //! while reading (the faces a polyface mesh becomes) must not take handles that records further
 //! on still have: a DWG keeps one object per handle, so the duplicates were lost on save.
 #![cfg(not(target_arch = "wasm32"))]

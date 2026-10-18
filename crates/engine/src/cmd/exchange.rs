@@ -64,7 +64,7 @@ pub fn specs() -> Vec<CommandSpec> {
         })
         .params("not available yet")
         .noundo(),
-        CommandSpec::new("3dorbit", "Orbit", |_, _| Err(EngineError::Other("3DORBIT is not available yet: CADCraft draws in 2D (plan view) only".into())))
+        CommandSpec::new("3dorbit", "Orbit", |_, _| Err(EngineError::Other("3DORBIT is not available yet: AsenaCAD draws in 2D (plan view) only".into())))
             .alias(&["3do", "orbit"])
             .params("not available yet")
             .noundo(),
@@ -79,7 +79,7 @@ fn extension(path: &str) -> String {
 fn write_file(cmd: &str, path: &str, bytes: &[u8]) -> Result<()> {
     #[cfg(not(target_arch = "wasm32"))]
     {
-        let tmp = format!("{path}.cadcraft-tmp");
+        let tmp = format!("{path}.asenacad-tmp");
         std::fs::write(&tmp, bytes).map_err(|e| bad(cmd, format!("{path}: {e}")))?;
         std::fs::rename(&tmp, path).map_err(|e| bad(cmd, format!("{path}: {e}")))?;
         Ok(())
@@ -571,7 +571,7 @@ mod tests {
     }
 
     fn temp(name: &str) -> std::path::PathBuf {
-        std::env::temp_dir().join(format!("cadcraft-exchange-{}-{name}", std::process::id()))
+        std::env::temp_dir().join(format!("asenacad-exchange-{}-{name}", std::process::id()))
     }
 
     #[test]

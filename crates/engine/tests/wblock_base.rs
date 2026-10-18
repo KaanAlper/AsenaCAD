@@ -19,7 +19,7 @@ fn write(d: &Drawing, _path: &str) -> Result<Vec<u8>, String> {
 }
 
 fn written(s: &mut Session, p: serde_json::Value) -> String {
-    let path = std::env::temp_dir().join(format!("cadcraft-wblock-base-{}.dxf", std::process::id()));
+    let path = std::env::temp_dir().join(format!("asenacad-wblock-base-{}.dxf", std::process::id()));
     let mut p = p;
     p["path"] = json!(path.to_string_lossy());
     s.execute("wblock", &p).unwrap();

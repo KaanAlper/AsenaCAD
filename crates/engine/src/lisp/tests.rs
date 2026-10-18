@@ -417,7 +417,7 @@ fn a_leading_newline_ends_the_command_line_instead_of_adding_an_empty_one() {
 
 #[test]
 fn startup_files_load_from_the_support_folder() {
-    let dir = std::env::temp_dir().join(format!("cadcraft-lisp-startup-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-lisp-startup-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("acad.lsp"), "(defun c:fromacad () (princ \"acad\") (princ))").unwrap();

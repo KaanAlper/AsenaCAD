@@ -1,4 +1,4 @@
-//! The CADCraft drawing database.
+//! The AsenaCAD drawing database.
 //!
 //! A [`Drawing`] holds the header variables, symbol tables (layers, linetypes, styles), block
 //! definitions, model space and paper-space layouts. Entity collections are copy-on-write
@@ -35,7 +35,7 @@ pub use refedit::{RefEdit, WorkItem};
 pub use store::EntityStore;
 pub use tables::*;
 
-/// File data CADCraft doesn't model, kept for saving (#528).
+/// File data AsenaCAD doesn't model, kept for saving (#528).
 pub mod dynblock;
 pub mod foreign;
 
@@ -85,7 +85,7 @@ impl Space {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Drawing {
     pub header: Header,
-    /// File data CADCraft does not model, written back on save.
+    /// File data AsenaCAD does not model, written back on save.
     pub foreign: std::sync::Arc<foreign::Foreign>,
     pub layers: Vec<Layer>,
     pub linetypes: Vec<Linetype>,

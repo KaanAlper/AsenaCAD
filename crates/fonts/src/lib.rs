@@ -1,7 +1,7 @@
-//! CADCraft text layout.
+//! AsenaCAD text layout.
 //!
 //! Turns TEXT and MTEXT into stroke polylines with the built-in single-stroke font
-//! ("CADCraft Stroke") or glyph outlines of installed TrueType fonts ([`ttf`]), with a
+//! ("AsenaCAD Stroke") or glyph outlines of installed TrueType fonts ([`ttf`]), with a
 //! per-character fallback to installed fonts for characters the chosen font lacks. Handles the
 //! `%%` control codes, alignment modes, width factor, obliquing, MTEXT inline formatting
 //! (paragraphs, stacking, height changes), word wrap and attachment points.
@@ -29,7 +29,18 @@ mod craft_fonts;
 pub use craft_fonts::{CRAFT_FONTS, CraftFont};
 
 /// Name of the built-in font.
-pub const BUILTIN_FONT: &str = "CADCraft Stroke";
+pub const BUILTIN_FONT: &str = "AsenaCAD Stroke";
+
+/// Earlier names of the built-in font, still found in drawings saved before the rename. They
+/// resolve to the built-in font but are never written: [`BUILTIN_FONT`] goes out instead.
+pub const LEGACY_BUILTIN_FONTS: &[&str] = &["CADCraft Stroke"];
+
+/// True when a text style font name means the built-in font: [`BUILTIN_FONT`] or one of
+/// [`LEGACY_BUILTIN_FONTS`], in any case, surrounding spaces ignored.
+pub fn is_builtin_font(name: &str) -> bool {
+    let n = name.trim();
+    n.eq_ignore_ascii_case(BUILTIN_FONT) || LEGACY_BUILTIN_FONTS.iter().any(|l| n.eq_ignore_ascii_case(l))
+}
 
 /// One laid-out run of text: strokes in local coordinates (baseline at y = 0, x from 0).
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -289,7 +300,7 @@ impl TextFont {
             return TextFont::Outline(f);
         }
         let n = name.trim();
-        if n.is_empty() || n.eq_ignore_ascii_case(BUILTIN_FONT) {
+        if n.is_empty() || is_builtin_font(n) {
             return TextFont::Stroke;
         }
         ttf::find(&ttf::font_alt()).map(TextFont::Outline).unwrap_or(TextFont::Stroke)
@@ -589,6 +600,18 @@ mod tests {
     }
 
     #[test]
+    fn cadcraft_era_font_name_is_the_builtin_font() {
+        for n in [BUILTIN_FONT, "CADCraft Stroke", " cadcraft stroke ", "CADCRAFT STROKE", "asenacad stroke"] {
+            assert!(is_builtin_font(n), "{n:?}");
+            assert!(matches!(TextFont::resolve(n), TextFont::Stroke), "{n:?}");
+            assert!(ttf::find(n).is_none(), "{n:?} is never looked up as TrueType");
+        }
+        for n in ["CADCraft", "Stroke", "Arial", "txt", ""] {
+            assert!(!is_builtin_font(n), "{n:?}");
+        }
+    }
+
+    #[test]
     fn control_codes() {
         let d: String = decode_controls("45%%d %%p0.1 %%c10 100%%%").iter().map(|x| x.0).collect();
         assert_eq!(d, "45° ±0.1 ⌀10 100%");
@@ -700,8 +723,8 @@ mod ttf_tests {
             assert!(crate::ttf::Face::new(arc.clone(), 3).is_none());
             assert!(!crate::ttf::Face { bytes: arc, index: u32::MAX }.has_glyph('a'));
         }
-        crate::ttf::register("cadcraft-hostile-test.ttc", ttc);
-        assert!(crate::ttf::find("cadcraft-hostile-test.ttc").is_none());
+        crate::ttf::register("asenacad-hostile-test.ttc", ttc);
+        assert!(crate::ttf::find("asenacad-hostile-test.ttc").is_none());
         let _ = crate::ttf::fallback_for('\u{4E2D}');
     }
 

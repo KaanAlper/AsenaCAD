@@ -401,7 +401,7 @@ fn save_as(s: &mut Session, cmd: &str, path: &str, opts: &SaveAs) -> Result<usiz
 fn store(path: &str, bytes: &[u8]) -> Result<()> {
     #[cfg(not(target_arch = "wasm32"))]
     {
-        let tmp = format!("{path}.cadcraft-tmp");
+        let tmp = format!("{path}.asenacad-tmp");
         std::fs::write(&tmp, bytes).map_err(|e| bad("save", format!("{path}: {e}")))?;
         std::fs::rename(&tmp, path).map_err(|e| bad("save", format!("{path}: {e}")))?;
         Ok(())
@@ -495,7 +495,7 @@ fn run_bytes(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(r)
 }
 
-/// Entities a DXF or DWG file doesn't keep: those of object types CADCraft doesn't model
+/// Entities a DXF or DWG file doesn't keep: those of object types AsenaCAD doesn't model
 /// (3DSOLID, MULTILEADER… read from other programs' files and kept in the drawing, but
 /// not written), counted by DXF type across model space, layouts and block definitions. Saved
 /// at the drawing's own version; see [`not_saved_as`].
@@ -631,7 +631,7 @@ mod tests {
     }
 
     fn temp_script(name: &str, text: &str) -> String {
-        let path = std::env::temp_dir().join(format!("cadcraft-script-{}-{name}", std::process::id()));
+        let path = std::env::temp_dir().join(format!("asenacad-script-{}-{name}", std::process::id()));
         std::fs::write(&path, text).unwrap();
         path.to_string_lossy().into_owned()
     }

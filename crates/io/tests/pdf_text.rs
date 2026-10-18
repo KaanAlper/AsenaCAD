@@ -146,8 +146,8 @@ fn test_font(fs_type: u16) -> Vec<u8> {
 fn fonts() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        cadcraft_fonts::ttf::register("cadcraft-pdf-test.ttf", test_font(0));
-        cadcraft_fonts::ttf::register("cadcraft-pdf-restricted.ttf", test_font(0x0002));
+        cadcraft_fonts::ttf::register("asenacad-pdf-test.ttf", test_font(0));
+        cadcraft_fonts::ttf::register("asenacad-pdf-restricted.ttf", test_font(0x0002));
     });
 }
 
@@ -176,8 +176,8 @@ fn text(d: &mut Drawing, space: &Space, style: &str, at: (f64, f64), value: &str
 fn drawing() -> Drawing {
     fonts();
     let mut d = Drawing::new_metric();
-    style(&mut d, "Real", "cadcraft-pdf-test.ttf");
-    style(&mut d, "Locked", "cadcraft-pdf-restricted.ttf");
+    style(&mut d, "Real", "asenacad-pdf-test.ttf");
+    style(&mut d, "Locked", "asenacad-pdf-restricted.ttf");
     d
 }
 

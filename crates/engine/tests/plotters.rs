@@ -37,8 +37,8 @@ fn plotted(r: Value) -> Value {
 fn manage_devices() {
     let mut s = session();
     let n = names(&mut s);
-    assert_eq!(n[..3], ["CADCraft PDF", "CADCraft PNG", "CADCraft SVG"], "built-in devices first");
-    let pdf = s.execute("plottermanager", &json!({"action": "get", "name": "cadcraft pdf"})).unwrap();
+    assert_eq!(n[..3], ["AsenaCAD PDF", "AsenaCAD PNG", "AsenaCAD SVG"], "built-in devices first");
+    let pdf = s.execute("plottermanager", &json!({"action": "get", "name": "asenacad pdf"})).unwrap();
     assert!(pdf["builtin"].as_bool().unwrap());
     let papers = pdf["papers"].as_array().unwrap();
     assert!(papers.iter().any(|p| p["name"] == "ISO B1 (707.00 x 1000.00 MM)"));
@@ -55,8 +55,8 @@ fn manage_devices() {
     assert_eq!(r["resolution"], 150);
     assert!(names(&mut s).contains(&"Office Raster".to_string()));
     assert!(s.execute("plottermanager", &json!({"action": "new", "name": "OFFICE RASTER"})).is_err(), "duplicate");
-    assert!(s.execute("plottermanager", &json!({"action": "set", "name": "CADCraft PDF", "resolution": 100})).is_err(), "built-ins are fixed");
-    assert!(s.execute("plottermanager", &json!({"action": "delete", "name": "CADCraft SVG"})).is_err());
+    assert!(s.execute("plottermanager", &json!({"action": "set", "name": "AsenaCAD PDF", "resolution": 100})).is_err(), "built-ins are fixed");
+    assert!(s.execute("plottermanager", &json!({"action": "delete", "name": "AsenaCAD SVG"})).is_err());
     let bad_margins = json!({"name": "x", "width": 100, "height": 100, "margins": [60, 0, 60, 0]});
     assert!(s.execute("plottermanager", &json!({"action": "set", "name": "Office Raster", "paper": bad_margins})).is_err());
 
@@ -90,7 +90,7 @@ fn page_setup_takes_a_device_and_its_papers() {
     assert!(got.iter().zip([10.0, 20.0, 190.0, 580.0]).all(|(a, b)| (a - b).abs() < 1e-9), "{got:?}");
 
     // Switching to a built-in device keeps a paper it has, else takes its default (A4).
-    s.execute("pagesetup", &json!({"layout": "Layout1", "device": "CADCraft PDF"})).unwrap();
+    s.execute("pagesetup", &json!({"layout": "Layout1", "device": "AsenaCAD PDF"})).unwrap();
     let page = s.doc().unwrap().layout("Layout1").unwrap().page.clone();
     assert_eq!((page.paper.as_str(), page.margins_mm), ("ISO A4 (210.00 x 297.00 MM)", [5.0; 4]));
     s.execute("pagesetup", &json!({"layout": "Layout1", "paper": "A3"})).unwrap();
@@ -189,4 +189,31 @@ fn plotwindow_keeps_the_picked_window_for_the_plot_dialog() {
     let r = s.execute("plotwindow", &json!({"p1": [0, 0], "p2": [3, 4]})).unwrap();
     assert_eq!(r["window"], json!([[0.0, 0.0], [3.0, 4.0]]));
     assert!(s.execute("plotwindow", &json!({"p1": [0, 0], "p2": [3, 0]})).is_err());
+}
+
+#[test]
+fn cadcraft_era_device_names_resolve_to_the_builtins() {
+    use cadcraft_doc::PlotOutput;
+    use cadcraft_engine::cmd::plotters::find_device;
+    let mut s = session();
+    for (old, new, output) in [
+        ("CADCraft PDF", "AsenaCAD PDF", PlotOutput::Pdf),
+        ("cadcraft png", "AsenaCAD PNG", PlotOutput::Png),
+        (" CADCRAFT SVG ", "AsenaCAD SVG", PlotOutput::Svg),
+    ] {
+        let dev = find_device(old).unwrap_or_else(|| panic!("{old} resolves"));
+        assert_eq!((dev.name.as_str(), dev.output), (new, output), "{old}");
+    }
+    // The old names are never listed, and a user device can't take one.
+    assert!(names(&mut s).iter().all(|n| !n.to_ascii_lowercase().contains("cadcraft")));
+    assert!(s.execute("plottermanager", &json!({"action": "new", "name": "CADCraft PDF"})).is_err());
+    assert!(s.execute("plottermanager", &json!({"action": "delete", "name": "CADCraft SVG"})).is_err(), "still a built-in");
+    // A page setup naming an old device takes the new name.
+    let r = s.execute("pagesetup", &json!({"layout": "Layout1", "device": "CADCraft PNG"})).unwrap();
+    assert_eq!(r["page"]["device"], "AsenaCAD PNG");
+    // A layout saved by CADCraft (its page setup still holds the old name) plots with that device.
+    let layout = s.doc_mut().unwrap().layouts.iter_mut().find(|l| l.name == "Layout1").unwrap();
+    layout.page.device = "CADCraft SVG".into();
+    let o = plotted(s.execute("plot", &json!({"layout": "Layout1"})).unwrap());
+    assert_eq!(o["output"], "svg");
 }

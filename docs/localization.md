@@ -3,7 +3,7 @@
 Choose **Edit → Interface Language** and select **Auto (system language)**, **English**,
 **Українська**, **Português (Brasil)**, **Deutsch**, **Español**, **Čeština** (Czech), **Русский**, **Français**, **简体中文**, **Italiano**, **한국어** (Korean), **Svenska** (Swedish), or **العربية** (Arabic).
 The interface updates without restarting, including the native macOS menus.
-The choice is saved with the other interface preferences (`cadcraft.prefs`, beside the theme):
+The choice is saved with the other interface preferences (`asenacad.prefs`, beside the theme):
 eframe storage on the desktop, browser local storage on the web. Installations without a saved
 choice use Auto.
 
@@ -83,7 +83,7 @@ Hangul can't be shown. This change does not fix platform IME issues or localize 
 The implementation follows the display-time catalog pattern used by
 [VectorCraft #205](https://github.com/storytold/vectorcraft/pull/205),
 [PdfCraft #106](https://github.com/storytold/pdfcraft/pull/106), and
-[FilmCraft #238](https://github.com/storytold/filmcraft/pull/238). Its code is local to CADCraft.
+[FilmCraft #238](https://github.com/storytold/filmcraft/pull/238). Its code is local to AsenaCAD.
 
 - `crates/ui-egui/src/i18n/*.tsv` are UTF-8 with three tab-separated columns:
   `context`, `English source`, and `translation`. Ordinary labels have an empty context.
@@ -113,4 +113,4 @@ The implementation follows the display-time catalog pattern used by
   `cargo xtask ci` runs the workspace quality gates.
 
 Translations are original work under `MIT OR Apache-2.0`, written from the meaning of
-CADCraft's English strings. Do not copy proprietary localization resources.
+AsenaCAD's English strings. Do not copy proprietary localization resources.

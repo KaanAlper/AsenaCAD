@@ -113,7 +113,7 @@ fn saving_closes_an_open_group() {
     s.execute("undo", &json!({ "mode": "begin" })).unwrap();
     circle(&mut s, 0.0);
     circle(&mut s, 2.0);
-    let path = std::env::temp_dir().join(format!("cadcraft-undo-group-{}.dxf", std::process::id()));
+    let path = std::env::temp_dir().join(format!("asenacad-undo-group-{}.dxf", std::process::id()));
     s.execute("saveas", &json!({ "path": path.to_string_lossy() })).unwrap();
     let _ = std::fs::remove_file(&path);
     assert_eq!(getvar(&mut s, "UNDOCTL").as_i64().unwrap() & 8, 0, "saving ends the group");

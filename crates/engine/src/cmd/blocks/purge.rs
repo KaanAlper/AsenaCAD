@@ -26,7 +26,7 @@ enum Kind {
     TextStyles,
     ZeroLength,
     EmptyText,
-    /// An object type CADCraft does not have: nothing to purge.
+    /// An object type AsenaCAD does not have: nothing to purge.
     Absent,
     All,
 }

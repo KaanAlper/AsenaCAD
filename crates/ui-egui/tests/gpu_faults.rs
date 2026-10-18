@@ -47,7 +47,7 @@ fn faults_are_recorded_autosaved_and_shown() {
     assert!(f.take().is_some_and(|g| g.lost && g.message == "driver reset"));
 
     set_io(IoHooks { read: |_, _| Ok(Drawing::new_metric()), write: |_, _| Ok(b"0\nEOF\n".to_vec()), plot: None });
-    let dir = std::env::temp_dir().join(format!("cadcraft-gpu-faults-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-gpu-faults-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let mut app = CadApp::new(Session::new(), Services::default());
     app.enable_autosave(&dir);

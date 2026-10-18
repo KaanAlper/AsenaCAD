@@ -1,6 +1,6 @@
 # AutoLISP
 
-CADCraft runs AutoLISP routines (`.lsp` files). What is here and what is not yet:
+AsenaCAD runs AutoLISP routines (`.lsp` files). What is here and what is not yet:
 [gaps.md](gaps.md) (E1).
 
 ## Loading and running
@@ -21,9 +21,9 @@ CADCraft runs AutoLISP routines (`.lsp` files). What is here and what is not yet
 
 ### At startup
 
-CADCraft loads LISP from its **support folder**, `support` in the settings folder (on Windows
-`%APPDATA%\CADCraft\support`, on macOS `~/Library/Application Support/CADCraft/support`, on
-Linux `~/.config/cadcraft/support`; created at first start):
+AsenaCAD loads LISP from its **support folder**, `support` in the settings folder (on Windows
+`%APPDATA%\AsenaCAD\support`, on macOS `~/Library/Application Support/AsenaCAD/support`, on
+Linux `~/.config/asenacad/support`; created at first start):
 
 - `acad.lsp` once per session, into the first drawing; with `ACADLSPASDOC` set to 1, into every
   drawing;
@@ -77,7 +77,7 @@ reached", malformed source is a reader error, and every built-in checks its argu
 - **Units:** `rtos angtos distof angtof`
 - **No-ops:** `vl-load-com gc redraw`; `ver`
 
-Entity lists use the DXF group codes of CADCraft's DXF files: what `entget` returns is what a
+Entity lists use the DXF group codes of AsenaCAD's DXF files: what `entget` returns is what a
 DXF file holds for the object, plus `-1` (its name) and `410` (its layout).
 
 ## Testing against the corpus
