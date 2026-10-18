@@ -102,6 +102,28 @@ pub(super) fn paint(pen: &Pen, icon: Icon) {
             pen.rect(5.0, 9.0, 10.0, 10.0, b);
             pen.poly(&[(9.0, 9.0), (9.0, 5.0), (19.0, 5.0), (19.0, 15.0), (15.0, 15.0)], false, b);
         }
+        // The zoom variants: a magnifier with what it does.
+        ZoomIn | ZoomOut | ZoomAll | ZoomPrevious | ZoomRealtime => {
+            pen.c(10.0, 10.0, 6.0, b);
+            pen.l(14.5, 14.5, 20.0, 20.0);
+            match icon {
+                ZoomIn => {
+                    pen.la(7.0, 10.0, 13.0, 10.0);
+                    pen.la(10.0, 7.0, 10.0, 13.0);
+                }
+                ZoomOut => pen.la(7.0, 10.0, 13.0, 10.0),
+                ZoomAll => pen.rect(7.5, 7.5, 5.0, 5.0, a),
+                ZoomPrevious => {
+                    pen.la(13.0, 10.0, 8.0, 10.0);
+                    pen.arrow_tip(7.0, 10.0, -1.0, 0.0, a);
+                }
+                _ => {
+                    pen.la(10.0, 8.0, 10.0, 12.0);
+                    pen.arrow_tip(10.0, 6.5, 0.0, -1.0, a);
+                    pen.arrow_tip(10.0, 13.5, 0.0, 1.0, a);
+                }
+            }
+        }
         _ => {}
     }
 }

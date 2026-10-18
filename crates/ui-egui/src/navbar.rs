@@ -34,19 +34,19 @@ const RESTORE: &str = "Restore Drawing";
 const CLOSE_DRAWING: &str = "Close Drawing";
 
 /// Zoom's variants, as the ▾ lists them: (label, command, keyword when the variant is an option
-/// of ZOOM itself).
-const ZOOMS: [(&str, &str, Option<&str>); 11] = [
-    ("Zoom Extents", "zoom.extents", None),
-    ("Zoom Window", "zoom.window", None),
-    ("Zoom Previous", "zoom.previous", None),
-    ("Zoom Realtime", "zoom.realtime", None),
-    ("Zoom All", "zoom.all", None),
-    ("Zoom Dynamic", "zoom.dynamic", None),
-    ("Zoom Scale", "zoom", Some("Scale")),
-    ("Zoom Center", "zoom", Some("Center")),
-    ("Zoom Object", "zoom.object", None),
-    ("Zoom In", "zoom.in", None),
-    ("Zoom Out", "zoom.out", None),
+/// of ZOOM itself, the face's glyph once chosen).
+const ZOOMS: [(&str, &str, Option<&str>, Icon); 11] = [
+    ("Zoom Extents", "zoom.extents", None, Icon::ZoomExtents),
+    ("Zoom Window", "zoom.window", None, Icon::ZoomWindow),
+    ("Zoom Previous", "zoom.previous", None, Icon::ZoomPrevious),
+    ("Zoom Realtime", "zoom.realtime", None, Icon::ZoomRealtime),
+    ("Zoom All", "zoom.all", None, Icon::ZoomAll),
+    ("Zoom Dynamic", "zoom.dynamic", None, Icon::ZoomExtents),
+    ("Zoom Scale", "zoom", Some("Scale"), Icon::ZoomExtents),
+    ("Zoom Center", "zoom", Some("Center"), Icon::ZoomExtents),
+    ("Zoom Object", "zoom.object", None, Icon::ZoomExtents),
+    ("Zoom In", "zoom.in", None, Icon::ZoomIn),
+    ("Zoom Out", "zoom.out", None, Icon::ZoomOut),
 ];
 const ORBITS: [(&str, &str); 3] = [("Orbit", "3dorbit"), ("Free Orbit", "3dforbit"), ("Continuous Orbit", "3dcorbit")];
 
@@ -120,7 +120,7 @@ pub fn show(app: &mut CadApp, ui: &mut egui::Ui, canvas: Rect) {
     p.rect_filled(strip, 5.0, t.navbar_bg);
     p.rect_stroke(strip, 5.0, Stroke::new(1.0, t.navbar_border), egui::StrokeKind::Inside);
     let zoom = ui.ctx().data(|d| d.get_temp::<usize>(zoom_id())).filter(|i| *i < ZOOMS.len()).unwrap_or(0);
-    let (zoom_label, zoom_cmd, zoom_kw) = ZOOMS.get(zoom).copied().unwrap_or(ZOOMS[0]);
+    let (zoom_label, zoom_cmd, zoom_kw, zoom_icon) = ZOOMS.get(zoom).copied().unwrap_or(ZOOMS[0]);
     let mut action = None;
     for (tool, r) in tools(strip) {
         let (label, cmd, icon) = match tool {
@@ -128,7 +128,7 @@ pub fn show(app: &mut CadApp, ui: &mut egui::Ui, canvas: Rect) {
             Tool::Wheel => (WHEEL, Some("navswheel"), Some(Icon::NavWheel)),
             Tool::WheelMenu => (WHEEL, Some("navswheel"), None),
             Tool::Pan => ("Pan", Some("pan"), Some(Icon::Pan)),
-            Tool::Zoom => (zoom_label, Some(zoom_cmd), Some(if zoom_cmd == "zoom.window" { Icon::ZoomWindow } else { Icon::ZoomExtents })),
+            Tool::Zoom => (zoom_label, Some(zoom_cmd), Some(zoom_icon)),
             Tool::ZoomMenu => ("Zoom", Some("zoom"), None),
             Tool::Orbit => ("Orbit", Some("3dorbit"), Some(Icon::Orbit)),
             Tool::OrbitMenu => ("Orbit", Some("3dorbit"), None),
@@ -184,12 +184,21 @@ pub fn show(app: &mut CadApp, ui: &mut egui::Ui, canvas: Rect) {
         }
         Some(Action::Keyword(cmd, keyword)) => {
             app.cmd.buffer.clear();
-            app.start(cmd);
-            if let Err(e) = app.session.input(cadcraft_engine::Input::Keyword(keyword.into())) {
-                app.session.echo(e.to_string());
-            }
+            start_with_keyword(app, cmd, keyword);
         }
         None => {}
+    }
+}
+
+/// Start `cmd` and answer its first prompt with `keyword` (Zoom Scale, Zoom Center), but only
+/// when `cmd` really is the command now asking and offers that keyword: a refused start or
+/// another command's prompt never receives it.
+fn start_with_keyword(app: &mut CadApp, cmd: &str, keyword: &str) {
+    app.start(cmd);
+    let asking = app.session.running.as_ref().is_some_and(|r| r.id == cmd)
+        && app.session.current_prompt().is_some_and(|p| p.keywords.iter().any(|k| k == keyword));
+    if asking && let Err(e) = app.session.input(cadcraft_engine::Input::Keyword(keyword.into())) {
+        app.session.echo(e.to_string());
     }
 }
 
@@ -202,7 +211,7 @@ fn zoom_menu(app: &CadApp, ui: &egui::Ui, resp: &egui::Response, current: usize,
     let mut chosen = None;
     egui::Popup::from_toggle_button_response(resp).align(RectAlign::LEFT_START).show(|ui| {
         ui.spacing_mut().item_spacing.y = 0.0;
-        for (i, (label, cmd, _)) in ZOOMS.iter().enumerate() {
+        for (i, (label, cmd, _, _)) in ZOOMS.iter().enumerate() {
             let ready = avail::availability(ui.ctx(), &app.session, cmd).is_ready();
             if row(ui, label, i == current, ready) {
                 chosen = Some(i);
@@ -210,7 +219,7 @@ fn zoom_menu(app: &CadApp, ui: &egui::Ui, resp: &egui::Response, current: usize,
         }
     });
     if let Some(i) = chosen
-        && let Some((_, cmd, kw)) = ZOOMS.get(i)
+        && let Some((_, cmd, kw, _)) = ZOOMS.get(i)
     {
         // The face shows the zoom chosen last, like AutoCAD's.
         ui.ctx().data_mut(|d| d.insert_temp(zoom_id(), i));
@@ -261,6 +270,30 @@ pub fn window_buttons(app: &mut CadApp, ui: &mut egui::Ui, canvas: Rect) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_zoom_option_goes_only_to_zoom_itself() {
+        let mut app = CadApp::new(cadcraft_engine::Session::empty(), crate::Services::default());
+        app.start("ui.sample");
+        // ZOOM starts and takes Scale: it now asks for the scale factor.
+        start_with_keyword(&mut app, "zoom", "Scale");
+        assert_eq!(app.session.running.as_ref().map(|r| r.id.as_str()), Some("zoom"));
+        assert!(app.session.current_prompt().is_some_and(|p| !p.keywords.iter().any(|k| k == "Scale")), "past the option prompt");
+        app.session.cancel();
+        // A start that is refused leaves the running command's prompt alone.
+        app.start("line");
+        let before = app.session.current_prompt().map(|p| p.message);
+        let log = app.session.log.len();
+        start_with_keyword(&mut app, "no-such-command", "Scale");
+        assert_eq!(app.session.running.as_ref().map(|r| r.id.as_str()), Some("line"));
+        assert_eq!(app.session.current_prompt().map(|p| p.message), before);
+        assert_eq!(app.session.log.len(), log + 1, "only the refusal is echoed");
+        // A command whose prompt lacks the keyword doesn't get it either.
+        app.session.cancel();
+        start_with_keyword(&mut app, "line", "Scale");
+        assert_eq!(app.session.running.as_ref().map(|r| r.id.as_str()), Some("line"));
+        assert!(!app.session.log.iter().any(|l| l.contains("Scale")), "{:?}", app.session.log);
+    }
 
     #[test]
     fn the_strip_sits_below_the_viewcube_inside_the_drawing_area() {

@@ -268,6 +268,11 @@ pub enum Icon {
     ShowMotion,
     VpMinimize,
     VpRestore,
+    ZoomIn,
+    ZoomOut,
+    ZoomAll,
+    ZoomPrevious,
+    ZoomRealtime,
 }
 
 /// Paint `icon` into `rect` (square), with `dim` for disabled.
@@ -898,7 +903,9 @@ fn paint_pen(pen: &Pen, icon: Icon) {
         | GroupManager | GroupBox | MeasureRadius | MeasureAngle | Volume | SelectAll | QuickCalc | IdPoint | PointStyle | Paste | PasteBlock
         | PasteHyperlink | PasteOrig | PasteSpecial | Cut | CopyClip | ViewBase | SectionViewStyle | DetailViewStyle => ribbon::paint(pen, icon),
         AutoScale | AnnoMonitor | Isolate | CleanScreen | SelCycling | Osnap3d | DynUcs | SelFilter | Gizmo | GraphicsPerf | Units | Wrench
-        | Prompt | NavWheel | ShowMotion | VpMinimize | VpRestore => shell::paint(pen, icon),
+        | Prompt | NavWheel | ShowMotion | VpMinimize | VpRestore | ZoomIn | ZoomOut | ZoomAll | ZoomPrevious | ZoomRealtime => {
+            shell::paint(pen, icon)
+        }
     }
 }
 
