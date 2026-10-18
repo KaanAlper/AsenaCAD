@@ -108,7 +108,11 @@ fn the_named_views_list_shows_unsaved_view_and_lists_the_drawings_views() {
     let h = harness("Named Views");
     let list = h.get_by_role_and_label(Role::ComboBox, "Named Views");
     assert_eq!(list.value().as_deref(), Some("Unsaved View"));
-    assert!(list.accesskit_node().is_disabled(), "nothing to restore in a drawing without views");
+    assert!(!list.accesskit_node().is_disabled(), "enabled as in AutoCAD, with only the current entry when there are no views");
+    let mut h = h;
+    h.get_by_role_and_label(Role::ComboBox, "Named Views").click();
+    h.run_steps(3);
+    assert!(h.query_all_by_label("Unsaved View").count() >= 1, "the open list shows the current entry");
     let mut app = CadApp::new(Session::default(), Services::default());
     app.session.execute("view", &json!({ "option": "save", "name": "Plan" })).expect("VIEW Save");
     let h = harness_with("Named Views", app);

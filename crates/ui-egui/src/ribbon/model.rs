@@ -64,6 +64,9 @@ pub enum Combo {
     NamedView,
     /// The recorded action macros to play (the Action Recorder isn't built: empty, disabled).
     ActionMacro,
+    /// The Action Recorder's slide-out: the steps of the chosen macro (AutoCAD's Action Tree).
+    /// Shown as an empty, disabled box until the Action Recorder exists.
+    ActionTree,
     /// What Output ▸ Export takes: the display, the extents or a window (not built: disabled).
     ExportArea,
     /// Whether Output ▸ Export uses the current page setup or an override (not built: disabled).
@@ -100,6 +103,7 @@ impl Combo {
             Self::MLeaderLayer => "Mleader Layer Gallery",
             Self::NamedView => "Named Views",
             Self::ActionMacro => "Available Action Macro",
+            Self::ActionTree => "Action Tree",
             // AutoCAD names both export lists "EplotExport".
             Self::ExportArea | Self::ExportPageSetup => "EplotExport",
         }

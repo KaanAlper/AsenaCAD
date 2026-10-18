@@ -48,6 +48,8 @@ fn the_action_recorder_is_shown_disabled() {
         assert!(disabled(&h, label), "{label}: there is no Action Recorder yet");
     }
     assert!(h.get_by_role_and_label(Role::ComboBox, "Available Action Macro").accesskit_node().is_disabled());
+    // The slide-out (so the title has its ▾): the Action Tree, disabled.
+    assert!(h.get_by_role_and_label(Role::ComboBox, "Action Tree").accesskit_node().is_disabled());
 }
 
 #[test]

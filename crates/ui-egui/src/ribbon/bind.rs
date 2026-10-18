@@ -101,10 +101,11 @@ fn current(app: &CadApp, kind: Combo) -> (String, bool) {
         // TEXTLAYER, DIMLAYER, CENTERLAYER and the multileader layer aren't modelled yet: new
         // annotations go on the current layer, which is what "Use Current" means.
         Combo::TextLayer | Combo::DimLayer | Combo::CenterLayer | Combo::MLeaderLayer => (crate::tl!("Use Current").to_string(), false),
-        // The drawing doesn't record which view was restored last.
-        Combo::NamedView => (crate::tl!("Unsaved View").to_string(), space_views(app, d).next().is_some()),
+        // The drawing doesn't record which view was restored last. Enabled with no views too, as
+        // in AutoCAD: the list then holds only the current entry.
+        Combo::NamedView => (crate::tl!("Unsaved View").to_string(), true),
         // No action macros can be recorded yet.
-        Combo::ActionMacro => (String::new(), false),
+        Combo::ActionMacro | Combo::ActionTree => (String::new(), false),
         // The export area and the page setup override aren't modelled yet: AutoCAD's defaults,
         // shown disabled.
         Combo::ExportArea => (crate::tl!("Export: Display").to_string(), false),
@@ -152,7 +153,9 @@ fn choices(app: &CadApp, kind: Combo) -> Vec<Choice> {
                 names(BY.into_iter().chain(t.styles.iter().map(|s| s.name.as_str())), "plotstyle", |n| json!({ "name": n }))
             })
         }
-        Combo::NamedView => names(space_views(app, d), "view", |n| json!({ "option": "restore", "name": n })),
+        Combo::NamedView => std::iter::once((crate::tl!("Unsaved View").to_string(), "ui.noop", Value::Null))
+            .chain(names(space_views(app, d), "view", |n| json!({ "option": "restore", "name": n })))
+            .collect(),
         Combo::AttributeDisplay => ATTMODES.iter().map(|(_, l, k)| (crate::i18n::t(l).to_string(), "attdisp", json!({ "mode": k }))).collect(),
         Combo::Transparency
         | Combo::SectionViewStyle
@@ -166,6 +169,7 @@ fn choices(app: &CadApp, kind: Combo) -> Vec<Choice> {
         | Combo::CenterLayer
         | Combo::MLeaderLayer
         | Combo::ActionMacro
+        | Combo::ActionTree
         | Combo::ExportArea
         | Combo::ExportPageSetup => Vec::new(),
     }

@@ -7,8 +7,8 @@ use crate::icons::Icon;
 
 // ---- Action Recorder ----
 
-/// AutoCAD's slide-out holds the Action Tree (the recorded macro's steps), which has no ribbon
-/// item kind here; it is left out until the Action Recorder exists.
+/// AutoCAD's slide-out holds the Action Tree (the recorded macro's steps): an empty, disabled box
+/// of its width until the Action Recorder exists.
 const ACTION_RECORDER: Panel = Panel {
     label: "Action Recorder",
     items: &[
@@ -22,7 +22,7 @@ const ACTION_RECORDER: Panel = Panel {
         icon(Icon::ActManager, "Manage Action Macros", "actmanager", 1),
         combo(Combo::ActionMacro, 125.0, 2),
     ],
-    slideout: &[],
+    slideout: &[combo(Combo::ActionTree, 250.0, 1)],
     launcher: None,
     launcher_name: None,
 };

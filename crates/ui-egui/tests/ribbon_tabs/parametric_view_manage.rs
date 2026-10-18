@@ -209,8 +209,9 @@ fn manage_matches_autocad() {
                     b("Manage Action Macros", "small", 1, "actmanager"),
                     cb("Available Action Macro", "ActionMacro", 2, 125.0),
                 ],
-                // AutoCAD's slide-out is the Action Tree (a tree view), which has no item here.
-                slideout: &[],
+                // AutoCAD's slide-out is the Action Tree, a 250 px tree view of the macro's steps:
+                // here a disabled box of that width until the Action Recorder exists.
+                slideout: &[cb("Action Tree", "ActionTree", 1, 250.0)],
                 launcher: None,
             },
             WantPanel {
