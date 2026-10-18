@@ -333,7 +333,6 @@ pub fn labels() -> Vec<&'static str> {
         }
     }
     out.extend(crate::ribbon::RibbonMin::ALL.iter().map(|s| s.label()));
-    out.push(crate::ribbon::UNBUILT_TAB_NOTE);
     out
 }
 

@@ -34,8 +34,6 @@ use crate::CadApp;
 use crate::icons::{self, Icon};
 use crate::theme::Tokens;
 
-/// What a tab whose panels are not built yet shows in the strip.
-pub const UNBUILT_TAB_NOTE: &str = "This tab is not built yet (M1b)";
 /// A collapsed panel's face is inset this much in its panel.
 const PANEL_BUTTON_INSET: f32 = 2.0;
 
@@ -208,10 +206,6 @@ fn tab_row(app: &mut CadApp, ui: &mut Ui, row: Rect, current: &Tab) {
 fn panel_strip(app: &mut CadApp, ui: &mut Ui, strip: Rect, tab: &Tab) {
     let t = Tokens::get();
     let left = strip.left() + 2.0;
-    if tab.panels.is_empty() {
-        unbuilt_note(ui, Rect::from_min_size(pos2(left, strip.top() + PANEL_TOP), vec2(strip.right() - 2.0 - left, PANEL_H)));
-        return;
-    }
     let full: Vec<f32> = tab.panels.iter().map(|p| layout::panel_width(ui, tab.label, p, false) + DIVIDER).collect();
     let compact: Vec<f32> = tab.panels.iter().map(|p| layout::panel_width(ui, tab.label, p, true) + DIVIDER).collect();
     let buttons: Vec<f32> = tab.panels.iter().map(|p| layout::panel_button_width(ui, p) + DIVIDER).collect();
@@ -242,19 +236,6 @@ fn panel_strip(app: &mut CadApp, ui: &mut Ui, strip: Rect, tab: &Tab) {
             x = rect.right() + DIVIDER;
         }
     });
-}
-
-/// The strip of a tab whose panels are not built yet: one dim, centred note.
-fn unbuilt_note(ui: &mut Ui, rect: Rect) {
-    let t = Tokens::get();
-    ui.painter().rect_filled(rect, 0.0, t.ribbon_bg);
-    let text = crate::tl!("This tab is not built yet (M1b)");
-    let galley = label_galley(ui, text, t.text_faint);
-    let at = rect.center() - galley.size() / 2.0;
-    let resp = ui.interact(Rect::from_min_size(at, galley.size()), ui.id().with("ribbon-unbuilt-tab"), Sense::hover());
-    ui.painter().galley(at, galley, t.text_faint);
-    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Label, true, text));
-    crate::control::record_widget(ui, &resp, UNBUILT_TAB_NOTE, "label", None);
 }
 
 /// One expanded panel in `rect`: its items and its title bar (slide-out "▾", launcher).
