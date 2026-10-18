@@ -2143,7 +2143,7 @@ fn dimassoc(d: &mut Drawing, tags: &[Tag]) {
     }
 }
 
-/// A AsenaCAD snap from a DIMASSOC object snap type and point.
+/// An AsenaCAD snap from a DIMASSOC object snap type and point.
 fn infer_snap(d: &Drawing, osnap: i64, main: Handle, other: Option<Handle>, at: Vec2) -> Option<AssocSnap> {
     let e = d.entity(main)?;
     Some(match osnap {

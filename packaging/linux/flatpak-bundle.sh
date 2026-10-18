@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Repackage a AsenaCAD Linux tarball as a single-file Flatpak bundle:
+# Repackage an AsenaCAD Linux tarball as a single-file Flatpak bundle:
 #
 #   $DIST/asenacad-<version>-linux-<arch>.flatpak
 #
