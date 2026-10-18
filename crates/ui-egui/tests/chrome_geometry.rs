@@ -238,3 +238,43 @@ fn home_collapses_at_autocads_window_widths_whatever_the_display_scale() {
         reference(1906.0, &rects_1906);
     }
 }
+
+/// Every text shape whose whole text is `text`, with its galley.
+fn galleys_of(shape: &Shape, text: &str, out: &mut Vec<std::sync::Arc<egui::Galley>>) {
+    match shape {
+        Shape::Text(t) if t.galley.text() == text => out.push(t.galley.clone()),
+        Shape::Vec(shapes) => shapes.iter().for_each(|s| galleys_of(s, text, out)),
+        _ => {}
+    }
+}
+
+#[test]
+fn collapsed_panel_labels_keep_whole_words_and_fit_their_buttons() {
+    // AutoCAD never breaks a word of a collapsed panel's name: a button whose name is too wide
+    // for the standard width gets wider ("Annotation" in a ~900 pt window).
+    for scale in [1.0, 1.34] {
+        for width in [700.0, 900.0] {
+            let h = window(width, 700.0, scale);
+            let at = format!("{width} pt @{scale}");
+            let collapsed_panels: Vec<_> = HOME.panels.iter().map(|p| p.label).filter(|p| collapsed(&h, p)).collect();
+            assert!(collapsed_panels.contains(&"Annotation"), "{at}: Annotation collapses: {collapsed_panels:?}");
+            for label in collapsed_panels {
+                let button = h
+                    .query_all_by_role_and_label(Role::Button, label)
+                    .map(|n| n.rect())
+                    .find(|r| (r.height() - layout::PANEL_H).abs() < 0.5)
+                    .unwrap_or_else(|| panic!("{at}: {label}'s button"));
+                assert!(button.width() >= layout::PANEL_BUTTON_W - 0.5, "{at}: {label} is at least the standard width: {button:?}");
+                let mut galleys = Vec::new();
+                for shape in &h.output().shapes {
+                    galleys_of(&shape.shape, label, &mut galleys);
+                }
+                assert!(!galleys.is_empty(), "{at}: {label}'s name is painted");
+                for g in galleys {
+                    assert_eq!(g.rows.len(), 1, "{at}: {label} is one whole word on one line");
+                    assert!(g.size().x <= button.width(), "{at}: {label} ({}) fits its button {button:?}", g.size().x);
+                }
+            }
+        }
+    }
+}

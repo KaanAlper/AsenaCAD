@@ -206,7 +206,8 @@ fn panel_strip(app: &mut CadApp, ui: &mut Ui, strip: Rect, tab: &Tab) {
     }
     let full: Vec<f32> = tab.panels.iter().map(|p| layout::panel_width(ui, tab.label, p, false) + DIVIDER).collect();
     let compact: Vec<f32> = tab.panels.iter().map(|p| layout::panel_width(ui, tab.label, p, true) + DIVIDER).collect();
-    let fits = layout::fit(&full, &compact, strip.right() - left);
+    let buttons: Vec<f32> = tab.panels.iter().map(|p| layout::panel_button_width(ui, p) + DIVIDER).collect();
+    let fits = layout::fit(&full, &compact, &buttons, strip.right() - left);
     ui.scope_builder(UiBuilder::new().max_rect(strip), |ui| {
         ui.shrink_clip_rect(strip);
         let mut x = left;
@@ -214,7 +215,7 @@ fn panel_strip(app: &mut CadApp, ui: &mut Ui, strip: Rect, tab: &Tab) {
             let key = format!("{}/{}", tab.label, panel.label);
             let top = strip.top() + PANEL_TOP;
             let w = match fit {
-                Fit::Collapsed => PANEL_BUTTON_W,
+                Fit::Collapsed => buttons.get(i).copied().unwrap_or(PANEL_BUTTON_W + DIVIDER) - DIVIDER,
                 Fit::Compact => compact.get(i).copied().unwrap_or(0.0) - DIVIDER,
                 Fit::Full => full.get(i).copied().unwrap_or(0.0) - DIVIDER,
             };
@@ -347,7 +348,9 @@ fn panel_button(app: &mut CadApp, ui: &mut Ui, rect: Rect, key: &str, tab: &Tab,
     ui.painter().rect_filled(face, 2.0, fill);
     let icon_rect = Rect::from_center_size(pos2(rect.center().x, rect.top() + 6.0 + 16.0), Vec2::splat(32.0));
     icons::paint(ui.painter(), icon_rect, panel_icon(&ctx, key, panel), false);
-    let mut job = egui::text::LayoutJob::simple(crate::i18n::t(panel.label).to_string(), crate::theme::ribbon_font(&ctx), t.text, rect.width() - 4.0);
+    // The button is wide enough for the label's longest word, so it wraps only at spaces.
+    let wrap = rect.width() - 2.0 * layout::PANEL_BUTTON_TEXT_PAD + 1.0;
+    let mut job = egui::text::LayoutJob::simple(crate::i18n::t(panel.label).to_string(), crate::theme::ribbon_font(&ctx), t.text, wrap);
     job.wrap.max_rows = 2;
     job.halign = Align::Center;
     let galley = ui.painter().layout_job(job);

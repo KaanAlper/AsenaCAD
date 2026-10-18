@@ -34,8 +34,10 @@ pub const DIVIDER: f32 = 1.0;
 /// Space at a panel's left and right edges and between its columns and row items.
 pub const PAD: f32 = 4.0;
 const GAP: f32 = 2.0;
-/// A collapsed panel's button.
+/// A collapsed panel's button: at least this wide, wider when a word of its label needs it.
 pub const PANEL_BUTTON_W: f32 = 60.0;
+/// Space a collapsed panel's label keeps from the button's edges on each side.
+pub const PANEL_BUTTON_TEXT_PAD: f32 = 5.0;
 /// The strip in the "Minimize to Panel Buttons" and "Minimize to Panel Titles" states.
 pub const BUTTONS_STRIP_H: f32 = 36.0;
 pub const TITLES_STRIP_H: f32 = 24.0;
@@ -52,27 +54,43 @@ pub enum Fit {
     Collapsed,
 }
 
-/// Which panels collapse when panels of `widths` (each including its divider) must fit in
-/// `available`: from the right, one at a time, until the rest plus the panel buttons fit.
-/// A NaN or infinite `available` never collapses anything.
-pub fn collapse(widths: &[f32], available: f32) -> Vec<bool> {
-    let collapsed = PANEL_BUTTON_W + DIVIDER;
+/// Which panels collapse when panels of `widths` must fit in `available`: from the right, one
+/// at a time, until the rest plus the panel buttons fit. `buttons` are the panels' button widths;
+/// both include the divider. A NaN or infinite `available` never collapses anything.
+pub fn collapse(widths: &[f32], buttons: &[f32], available: f32) -> Vec<bool> {
     let mut total: f32 = widths.iter().sum();
     let mut out = vec![false; widths.len()];
-    for (flag, w) in out.iter_mut().zip(widths).rev() {
+    for ((flag, w), button) in out.iter_mut().zip(widths).zip(buttons).rev() {
         if total <= available || available.is_nan() {
             break;
         }
-        total += collapsed - w;
+        total += button - w;
         *flag = true;
     }
     out
 }
 
+/// A collapsed panel's button width for `label`: [`PANEL_BUTTON_W`], or wider when its widest
+/// word (`word_widths`) doesn't fit, because AutoCAD never breaks a word of a panel's name.
+pub fn button_width(word_widths: impl IntoIterator<Item = f32>) -> f32 {
+    let widest = word_widths.into_iter().filter(|w| w.is_finite()).fold(0.0_f32, f32::max);
+    PANEL_BUTTON_W.max((widest + 2.0 * PANEL_BUTTON_TEXT_PAD).ceil())
+}
+
+/// `panel`'s collapsed button width (without its divider), from its label in the ribbon font.
+pub fn panel_button_width(ui: &Ui, panel: &Panel) -> f32 {
+    let font = crate::theme::ribbon_font(ui.ctx());
+    let words = crate::i18n::t(panel.label)
+        .split_whitespace()
+        .map(|w| ui.painter().layout_no_wrap(w.to_string(), font.clone(), egui::Color32::WHITE).size().x);
+    button_width(words)
+}
+
 /// How every panel is shown: all full when they fit; otherwise panels go compact from the
 /// right until they fit; if all compact still don't fit, panels collapse from the right.
-/// `full` and `compact` are the panels' widths in both forms (each including its divider).
-pub fn fit(full: &[f32], compact: &[f32], available: f32) -> Vec<Fit> {
+/// `full`, `compact` and `buttons` are the panels' widths in the three forms (each including its
+/// divider).
+pub fn fit(full: &[f32], compact: &[f32], buttons: &[f32], available: f32) -> Vec<Fit> {
     let mut widths = full.to_vec();
     let mut out = vec![Fit::Full; full.len()];
     for i in (0..widths.len()).rev() {
@@ -84,7 +102,7 @@ pub fn fit(full: &[f32], compact: &[f32], available: f32) -> Vec<Fit> {
             *f = Fit::Compact;
         }
     }
-    for (f, collapsed) in out.iter_mut().zip(collapse(&widths, available)) {
+    for (f, collapsed) in out.iter_mut().zip(collapse(&widths, buttons, available)) {
         if collapsed {
             *f = Fit::Collapsed;
         }
@@ -204,6 +222,15 @@ mod tests {
     use super::*;
 
     const COLLAPSED: f32 = PANEL_BUTTON_W + DIVIDER;
+    const BUTTONS: [f32; 4] = [COLLAPSED; 4];
+
+    fn collapse(widths: &[f32], available: f32) -> Vec<bool> {
+        super::collapse(widths, &BUTTONS[..widths.len()], available)
+    }
+
+    fn fit(full: &[f32], compact: &[f32], available: f32) -> Vec<Fit> {
+        super::fit(full, compact, &BUTTONS[..full.len()], available)
+    }
 
     #[test]
     fn nothing_collapses_when_everything_fits() {
@@ -236,5 +263,21 @@ mod tests {
         assert_eq!(fit(&full, &compact, 550.0), [Fit::Full, Fit::Full, Fit::Compact]);
         assert_eq!(fit(&full, &compact, 450.0), [Fit::Compact; 3]);
         assert_eq!(fit(&full, &compact, 300.0 + COLLAPSED), [Fit::Compact, Fit::Compact, Fit::Collapsed]);
+    }
+
+    #[test]
+    fn a_wider_panel_button_counts_when_panels_collapse() {
+        // The last panel's button is 80 wide: collapsing it saves less, so the middle one goes too.
+        let buttons = [COLLAPSED, COLLAPSED, 80.0 + DIVIDER];
+        assert_eq!(super::collapse(&[100.0, 100.0, 100.0], &buttons, 200.0 + 80.0 + DIVIDER), [false, false, true]);
+        assert_eq!(super::collapse(&[100.0, 100.0, 100.0], &buttons, 190.0 + 80.0 + DIVIDER), [false, true, true]);
+    }
+
+    #[test]
+    fn panel_buttons_widen_to_keep_their_longest_word_whole() {
+        assert_eq!(button_width([30.0]), PANEL_BUTTON_W, "a short name keeps the standard width");
+        assert_eq!(button_width([]), PANEL_BUTTON_W);
+        assert_eq!(button_width([20.0, 61.3]), (61.3 + 2.0 * PANEL_BUTTON_TEXT_PAD).ceil(), "the widest word decides");
+        assert_eq!(button_width([f32::NAN, f32::INFINITY, 10.0]), PANEL_BUTTON_W, "nonsense widths are ignored");
     }
 }
