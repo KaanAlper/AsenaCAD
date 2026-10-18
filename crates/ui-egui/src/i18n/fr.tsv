@@ -10,7 +10,6 @@
 	% of all commits	% de toutes les révisions
 	* Wildcard Match	* Correspondance générique
 	*VARIES*	*DIVER*
-	+  |  Top  |  2D Wireframe	+  |  Dessus  |  Filaire 2D
 	+Bin	+bin.
 	+LOC	+lignes
 	1 Viewport	1 fenêtre
@@ -1011,3 +1010,12 @@
 	Minimize to Tabs	Réduire aux onglets
 	Minimize Options	Options de réduction
 	Pin	Épingler
+	Top	Dessus
+	2D Wireframe	Filaire 2D
+	Annotate	Annoter
+	Manage	Gérer
+	Output	Sortie
+	Collaborate	Collaborer
+	Express Tools	Outils express
+	File Tabs	Onglets de fichiers
+	This tab is not built yet (M1b)	Cet onglet n'est pas encore construit (M1b)

@@ -10,7 +10,6 @@
 	% of all commits	% 的所有提交
 	* Wildcard Match	* 通配符匹配
 	*VARIES*	*多值*
-	+  |  Top  |  2D Wireframe	+  |  俯视  |  二维线框
 	+Bin	+Bin
 	+LOC	+LOC
 	1 Viewport	1 个视口
@@ -1120,3 +1119,12 @@
 	Minimize to Tabs	最小化为选项卡
 	Minimize Options	最小化选项
 	Pin	固定
+	Top	俯视
+	2D Wireframe	二维线框
+	Annotate	注释
+	Manage	管理
+	Output	输出
+	Collaborate	协作
+	Express Tools	快捷工具
+	File Tabs	文件选项卡
+	This tab is not built yet (M1b)	此选项卡尚未构建 (M1b)

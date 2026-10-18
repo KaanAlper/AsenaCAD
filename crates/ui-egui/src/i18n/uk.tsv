@@ -33,7 +33,6 @@
 	% of all commits	% усіх комітів
 	* Wildcard Match	* За шаблоном
 	*VARIES*	*РІЗНІ*
-	+  |  Top  |  2D Wireframe	+  |  Зверху  |  2D-каркас
 	+Bin	+двійк.
 	+LOC	+рядків
 	1 Viewport	1 видовий екран
@@ -1406,3 +1405,12 @@
 	Hide search	Сховати пошук
 	Show search	Показати пошук
 	Type a keyword or phrase	Введіть ключове слово або фразу
+	Top	Зверху
+	2D Wireframe	2D-каркас
+	Annotate	Анотації
+	Manage	Керування
+	Output	Вивід
+	Collaborate	Співпраця
+	Express Tools	Експрес-інструменти
+	File Tabs	Вкладки файлів
+	This tab is not built yet (M1b)	Ця вкладка ще не готова (M1b)

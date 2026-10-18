@@ -7,7 +7,7 @@
 //! command-line buffer and starts the command.
 
 use egui::text::LayoutJob;
-use egui::{FontId, Rect, Response, Sense, Stroke, Ui, Vec2, pos2, vec2};
+use egui::{Rect, Response, Sense, Stroke, Ui, Vec2, pos2, vec2};
 
 use super::avail::{self, Availability};
 use super::model::{Entry, Item, Size, Toggle};
@@ -32,7 +32,6 @@ const SMALL_SPLIT_ARROW_W: f32 = 13.0;
 /// doesn't.
 const LARGE_WRAP: f32 = 60.0;
 const MENU_W: f32 = 220.0;
-const FONT: f32 = 12.0;
 
 /// Per-split memory: which menu entry each split button's face shows and runs. Each split's
 /// entry is kept on its own in egui memory (temporary data, for the life of the window), keyed
@@ -94,9 +93,9 @@ fn start(app: &mut CadApp, cmd: &str) {
 fn paint_state(ui: &Ui, rect: Rect, resp: &Response, on: bool) {
     let t = Tokens::get();
     let fill = if on || resp.is_pointer_button_down_on() {
-        t.select_bg
+        t.ribbon_pressed
     } else if resp.hovered() && resp.enabled() {
-        t.control_hover
+        t.ribbon_hover
     } else {
         return;
     };
@@ -112,7 +111,7 @@ fn text_color(enabled: bool) -> egui::Color32 {
 }
 
 fn large_label(ui: &Ui, text: &str, enabled: bool) -> std::sync::Arc<egui::Galley> {
-    let mut job = LayoutJob::simple(large_lines(ui, text), FontId::proportional(FONT), text_color(enabled), f32::INFINITY);
+    let mut job = LayoutJob::simple(large_lines(ui, text), crate::theme::ribbon_font(ui.ctx()), text_color(enabled), f32::INFINITY);
     job.halign = egui::Align::Center;
     ui.painter().layout_job(job)
 }
@@ -121,7 +120,7 @@ fn large_label(ui: &Ui, text: &str, enabled: bool) -> std::sync::Arc<egui::Galle
 /// broken at the last space that keeps the first line within it ("Detect and / Convert",
 /// "Layer / Properties"), or after the first word when even that is wider.
 fn large_lines(ui: &Ui, text: &str) -> String {
-    let width = |s: &str| ui.painter().layout_no_wrap(s.to_string(), FontId::proportional(FONT), text_color(true)).size().x;
+    let width = |s: &str| ui.painter().layout_no_wrap(s.to_string(), crate::theme::ribbon_font(ui.ctx()), text_color(true)).size().x;
     let spaces = text.match_indices(' ').map(|(i, _)| i);
     let Some(first) = spaces.clone().next() else { return text.to_string() };
     if width(text) <= LARGE_WRAP {
@@ -132,7 +131,7 @@ fn large_lines(ui: &Ui, text: &str) -> String {
 }
 
 fn small_label(ui: &Ui, text: &str, enabled: bool) -> std::sync::Arc<egui::Galley> {
-    ui.painter().layout_no_wrap(text.to_string(), FontId::proportional(FONT), text_color(enabled))
+    ui.painter().layout_no_wrap(text.to_string(), crate::theme::ribbon_font(ui.ctx()), text_color(enabled))
 }
 
 /// Reserve `size` in a scope that is disabled when `enabled` is false.
@@ -276,7 +275,7 @@ pub fn split_button(ui: &mut Ui, app: &mut CadApp, key: &str, label: Option<&str
     let face = ui.add_enabled_ui(face_enabled, |ui| ui.interact(face_rect, id.with("face"), Sense::click())).inner;
     let arrow = ui.add_enabled_ui(menu_enabled, |ui| ui.interact(arrow_rect, id.with("menu"), Sense::click())).inner;
     if (face.hovered() && face.enabled()) || (arrow.hovered() && arrow.enabled()) {
-        ui.painter().rect_filled(r, 2.0, Tokens::get().control_hover);
+        ui.painter().rect_filled(r, 2.0, Tokens::get().ribbon_hover);
     }
     paint_state(ui, face_rect, &face, false);
     paint_state(ui, arrow_rect, &arrow, false);

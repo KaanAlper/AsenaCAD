@@ -158,9 +158,31 @@ pub struct Tab {
     pub panels: &'static [Panel],
 }
 
-/// Ribbon tabs in AutoCAD's order. M1a builds Home; the other tabs come in M1b.
+/// A tab whose panels are not built yet: it shows a note instead (M1b fills them).
+const fn unbuilt(label: &'static str) -> Tab {
+    Tab { label, panels: &[] }
+}
+
+/// Ribbon tabs in AutoCAD's order. M1a builds Home; the other tabs' panels come in M1b.
 pub fn tabs() -> &'static [Tab] {
-    &[crate::ribbon::home::HOME]
+    TABS
+}
+
+const TABS: &[Tab] = &[
+    crate::ribbon::home::HOME,
+    unbuilt("Insert"),
+    unbuilt("Annotate"),
+    unbuilt("Parametric"),
+    unbuilt("View"),
+    unbuilt("Manage"),
+    unbuilt("Output"),
+    unbuilt("Collaborate"),
+    unbuilt("Express Tools"),
+];
+
+/// Whether `name` is one of the ribbon's tabs (a saved `ribbonTab` must be).
+pub fn is_tab(name: &str) -> bool {
+    tabs().iter().any(|t| t.label == name)
 }
 
 fn entry_commands(menu: &'static [Entry]) -> impl Iterator<Item = &'static str> {
@@ -214,6 +236,7 @@ pub fn labels() -> Vec<&'static str> {
         }
     }
     out.extend(crate::ribbon::RibbonMin::ALL.iter().map(|s| s.label()));
+    out.push(crate::ribbon::UNBUILT_TAB_NOTE);
     out
 }
 
@@ -257,6 +280,14 @@ mod tests {
         let referenced = command_ids();
         let unused: Vec<_> = UNBUILT.iter().filter(|id| !referenced.contains(id)).collect();
         assert!(unused.is_empty(), "no ribbon item uses these, remove them from UNBUILT: {unused:?}");
+    }
+
+    #[test]
+    fn the_tab_row_has_autocads_nine_tabs_in_order() {
+        let labels: Vec<_> = tabs().iter().map(|t| t.label).collect();
+        assert_eq!(labels, ["Home", "Insert", "Annotate", "Parametric", "View", "Manage", "Output", "Collaborate", "Express Tools"]);
+        assert!(tabs()[1..].iter().all(|t| t.panels.is_empty()), "only Home has panels in M1a");
+        assert!(is_tab("Express Tools") && !is_tab("Tool Sets") && !is_tab(""));
     }
 
     #[test]

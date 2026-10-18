@@ -2,7 +2,7 @@
 //! navy model space) and are AsenaCAD's own values; every widget reads them from here.
 //!
 //! Two palettes: [`Tokens::DARK`] (the original look) and [`Tokens::LIGHT`]. The interface theme
-//! changes the chrome (title and tool bar, menus, palettes, tabs, command line, status bar,
+//! changes the chrome (title row, ribbon, menus, palettes, tabs, command line, status bar,
 //! dialogs); the drawing area keeps its model-space colours in both, as drawing colours are not
 //! part of the interface theme. [`Tokens::get`] returns the palette of the theme in use, which
 //! [`CadApp::logic`](crate::CadApp::logic) resolves once per frame from the user's [`ThemePref`].
@@ -124,17 +124,30 @@ pub struct Tokens {
     pub crosshair: Color32,
     /// The sheet of paper on a layout tab.
     pub paper: Color32,
+    /// The ribbon's panels (and the selected ribbon tab and the active document tab, which join
+    /// the area below them).
+    pub ribbon_bg: Color32,
+    /// The window frame around the ribbon: the title row, the tab row, the gaps between panels
+    /// and the document tab bar.
+    pub ribbon_tab_row: Color32,
+    /// A panel's title strip at its bottom.
+    pub ribbon_panel_title: Color32,
+    /// Ribbon (and title row, tab bar) controls under the pointer, and pressed or "on".
+    pub ribbon_hover: Color32,
+    pub ribbon_pressed: Color32,
+    /// The face of a collapsed panel's button.
+    pub ribbon_collapsed_bg: Color32,
 }
 
 impl Tokens {
     pub const DARK: Tokens = Tokens {
-        chrome: Color32::from_rgb(0x3b, 0x44, 0x53),
-        chrome_dark: Color32::from_rgb(0x31, 0x38, 0x44),
-        panel: Color32::from_rgb(0x3c, 0x44, 0x52),
-        tab_active: Color32::from_rgb(0x4e, 0x5a, 0x6e),
-        control: Color32::from_rgb(0x50, 0x5a, 0x6d),
-        control_hover: Color32::from_rgb(0x5c, 0x67, 0x7c),
-        border: Color32::from_rgb(0x23, 0x29, 0x30),
+        chrome: Color32::from_rgb(0x3d, 0x43, 0x4c),
+        chrome_dark: Color32::from_rgb(0x30, 0x35, 0x3d),
+        panel: Color32::from_rgb(0x3e, 0x44, 0x4d),
+        tab_active: Color32::from_rgb(0x50, 0x58, 0x65),
+        control: Color32::from_rgb(0x52, 0x5a, 0x67),
+        control_hover: Color32::from_rgb(0x5e, 0x67, 0x74),
+        border: Color32::from_rgb(0x23, 0x27, 0x2d),
         canvas: Color32::from_rgb(0x22, 0x28, 0x2f),
         grid_minor: Color32::from_rgb(0x29, 0x30, 0x3a),
         grid_major: Color32::from_rgb(0x31, 0x39, 0x45),
@@ -160,7 +173,7 @@ impl Tokens {
         crossing_stroke: Color32::from_rgb(0x7f, 0xe0, 0x7f),
         cmd_bg: Color32::from_rgba_premultiplied(0x34, 0x3c, 0x4a, 0xf0),
         toggle_on: Color32::from_rgb(0x3d, 0x8b, 0xfd),
-        field: Color32::from_rgb(0x31, 0x38, 0x44),
+        field: Color32::from_rgb(0x2c, 0x31, 0x38),
         select_bg: Color32::from_rgb(0x3d, 0x8b, 0xfd),
         canvas_ink: Color32::from_rgb(0xa3, 0xaa, 0xb4),
         cmd_history: Color32::from_rgba_unmultiplied_const(0x2a, 0x30, 0x3a, 170),
@@ -172,6 +185,12 @@ impl Tokens {
         warn: Color32::from_rgb(0xff, 0xd0, 0x80),
         crosshair: Color32::from_rgb(0xe8, 0xe8, 0xe8),
         paper: Color32::WHITE,
+        ribbon_bg: Color32::from_rgb(0x3e, 0x44, 0x4d),
+        ribbon_tab_row: Color32::from_rgb(0x24, 0x28, 0x2e),
+        ribbon_panel_title: Color32::from_rgb(0x3a, 0x40, 0x48),
+        ribbon_hover: Color32::from_rgb(0x4e, 0x56, 0x62),
+        ribbon_pressed: Color32::from_rgb(0x2f, 0x5a, 0x8a),
+        ribbon_collapsed_bg: Color32::from_rgb(0x50, 0x58, 0x65),
     };
 
     /// Light grey chrome with dark text. The drawing-area colours (canvas, grid, axes, selection,
@@ -202,6 +221,12 @@ impl Tokens {
         list_bg: Color32::from_rgb(0xfb, 0xfc, 0xfd),
         list_row: Color32::from_rgb(0xe3, 0xe8, 0xef),
         warn: Color32::from_rgb(0x8a, 0x53, 0x00),
+        ribbon_bg: Color32::from_rgb(0xf1, 0xf3, 0xf5),
+        ribbon_tab_row: Color32::from_rgb(0xd6, 0xda, 0xe0),
+        ribbon_panel_title: Color32::from_rgb(0xe6, 0xe9, 0xed),
+        ribbon_hover: Color32::from_rgb(0xd8, 0xe1, 0xec),
+        ribbon_pressed: Color32::from_rgb(0xb6, 0xd3, 0xfb),
+        ribbon_collapsed_bg: Color32::from_rgb(0xdf, 0xe3, 0xe9),
         ..Tokens::DARK
     };
 
@@ -300,6 +325,40 @@ pub fn body() -> FontId {
 }
 pub fn mono() -> FontId {
     FontId::new(12.0, FontFamily::Monospace)
+}
+
+/// AutoCAD's interface text size: 9 pt at 96 dpi.
+const RIBBON_FONT_PX: f32 = 12.0;
+/// The ribbon's tab names, and how wide they are together in AutoCAD's interface font at that
+/// size: the observed widths of its tab buttons less their padding (Home 53 … Express Tools 89,
+/// 10 px either side of the name).
+const RIBBON_TAB_NAMES: [&str; 9] = ["Home", "Insert", "Annotate", "Parametric", "View", "Manage", "Output", "Collaborate", "Express Tools"];
+const RIBBON_TAB_NAMES_W: f32 = 404.0;
+/// How far the ribbon font may be scaled to match those widths.
+const RIBBON_FONT_RANGE: std::ops::RangeInclusive<f32> = 10.0..=13.0;
+
+/// The text of the ribbon, the title row and the document tabs: AutoCAD's 12 px interface text,
+/// sized so that the interface font in use (the system's, which varies from DejaVu Sans to Segoe
+/// UI, or egui's own) sets words as wide as AutoCAD's does. Panels then need the room they need
+/// in AutoCAD and collapse at the same window widths. Measured once per pass.
+pub fn ribbon_font(ctx: &egui::Context) -> FontId {
+    let id = egui::Id::new("asenacad-ribbon-font");
+    let pass = ctx.cumulative_pass_nr();
+    if let Some((at, size)) = ctx.data(|d| d.get_temp::<(u64, f32)>(id))
+        && at == pass
+    {
+        return FontId::proportional(size);
+    }
+    let base = FontId::proportional(RIBBON_FONT_PX);
+    let width: f32 =
+        ctx.fonts_mut(|f| RIBBON_TAB_NAMES.iter().map(|name| f.layout_no_wrap((*name).to_string(), base.clone(), Color32::WHITE).size().x).sum());
+    let size = if width.is_finite() && width > 0.0 {
+        (RIBBON_FONT_PX * RIBBON_TAB_NAMES_W / width).clamp(*RIBBON_FONT_RANGE.start(), *RIBBON_FONT_RANGE.end())
+    } else {
+        RIBBON_FONT_PX
+    };
+    ctx.data_mut(|d| d.insert_temp(id, (pass, size)));
+    FontId::proportional(size)
 }
 
 /// Load a system UI font at run time when one is installed (not bundled), else keep egui's;

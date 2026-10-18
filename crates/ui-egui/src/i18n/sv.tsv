@@ -14,7 +14,6 @@
 	% of all commits	% av alla commits
 	* Wildcard Match	* Jokerteckenmatchning
 	*VARIES*	*VARIERAR*
-	+  |  Top  |  2D Wireframe	+  |  Ovanifrån  |  2D-trådmodell
 	+Bin	+Bin
 	+LOC	+LOC
 	1 Viewport	1 vyfönster
@@ -1249,3 +1248,12 @@ menu	Modify	Ändra
 	Minimize to Tabs	Minimera till flikar
 	Minimize Options	Minimeringsalternativ
 	Pin	Fäst
+	Top	Ovanifrån
+	2D Wireframe	2D-trådmodell
+	Annotate	Kommentera
+	Manage	Hantera
+	Output	Utdata
+	Collaborate	Samarbeta
+	Express Tools	Expressverktyg
+	File Tabs	Filflikar
+	This tab is not built yet (M1b)	Den här fliken är inte byggd än (M1b)

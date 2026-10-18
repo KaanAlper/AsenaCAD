@@ -10,7 +10,6 @@
 	% of all commits	% de todos os commits
 	* Wildcard Match	* Correspondência com curinga
 	*VARIES*	*VARIADO*
-	+  |  Top  |  2D Wireframe	+  |  Superior  |  Wireframe 2D
 	+Bin	+bin.
 	+LOC	+linhas
 	1 Viewport	1 viewport
@@ -1248,3 +1247,12 @@
 	Minimize to Tabs	Minimizar para guias
 	Minimize Options	Opções de minimização
 	Pin	Fixar
+	Top	Superior
+	2D Wireframe	Wireframe 2D
+	Annotate	Anotar
+	Manage	Gerenciar
+	Output	Saída
+	Collaborate	Colaborar
+	Express Tools	Ferramentas expressas
+	File Tabs	Abas de arquivos
+	This tab is not built yet (M1b)	Esta aba ainda não foi construída (M1b)

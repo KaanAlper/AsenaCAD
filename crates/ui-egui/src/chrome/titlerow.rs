@@ -5,7 +5,7 @@
 //! menu (recent documents, sub-panes, Options, Exit) comes in M1c. Autodesk's online controls
 //! (Sign In, App Store, Stay Connected) are not built.
 
-use egui::{Color32, FontId, Painter, Rect, Response, Sense, Stroke, Ui, Vec2, pos2, vec2};
+use egui::{Color32, Painter, Rect, Response, Sense, Stroke, Ui, Vec2, pos2, vec2};
 use serde_json::Value;
 
 use super::qat;
@@ -27,7 +27,6 @@ const COLLAPSE_W: f32 = 13.0;
 const SPLIT_ARROW_W: f32 = 13.0;
 const GAP: f32 = 4.0;
 const MARGIN: f32 = 6.0;
-const TITLE_FONT: f32 = 13.0;
 /// Queries typed into the search box are at most this long.
 const QUERY_MAX: usize = 256;
 
@@ -48,7 +47,7 @@ fn search_hidden_id() -> egui::Id {
 /// The title row as a top panel of `ui`.
 pub fn show(app: &mut CadApp, ui: &mut Ui) {
     let t = Tokens::get();
-    egui::Panel::top("asenacad_title_row").exact_size(HEIGHT).frame(egui::Frame::NONE.fill(t.chrome)).show(ui, |ui| {
+    egui::Panel::top("asenacad_title_row").exact_size(HEIGHT).frame(egui::Frame::NONE.fill(t.ribbon_tab_row)).show(ui, |ui| {
         let r = ui.max_rect();
         if app.integrated_titlebar {
             // Under everything else: the buttons on top of it keep their clicks.
@@ -81,11 +80,11 @@ fn title(app: &CadApp, ui: &mut Ui, row: Rect, min_x: f32, max_x: f32) {
         return;
     }
     let text = title_text(app);
-    let (galley, _) = super::elided(ui.painter(), &text, FontId::proportional(TITLE_FONT), t.text_dim, room);
+    let (galley, _) = super::elided(ui.painter(), &text, crate::theme::ribbon_font(ui.ctx()), t.text, room);
     let size = galley.size();
     let x = (row.center().x - size.x / 2.0).clamp(min_x, (max_x - size.x).max(min_x));
     let at = pos2(x, row.center().y - size.y / 2.0);
-    ui.painter().galley(at, galley, t.text_dim);
+    ui.painter().galley(at, galley, t.text);
     let resp = ui.interact(Rect::from_min_size(at, size), ui.id().with("title-text"), Sense::hover());
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Label, true, &text));
     crate::control::record_widget(ui, &resp, &text, "label", None);
@@ -113,9 +112,9 @@ fn paint_mark(p: &Painter, rect: Rect) {
 fn hover_fill(ui: &Ui, rect: Rect, resp: &Response) {
     let t = Tokens::get();
     if resp.is_pointer_button_down_on() {
-        ui.painter().rect_filled(rect, 2.0, t.select_bg);
+        ui.painter().rect_filled(rect, 2.0, t.ribbon_pressed);
     } else if resp.hovered() && resp.enabled() {
-        ui.painter().rect_filled(rect, 2.0, t.control_hover);
+        ui.painter().rect_filled(rect, 2.0, t.ribbon_hover);
     }
 }
 
@@ -192,7 +191,7 @@ fn info_center(app: &mut CadApp, ui: &mut Ui, right: f32, center_y: f32) -> f32 
             .id(egui::Id::new("asenacad-infocenter-search-box"))
             .hint_text(hint)
             .char_limit(QUERY_MAX)
-            .font(FontId::proportional(12.0))
+            .font(crate::theme::ribbon_font(ui.ctx()))
             .background_color(t.field)
             .margin(vec2(4.0, 2.0))
             .desired_width(SEARCH_W);

@@ -31,7 +31,6 @@
 	% of all commits	전체 커밋 중 비율(%)
 	* Wildcard Match	* 와일드카드 일치
 	*VARIES*	*다양함*
-	+  |  Top  |  2D Wireframe	+  |  평면  |  2D 와이어프레임
 	+Bin	+Bin
 	+LOC	+LOC
 	1 Viewport	뷰포트 1개
@@ -1242,3 +1241,12 @@ menu	Modify	수정
 	Minimize to Tabs	탭으로 최소화
 	Minimize Options	최소화 옵션
 	Pin	고정
+	Top	평면
+	2D Wireframe	2D 와이어프레임
+	Annotate	주석
+	Manage	관리
+	Output	출력
+	Collaborate	공동 작업
+	Express Tools	익스프레스 도구
+	File Tabs	파일 탭
+	This tab is not built yet (M1b)	이 탭은 아직 만들어지지 않았습니다 (M1b)

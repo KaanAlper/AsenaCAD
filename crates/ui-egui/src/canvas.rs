@@ -2255,10 +2255,15 @@ fn draw_ucs_icon(p: &egui::Painter, rect: Rect) {
     p.text(o + vec2(0.0, -70.0), egui::Align2::CENTER_BOTTOM, crate::tl!("Y"), f, t.canvas_ink);
 }
 
+/// The viewport controls at the top left, as AutoCAD shows them: "[−][Top][2D Wireframe]" (the
+/// viewport menu, the view and the visual style).
 fn viewport_label(p: &egui::Painter, rect: Rect) {
     let t = Tokens::get();
-    let at = pos2(rect.left() + 10.0, rect.top() + 8.0);
-    p.text(at, egui::Align2::LEFT_TOP, crate::tl!("+  |  Top  |  2D Wireframe"), crate::theme::small(), t.canvas_ink);
+    let font = crate::theme::ribbon_font(p.ctx());
+    let mut x = rect.left() + 8.0;
+    for part in ["\u{2212}", crate::tl!("Top"), crate::tl!("2D Wireframe")] {
+        x += p.text(pos2(x, rect.top() + 6.0), egui::Align2::LEFT_TOP, format!("[{part}]"), font.clone(), t.canvas_ink).width();
+    }
 }
 
 fn draw_viewcube(app: &mut CadApp, ui: &mut egui::Ui, rect: Rect) {

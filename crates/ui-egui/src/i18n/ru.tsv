@@ -10,7 +10,6 @@
 	% of all commits	% всех коммитов
 	* Wildcard Match	* По шаблону
 	*VARIES*	*РАЗНЫЕ*
-	+  |  Top  |  2D Wireframe	+  |  Сверху  |  2D-каркас
 	+Bin	+двоич.
 	+LOC	+строк
 	1 Viewport	1 видовой экран
@@ -1012,3 +1011,12 @@
 	Minimize to Tabs	Свернуть до вкладок
 	Minimize Options	Параметры сворачивания
 	Pin	Закрепить
+	Top	Сверху
+	2D Wireframe	2D-каркас
+	Annotate	Аннотации
+	Manage	Управление
+	Output	Вывод
+	Collaborate	Совместная работа
+	Express Tools	Экспресс-инструменты
+	File Tabs	Вкладки файлов
+	This tab is not built yet (M1b)	Эта вкладка ещё не готова (M1b)

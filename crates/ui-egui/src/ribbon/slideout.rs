@@ -155,17 +155,17 @@ pub fn track(ctx: &Context) {
 /// rows and the pin button at the bottom-left.
 pub fn body(ui: &mut Ui, app: &mut CadApp, rect: Rect, key: &str, panel: &Panel) {
     let t = Tokens::get();
-    ui.painter().rect_filled(rect, 0.0, t.panel);
+    ui.painter().rect_filled(rect, 0.0, t.ribbon_bg);
     ui.painter().rect_stroke(rect, 0.0, egui::Stroke::new(1.0, t.border), egui::StrokeKind::Inside);
     let prefix = format!("{key}/slideout");
     super::render_items(ui, app, &prefix, panel.slideout, false, pos2(rect.left() + layout::PAD, rect.top()));
     let bar = Rect::from_min_max(pos2(rect.left(), rect.bottom() - SLIDEOUT_BAR_H), rect.max);
-    ui.painter().rect_filled(bar.shrink(1.0), 0.0, t.chrome_dark);
+    ui.painter().rect_filled(bar.shrink(1.0), 0.0, t.ribbon_panel_title);
     let pin_rect = Rect::from_min_size(pos2(bar.left() + 3.0, bar.center().y - 8.0), Vec2::splat(16.0));
     let pinned = get(ui.ctx()).is_some_and(|f| f.pinned);
     let resp = ui.interact(pin_rect, ui.id().with(("ribbon-pin", key)), Sense::click());
     if pinned || resp.hovered() {
-        ui.painter().rect_filled(pin_rect, 2.0, if pinned { t.select_bg } else { t.control_hover });
+        ui.painter().rect_filled(pin_rect, 2.0, if pinned { t.ribbon_pressed } else { t.ribbon_hover });
     }
     icons::paint(ui.painter(), pin_rect.shrink(1.0), if pinned { Icon::Pin } else { Icon::Unpin }, false);
     icons::describe_control(ui, &resp, "Pin", Some(pinned), false);
@@ -187,7 +187,7 @@ pub(super) fn panel_popup(app: &mut CadApp, ui: &Ui, anchor: Rect, key: &str, ta
         &ctx,
         |ui| {
             let (rect, _) = ui.allocate_exact_size(size, Sense::hover());
-            ui.painter().rect_filled(rect, 0.0, t.panel);
+            ui.painter().rect_filled(rect, 0.0, t.ribbon_bg);
             ui.painter().rect_stroke(rect, 0.0, egui::Stroke::new(1.0, t.border), egui::StrokeKind::Inside);
             let panel_rect = Rect::from_min_size(rect.min, vec2(w, PANEL_H));
             super::show_panel(app, ui, panel_rect, key, panel, false, true);

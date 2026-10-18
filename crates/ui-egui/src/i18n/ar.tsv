@@ -10,7 +10,6 @@
 	% of all commits	% من كل الإيداعات
 	* Wildcard Match	* مطابقة أحرف البدل
 	*VARIES*	*متفاوت*
-	+  |  Top  |  2D Wireframe	+  |  علوي  |  هيكل سلكي ثنائي الأبعاد
 	+Bin	+Bin
 	+LOC	+LOC
 	1 Viewport	إطار عرض واحد
@@ -1237,3 +1236,12 @@ menu	View	عرض
 	Minimize to Tabs	تصغير إلى علامات التبويب
 	Minimize Options	خيارات التصغير
 	Pin	تثبيت
+	Top	علوي
+	2D Wireframe	هيكل سلكي ثنائي الأبعاد
+	Annotate	تعليقات توضيحية
+	Manage	إدارة
+	Output	إخراج
+	Collaborate	تعاون
+	Express Tools	أدوات سريعة
+	File Tabs	علامات تبويب الملفات
+	This tab is not built yet (M1b)	لم يتم إنشاء علامة التبويب هذه بعد (M1b)

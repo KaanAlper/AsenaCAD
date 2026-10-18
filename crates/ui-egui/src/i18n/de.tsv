@@ -10,7 +10,6 @@
 	% of all commits	% aller Commits
 	* Wildcard Match	* Wildcard-Abgleich
 	*VARIES*	*VARIIERT*
-	+  |  Top  |  2D Wireframe	+  |  Oben  |  2D-Drahtmodell
 	+Bin	+Binär
 	+LOC	+Zeilen
 	1 Viewport	1 Ansichtsfenster
@@ -1038,3 +1037,12 @@
 	Minimize to Tabs	Auf Registerkarten minimieren
 	Minimize Options	Minimierungsoptionen
 	Pin	Fixieren
+	Top	Oben
+	2D Wireframe	2D-Drahtmodell
+	Annotate	Beschriften
+	Manage	Verwalten
+	Output	Ausgabe
+	Collaborate	Zusammenarbeit
+	Express Tools	Express-Werkzeuge
+	File Tabs	Dateiregisterkarten
+	This tab is not built yet (M1b)	Diese Registerkarte ist noch nicht fertig (M1b)

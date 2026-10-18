@@ -19,14 +19,17 @@ pub use bind::{combo, slider};
 use egui::{Align, Area, Id, Layout, Order, Pos2, Rect, Sense, Ui, UiBuilder, Vec2, pos2, vec2};
 use serde::{Deserialize, Serialize};
 
-use layout::{DIVIDER, Fit, PANEL_BUTTON_W, PANEL_H, PANEL_TOP, TAB_H, TAB_PAD, TAB_ROW_H, TITLE_H};
+use layout::{DIVIDER, Fit, PANEL_BUTTON_W, PANEL_H, PANEL_TOP, TAB_H, TAB_PAD, TAB_ROW_H, TAB_TOP, TITLE_H};
 use model::{Item, Panel, Size, Tab};
 
 use crate::CadApp;
 use crate::icons::{self, Icon};
 use crate::theme::Tokens;
 
-const FONT: f32 = 12.0;
+/// What a tab whose panels are not built yet shows in the strip.
+pub const UNBUILT_TAB_NOTE: &str = "This tab is not built yet (M1b)";
+/// A collapsed panel's face is inset this much in its panel.
+const PANEL_BUTTON_INSET: f32 = 2.0;
 
 /// How far the ribbon is minimized: AutoCAD's minimize button cycles through these in order.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -83,7 +86,9 @@ pub fn current_tab(name: &str) -> &'static Tab {
 /// The ribbon: tab row and the selected tab's panels, as a top panel of `ui`.
 pub fn show(app: &mut CadApp, ui: &mut Ui) {
     let t = Tokens::get();
-    egui::Panel::top("asenacad_ribbon").exact_size(height(app.ui.ribbon_min)).frame(egui::Frame::NONE.fill(t.chrome)).show(ui, |ui| {
+    egui::Panel::top("asenacad_ribbon").exact_size(height(app.ui.ribbon_min)).frame(egui::Frame::NONE.fill(t.ribbon_tab_row)).show(ui, |ui| {
+        // Combo boxes and other egui widgets in the panels use the ribbon's text size too.
+        ui.style_mut().override_font_id = Some(crate::theme::ribbon_font(ui.ctx()));
         let r = ui.max_rect();
         let tab = current_tab(&app.ui.ribbon_tab);
         let row = Rect::from_min_size(r.min, vec2(r.width(), TAB_ROW_H));
@@ -97,8 +102,9 @@ pub fn show(app: &mut CadApp, ui: &mut Ui) {
                 slideout::add_inside(ui.ctx(), row);
                 let ctx = ui.ctx().clone();
                 Area::new(Id::new("asenacad-ribbon-strip")).order(Order::Foreground).fixed_pos(strip.min).show(&ctx, |ui| {
+                    ui.style_mut().override_font_id = Some(crate::theme::ribbon_font(ui.ctx()));
                     let (rect, _) = ui.allocate_exact_size(strip.size(), Sense::hover());
-                    ui.painter().rect_filled(rect, 0.0, t.panel);
+                    ui.painter().rect_filled(rect, 0.0, t.ribbon_tab_row);
                     panel_strip(app, ui, rect, tab);
                     slideout::add_inside(ui.ctx(), rect);
                 });
@@ -110,15 +116,15 @@ pub fn show(app: &mut CadApp, ui: &mut Ui) {
 }
 
 fn label_galley(ui: &Ui, text: &str, color: egui::Color32) -> std::sync::Arc<egui::Galley> {
-    ui.painter().layout_no_wrap(text.to_string(), egui::FontId::proportional(FONT), color)
+    ui.painter().layout_no_wrap(text.to_string(), crate::theme::ribbon_font(ui.ctx()), color)
 }
 
 fn hover_fill(ui: &Ui, rect: Rect, resp: &egui::Response, on: bool) {
     let t = Tokens::get();
-    if on {
-        ui.painter().rect_filled(rect, 2.0, t.select_bg);
+    if on || resp.is_pointer_button_down_on() {
+        ui.painter().rect_filled(rect, 2.0, t.ribbon_pressed);
     } else if resp.hovered() {
-        ui.painter().rect_filled(rect, 2.0, t.control_hover);
+        ui.painter().rect_filled(rect, 2.0, t.ribbon_hover);
     }
 }
 
@@ -130,12 +136,16 @@ fn tab_row(app: &mut CadApp, ui: &mut Ui, row: Rect, current: &Tab) {
     for tab in model::tabs() {
         let selected = std::ptr::eq(tab, current);
         let galley = label_galley(ui, crate::i18n::t(tab.label), if selected { t.text } else { t.text_dim });
-        let rect = Rect::from_min_size(pos2(x, row.top() + (TAB_ROW_H - TAB_H) / 2.0), vec2(galley.size().x + 2.0 * TAB_PAD, TAB_H));
+        let rect = Rect::from_min_size(pos2(x, row.top() + TAB_TOP), vec2(galley.size().x + 2.0 * TAB_PAD, TAB_H));
         let resp = ui.interact(rect, ui.id().with(("ribbon-tab", tab.label)), Sense::click());
+        // The selected tab is part of the panel strip below it (unless the ribbon is down to its
+        // tabs).
+        let joined = app.ui.ribbon_min != RibbonMin::Tabs || slideout::strip_open(&ctx);
         if selected {
-            ui.painter().rect_filled(rect, egui::CornerRadius { nw: 3, ne: 3, sw: 0, se: 0 }, t.panel);
+            let radius = egui::CornerRadius { nw: 2, ne: 2, sw: if joined { 0 } else { 2 }, se: if joined { 0 } else { 2 } };
+            ui.painter().rect_filled(rect, radius, t.ribbon_bg);
         } else if resp.hovered() {
-            ui.painter().rect_filled(rect, 3.0, t.control_hover);
+            ui.painter().rect_filled(rect, 2.0, t.ribbon_hover);
         }
         let y = rect.center().y - galley.size().y / 2.0;
         ui.painter().galley(pos2(rect.left() + TAB_PAD, y), galley, t.text);
@@ -157,7 +167,7 @@ fn tab_row(app: &mut CadApp, ui: &mut Ui, row: Rect, current: &Tab) {
         }
         x = rect.right() + 1.0;
     }
-    let button = Rect::from_min_size(pos2(x + 6.0, row.top() + 3.0), vec2(20.0, 18.0));
+    let button = Rect::from_min_size(pos2(x + 6.0, row.top() + TAB_TOP + 1.0), vec2(20.0, 18.0));
     let resp = ui.interact(button, ui.id().with("ribbon-minimize"), Sense::click());
     hover_fill(ui, button, &resp, false);
     let up = app.ui.ribbon_min == RibbonMin::Full;
@@ -190,6 +200,10 @@ fn tab_row(app: &mut CadApp, ui: &mut Ui, row: Rect, current: &Tab) {
 fn panel_strip(app: &mut CadApp, ui: &mut Ui, strip: Rect, tab: &Tab) {
     let t = Tokens::get();
     let left = strip.left() + 2.0;
+    if tab.panels.is_empty() {
+        unbuilt_note(ui, Rect::from_min_size(pos2(left, strip.top() + PANEL_TOP), vec2(strip.right() - 2.0 - left, PANEL_H)));
+        return;
+    }
     let full: Vec<f32> = tab.panels.iter().map(|p| layout::panel_width(ui, tab.label, p, false) + DIVIDER).collect();
     let compact: Vec<f32> = tab.panels.iter().map(|p| layout::panel_width(ui, tab.label, p, true) + DIVIDER).collect();
     let fits = layout::fit(&full, &compact, strip.right() - left);
@@ -205,6 +219,7 @@ fn panel_strip(app: &mut CadApp, ui: &mut Ui, strip: Rect, tab: &Tab) {
                 Fit::Full => full.get(i).copied().unwrap_or(0.0) - DIVIDER,
             };
             let rect = Rect::from_min_size(pos2(x, top), vec2(w, PANEL_H));
+            ui.painter().rect_filled(rect, 0.0, t.ribbon_bg);
             if *fit == Fit::Collapsed {
                 panel_button(app, ui, rect, &key, tab, panel);
             } else {
@@ -214,12 +229,23 @@ fn panel_strip(app: &mut CadApp, ui: &mut Ui, strip: Rect, tab: &Tab) {
                     slideout::slideout_area(app, ui, pos2(rect.left(), rect.bottom()), rect.width(), &key, panel);
                 }
             }
-            x = rect.right();
-            let line_x = x + DIVIDER / 2.0;
-            ui.painter().line_segment([pos2(line_x, top + 4.0), pos2(line_x, top + PANEL_H - 4.0)], egui::Stroke::new(DIVIDER, t.border));
-            x += DIVIDER;
+            // The frame shows through the gap between panels.
+            x = rect.right() + DIVIDER;
         }
     });
+}
+
+/// The strip of a tab whose panels are not built yet: one dim, centred note.
+fn unbuilt_note(ui: &mut Ui, rect: Rect) {
+    let t = Tokens::get();
+    ui.painter().rect_filled(rect, 0.0, t.ribbon_bg);
+    let text = crate::tl!("This tab is not built yet (M1b)");
+    let galley = label_galley(ui, text, t.text_faint);
+    let at = rect.center() - galley.size() / 2.0;
+    let resp = ui.interact(Rect::from_min_size(at, galley.size()), ui.id().with("ribbon-unbuilt-tab"), Sense::hover());
+    ui.painter().galley(at, galley, t.text_faint);
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Label, true, text));
+    crate::control::record_widget(ui, &resp, UNBUILT_TAB_NOTE, "label", None);
 }
 
 /// One expanded panel in `rect`: its items and its title bar (slide-out "▾", launcher).
@@ -235,11 +261,11 @@ fn show_panel(app: &mut CadApp, ui: &mut Ui, rect: Rect, key: &str, panel: &Pane
 fn title_bar(app: &mut CadApp, ui: &mut Ui, bar: Rect, key: &str, panel: &Panel, popup: bool) {
     let t = Tokens::get();
     let ctx = ui.ctx().clone();
-    ui.painter().rect_filled(bar, 0.0, t.chrome_dark);
+    ui.painter().rect_filled(bar, 0.0, t.ribbon_panel_title);
     let launcher = panel.launcher.map(|cmd| (cmd, Rect::from_min_size(pos2(bar.right() - widgets::LAUNCHER.x, bar.top()), widgets::LAUNCHER)));
     let title = Rect::from_min_max(bar.min, pos2(launcher.map_or(bar.right(), |(_, r)| r.left()), bar.bottom()));
     let open = slideout::slideout_open(&ctx, key, popup);
-    let galley = label_galley(ui, crate::i18n::t(panel.label), t.text_dim);
+    let galley = label_galley(ui, crate::i18n::t(panel.label), t.text);
     let has_slideout = !panel.slideout.is_empty();
     let text_w = galley.size().x + if has_slideout { 14.0 } else { 0.0 };
     let x = title.center().x - text_w / 2.0;
@@ -260,7 +286,7 @@ fn title_bar(app: &mut CadApp, ui: &mut Ui, bar: Rect, key: &str, panel: &Panel,
         let resp = ui.interact(title, ui.id().with(("ribbon-title", key, popup)), Sense::hover());
         resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Label, true, crate::i18n::t(panel.label)));
     }
-    ui.painter().galley(pos2(x, bar.center().y - galley.size().y / 2.0), galley, t.text_dim);
+    ui.painter().galley(pos2(x, bar.center().y - galley.size().y / 2.0), galley, t.text);
     if let Some((cmd, rect)) = launcher {
         let label = widgets::command_label(ui, app, cmd).unwrap_or(panel.label);
         widgets::launcher(ui, app, rect, key, label, cmd);
@@ -310,11 +336,18 @@ fn panel_button(app: &mut CadApp, ui: &mut Ui, rect: Rect, key: &str, tab: &Tab,
     let ctx = ui.ctx().clone();
     let resp = ui.interact(rect, ui.id().with(("ribbon-panel-button", key)), Sense::click());
     let open = slideout::popup_open(&ctx, key);
-    hover_fill(ui, rect, &resp, open);
+    let face = rect.shrink(PANEL_BUTTON_INSET);
+    let fill = if open || resp.is_pointer_button_down_on() {
+        t.ribbon_pressed
+    } else if resp.hovered() {
+        t.ribbon_hover
+    } else {
+        t.ribbon_collapsed_bg
+    };
+    ui.painter().rect_filled(face, 2.0, fill);
     let icon_rect = Rect::from_center_size(pos2(rect.center().x, rect.top() + 6.0 + 16.0), Vec2::splat(32.0));
     icons::paint(ui.painter(), icon_rect, panel_icon(&ctx, key, panel), false);
-    let mut job =
-        egui::text::LayoutJob::simple(crate::i18n::t(panel.label).to_string(), egui::FontId::proportional(FONT), t.text, rect.width() - 4.0);
+    let mut job = egui::text::LayoutJob::simple(crate::i18n::t(panel.label).to_string(), crate::theme::ribbon_font(&ctx), t.text, rect.width() - 4.0);
     job.wrap.max_rows = 2;
     job.halign = Align::Center;
     let galley = ui.painter().layout_job(job);
@@ -343,8 +376,8 @@ fn minimized_strip(app: &mut CadApp, ui: &mut Ui, strip: Rect, tab: &Tab, titles
         let rect = Rect::from_min_size(pos2(x, strip.top() + 2.0), size);
         let resp = ui.interact(rect, ui.id().with(("ribbon-panel-button", &key)), Sense::click());
         let open = slideout::popup_open(&ctx, &key);
+        ui.painter().rect_filled(rect, 2.0, t.ribbon_collapsed_bg);
         hover_fill(ui, rect, &resp, open);
-        ui.painter().rect_stroke(rect, 2.0, egui::Stroke::new(1.0, t.border), egui::StrokeKind::Inside);
         let chevron = Rect::from_center_size(pos2(rect.right() - 9.0, rect.center().y), Vec2::splat(9.0));
         if titles {
             ui.painter().galley(pos2(rect.left() + 8.0, rect.center().y - galley.size().y / 2.0), galley, t.text);

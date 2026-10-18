@@ -258,7 +258,7 @@ fn ribbon(width: f32, height: f32) -> Harness<'static, CadApp> {
 
 /// The ribbon's top edge (the harness's panel has a margin): the tab row's top.
 fn ribbon_top(h: &Harness<'_, CadApp>) -> f32 {
-    h.get_by_role_and_label(Role::Tab, "Home").rect().top() - (layout::TAB_ROW_H - layout::TAB_H) / 2.0
+    h.get_by_role_and_label(Role::Tab, "Home").rect().top() - layout::TAB_TOP
 }
 
 /// The panel title bars' band: panels start 1 px below the strip, which starts below the tab row.

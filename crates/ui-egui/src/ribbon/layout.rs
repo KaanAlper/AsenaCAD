@@ -3,7 +3,7 @@
 //!
 //! Numbers follow the observed AutoCAD ribbon: a 100 px strip of 97 px panels (72 px content and
 //! an 18 px title bar), large items at the content's top, small items in rows at +5/+29/+53,
-//! panels packed left to right with 1 px dividers. A narrow window first hides the labels of
+//! panels packed left to right with 1 px gaps between them. A narrow window first hides the labels of
 //! small items (panel by panel from the right), then collapses whole panels from the right into
 //! panel buttons that open the panel as a popup.
 
@@ -12,9 +12,10 @@ use egui::{Pos2, Rect, Ui, pos2, vec2};
 use super::model::{Item, Panel, Size};
 use super::widgets;
 
-/// The tab row: 20 px tab buttons with 2 px above and below.
+/// The tab row: 20 px tab buttons 4 px below the row's top, standing on the panel strip.
 pub const TAB_ROW_H: f32 = 24.0;
 pub const TAB_H: f32 = 20.0;
+pub const TAB_TOP: f32 = TAB_ROW_H - TAB_H;
 /// Horizontal padding inside a tab button around its label.
 pub const TAB_PAD: f32 = 10.0;
 /// The panel strip below the tab row (Full state).
@@ -181,7 +182,7 @@ pub fn slideout_size(ui: &Ui, prefix: &str, list: &[Item], min_w: f32) -> egui::
 
 /// The width a panel's title bar needs: its label, the slide-out "▾" and the launcher.
 pub fn title_width(ui: &Ui, panel: &Panel) -> f32 {
-    let text = ui.painter().layout_no_wrap(crate::i18n::t(panel.label).to_string(), egui::FontId::proportional(12.0), egui::Color32::WHITE);
+    let text = ui.painter().layout_no_wrap(crate::i18n::t(panel.label).to_string(), crate::theme::ribbon_font(ui.ctx()), egui::Color32::WHITE);
     let chevron = if panel.slideout.is_empty() { 0.0 } else { 14.0 };
     let launcher = if panel.launcher.is_some() { widgets::LAUNCHER.x + 2.0 } else { 0.0 };
     text.size().x + chevron + launcher + 12.0

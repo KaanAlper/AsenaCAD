@@ -36,7 +36,6 @@ menu	Modify	Edita
 	% of all commits	% di tutti i commit
 	* Wildcard Match	* Corrispondenza con caratteri jolly
 	*VARIES*	*VARIA*
-	+  |  Top  |  2D Wireframe	+  |  Alto  |  Wireframe 2D
 	+Bin	+Bin
 	+LOC	+LOC
 	1 Viewport	1 finestra
@@ -1241,3 +1240,12 @@ menu	Modify	Edita
 	Minimize to Tabs	Riduci a schede
 	Minimize Options	Opzioni di riduzione
 	Pin	Blocca
+	Top	Alto
+	2D Wireframe	Wireframe 2D
+	Annotate	Annota
+	Manage	Gestione
+	Output	Output
+	Collaborate	Collabora
+	Express Tools	Strumenti rapidi
+	File Tabs	Schede dei file
+	This tab is not built yet (M1b)	Questa scheda non è ancora pronta (M1b)

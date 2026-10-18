@@ -10,7 +10,6 @@
 	% of all commits	% de todos los commits
 	* Wildcard Match	* Coincidencia con comodines
 	*VARIES*	*VARIOS*
-	+  |  Top  |  2D Wireframe	+  |  Superior  |  Estructura alámbrica 2D
 	+Bin	+Bin
 	+LOC	+Líneas
 	1 Viewport	1 ventana gráfica
@@ -1247,3 +1246,12 @@
 	Minimize to Tabs	Minimizar a fichas
 	Minimize Options	Opciones de minimización
 	Pin	Fijar
+	Top	Superior
+	2D Wireframe	Estructura alámbrica 2D
+	Annotate	Anotar
+	Manage	Administrar
+	Output	Salida
+	Collaborate	Colaborar
+	Express Tools	Herramientas exprés
+	File Tabs	Pestañas de archivo
+	This tab is not built yet (M1b)	Esta pestaña aún no está hecha (M1b)

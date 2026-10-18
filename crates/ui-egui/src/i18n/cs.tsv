@@ -31,7 +31,6 @@
 	% of all commits	% všech commitů
 	* Wildcard Match	* Shoda se zástupnými znaky
 	*VARIES*	*RŮZNÉ*
-	+  |  Top  |  2D Wireframe	+  |  Shora  |  2D drátový model
 	+Bin	+Bin
 	+LOC	+LOC
 	1 Viewport	1 výřez
@@ -1221,3 +1220,12 @@ menu	Modify	Modifikace
 	Minimize to Tabs	Minimalizovat na karty
 	Minimize Options	Možnosti minimalizace
 	Pin	Připnout
+	Top	Shora
+	2D Wireframe	2D drátový model
+	Annotate	Poznámky
+	Manage	Správa
+	Output	Výstup
+	Collaborate	Spolupráce
+	Express Tools	Expresní nástroje
+	File Tabs	Karty souborů
+	This tab is not built yet (M1b)	Tato karta zatím není hotová (M1b)
