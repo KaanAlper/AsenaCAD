@@ -125,3 +125,20 @@ fn find_text_selects_the_objects_with_the_typed_text() {
     h.run_steps(3);
     assert_eq!(h.state().session.selection().len(), 1, "FIND selects the text it finds");
 }
+
+#[test]
+fn the_text_height_list_offers_the_drawings_heights_and_common_ones() {
+    let mut h = harness("Text");
+    h.state_mut().run("text", json!({ "at": [0, 0], "text": "Tag", "height": 0.3 })).unwrap();
+    h.run_steps(2);
+    h.get_by_label("Annotation Text Height options").click();
+    h.run_steps(3);
+    let shown = ["0.1", "0.2", "0.25", "0.3", "0.375", "0.5"];
+    let tops: Vec<f32> = shown.iter().map(|l| h.get_by_label(l).rect().min.y).collect();
+    assert!(tops.windows(2).all(|w| w[0] < w[1]), "smallest first, the current 0.2 and the text's 0.3 included: {tops:?}");
+    h.get_by_label("0.375").click();
+    h.run_steps(3);
+    assert_eq!(text_size(&h), 0.375, "an entry sets TEXTSIZE");
+    assert!(h.query_by_label("0.1").is_none(), "the list closes");
+    assert_eq!(h.get_by_label("Annotation Text Height").value().as_deref(), Some("0.375"));
+}

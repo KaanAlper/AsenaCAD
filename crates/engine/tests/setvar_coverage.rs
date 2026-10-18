@@ -81,6 +81,7 @@ fn bad_values_and_unknown_names_are_refused() {
         ("HPSCALE", json!(0)),
         ("TEXTSIZE", json!(0)),
         ("TEXTSIZE", json!(-2.5)),
+        ("TEXTSIZE", json!(1e7)),
         ("HPNAME", json!("NO-SUCH-PATTERN")),
         ("DONUTOD", json!(0)),
         ("CIRCLERAD", json!(-1)),
@@ -110,4 +111,7 @@ fn metric_defaults() {
     assert_eq!(getvar(&mut s, "REVCLOUDARCLEN"), json!(15.0));
     assert_eq!(getvar(&mut s, "CMLSCALE"), json!(20.0));
     assert_eq!(getvar(&mut s, "CENTEREXE"), json!(3.5));
+    // A header without TEXTSIZE gives the metric default.
+    s.doc_mut().unwrap().header.vars.remove("TEXTSIZE");
+    assert_eq!(getvar(&mut s, "TEXTSIZE"), json!(2.5));
 }

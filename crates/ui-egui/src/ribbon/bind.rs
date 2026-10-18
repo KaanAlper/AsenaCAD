@@ -97,7 +97,7 @@ fn current(app: &CadApp, kind: Combo) -> (String, bool) {
         Combo::XrefFrames => (crate::tl!("*Frames vary*").to_string(), false),
         Combo::UnderlaySnap => (crate::tl!("Snap to Underlays ON").to_string(), false),
         Combo::FindText => (String::new(), true),
-        Combo::TextHeight => (height_text(h.f64("TEXTSIZE", 0.2)), true),
+        Combo::TextHeight => (height_text(text_size(app)), true),
         // TEXTLAYER, DIMLAYER, CENTERLAYER and the multileader layer aren't modelled yet: new
         // annotations go on the current layer, which is what "Use Current" means.
         Combo::TextLayer | Combo::DimLayer | Combo::CenterLayer | Combo::MLeaderLayer => (crate::tl!("Use Current").to_string(), false),
@@ -158,9 +158,41 @@ fn height_text(v: f64) -> String {
     if text.is_empty() || text == "-" { "0".to_string() } else { text.to_string() }
 }
 
+/// TEXTSIZE, or the default for the drawing's units when the header has none.
+fn text_size(app: &CadApp) -> f64 {
+    cadcraft_engine::sysvars::get(&app.session, "TEXTSIZE").and_then(|v| v.as_f64()).filter(|v| v.is_finite()).unwrap_or(0.2)
+}
+
+/// Our own choice of common text heights for the height list: paper-like sizes in the drawing's
+/// units (ISO 3098's series in a metric drawing).
+const METRIC_HEIGHTS: [f64; 6] = [1.8, 2.5, 3.5, 5.0, 7.0, 10.0];
+const IMPERIAL_HEIGHTS: [f64; 6] = [0.1, 0.125, 0.1875, 0.25, 0.375, 0.5];
+/// The height list never grows past this many entries, however many heights the drawing uses.
+const MAX_HEIGHTS: usize = 24;
+
+/// The Annotation Text Height list: the current height, the heights the drawing's text and
+/// multiline text use, and the common sizes, smallest first, each once.
+fn heights(app: &CadApp) -> Vec<f64> {
+    let Ok(d) = app.session.doc() else { return Vec::new() };
+    let common = if d.header.i64("MEASUREMENT", 0) == 1 { METRIC_HEIGHTS } else { IMPERIAL_HEIGHTS };
+    let used = std::iter::once(&d.model).chain(d.layouts.iter().map(|l| &l.entities)).flat_map(|st| st.iter()).filter_map(|e| match &e.kind {
+        cadcraft_doc::EntityKind::Text(t) => Some(t.height),
+        cadcraft_doc::EntityKind::MText(t) => Some(t.height),
+        _ => None,
+    });
+    let mut out: Vec<f64> = std::iter::once(text_size(app)).chain(common).chain(used).filter(|h| h.is_finite() && *h > 0.0).collect();
+    out.sort_by(f64::total_cmp);
+    out.dedup_by(|a, b| height_text(*a) == height_text(*b));
+    out.truncate(MAX_HEIGHTS);
+    out
+}
+
+/// The ▾ part of an editable combo box.
+const COMBO_ARROW_W: f32 = 18.0;
+
 /// The editable boxes: Find Text (Enter finds the typed text with FIND, which selects the
-/// objects it is in) and Annotation Text Height (Enter sets TEXTSIZE). While it isn't being
-/// edited, the height box shows the drawing's value.
+/// objects it is in) and Annotation Text Height, an editable combo box (Enter or an entry of its
+/// ▾ list sets TEXTSIZE). While it isn't being edited, the height box shows the drawing's value.
 fn text_field(ui: &mut Ui, app: &mut CadApp, kind: Combo, width: f32) -> Response {
     let label = crate::i18n::t(kind.label());
     let id = egui::Id::new(("ribbon-field", kind));
@@ -168,13 +200,23 @@ fn text_field(ui: &mut Ui, app: &mut CadApp, kind: Combo, width: f32) -> Respons
     let (value, _) = current(app, kind);
     let focused = ui.memory(|m| m.has_focus(id));
     let mut text = match kind {
-        Combo::TextHeight if !focused => value,
+        Combo::TextHeight if !focused => value.clone(),
         _ => ui.data(|d| d.get_temp::<String>(buffer)).unwrap_or_default(),
     };
     let enabled = app.session.doc().is_ok();
+    let list = kind == Combo::TextHeight;
     let hint = if kind == Combo::FindText { crate::tl!("Find text") } else { "" };
     let edit = egui::TextEdit::singleline(&mut text).id(id).hint_text(hint);
-    let resp = ui.add_enabled_ui(enabled, |ui| ui.add_sized(egui::vec2(width, ui.available_height()), edit)).inner;
+    let box_w = if list { width - COMBO_ARROW_W } else { width };
+    let (resp, arrow) = ui
+        .add_enabled_ui(enabled, |ui| {
+            ui.spacing_mut().item_spacing.x = 0.0;
+            let h = ui.available_height();
+            let resp = ui.add_sized(egui::vec2(box_w, h), edit);
+            let arrow = list.then(|| ui.allocate_exact_size(egui::vec2(COMBO_ARROW_W, h), egui::Sense::click()).1);
+            (resp, arrow)
+        })
+        .inner;
     let entered = resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
     resp.widget_info(|| {
         let mut info = WidgetInfo::labeled(WidgetType::TextEdit, resp.enabled(), label);
@@ -184,20 +226,34 @@ fn text_field(ui: &mut Ui, app: &mut CadApp, kind: Combo, width: f32) -> Respons
     crate::control::record_widget(ui, &resp, label, "textbox", None);
     let typed = text.trim().to_string();
     ui.data_mut(|d| d.insert_temp(buffer, text));
-    if entered {
-        // Errors are echoed to the command history by `run`; a height that isn't a positive
-        // number is left alone and the box shows the drawing's value again.
-        match kind {
-            Combo::FindText if !typed.is_empty() => {
-                let _ = app.run("find", json!({ "find": typed }));
-            }
-            Combo::TextHeight => {
-                if let Some(v) = typed.parse::<f64>().ok().filter(|v| v.is_finite() && *v > 0.0) {
-                    let _ = app.run("setvar", json!({ "name": "TEXTSIZE", "value": v }));
+    let mut picked = None;
+    if let Some(arrow) = arrow {
+        let t = crate::theme::Tokens::get();
+        if arrow.hovered() && arrow.enabled() {
+            ui.painter().rect_filled(arrow.rect, 2.0, t.ribbon_hover);
+        }
+        let chevron = egui::Rect::from_center_size(arrow.rect.center(), egui::Vec2::splat(10.0));
+        crate::icons::paint(ui.painter(), chevron, crate::icons::Icon::ChevronDown, !arrow.enabled());
+        let options = crate::tf!("{label} options", label = label);
+        crate::icons::describe_control(ui, &arrow, &options, None, false);
+        egui::Popup::from_toggle_button_response(&arrow).close_behavior(egui::PopupCloseBehavior::CloseOnClick).show(|ui| {
+            ui.set_min_width(width - 8.0);
+            for h in heights(app) {
+                let shown = height_text(h);
+                if ui.selectable_label(shown == value, shown.as_str()).clicked() {
+                    picked = Some(h);
                 }
             }
-            _ => {}
-        }
+        });
+    }
+    // Errors are echoed to the command history by `run`; a typed height that isn't a positive
+    // number is left alone and the box shows the drawing's value again.
+    let height = picked.or_else(|| (entered && list).then(|| typed.parse::<f64>().ok()).flatten().filter(|v| v.is_finite() && *v > 0.0));
+    if let Some(v) = height {
+        let _ = app.run("setvar", json!({ "name": "TEXTSIZE", "value": v }));
+    }
+    if entered && kind == Combo::FindText && !typed.is_empty() {
+        let _ = app.run("find", json!({ "find": typed }));
     }
     resp.on_hover_text(label)
 }

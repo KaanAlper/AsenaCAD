@@ -18,6 +18,8 @@ enum Kind {
     Real { min: f64, strict: bool },
     /// Any finite real number.
     AnyReal,
+    /// A real number above 0 and at most `max` (a size that must stay drawable).
+    Size { max: f64 },
     /// An angle: kept in radians, shown and typed in degrees (a typed text follows AUNITS).
     Angle,
     /// A hatch pattern name from the library.
@@ -72,7 +74,7 @@ const HEADER: &[(&str, Kind, Def)] = &[
     ("SPLKNOTS", Kind::Choice(&[0, 1, 2]), Def::Int(0)),
     ("TEXTFILL", Kind::Choice(&[0, 1]), Def::Int(1)),
     // The height TEXT and MTEXT start with (the ribbon's Annotation Text Height).
-    ("TEXTSIZE", Kind::Real { min: 0.0, strict: true }, Def::Units(0.2, 2.5)),
+    ("TEXTSIZE", Kind::Size { max: 1e6 }, Def::Units(0.2, 2.5)),
     ("TRIMEXTENDMODE", Kind::Choice(&[0, 1]), Def::Int(1)),
     ("TRIMMODE", Kind::Choice(&[0, 1]), Def::Int(1)),
     ("WIPEOUTFRAME", Kind::Choice(&[0, 1, 2]), Def::Int(1)),
@@ -168,6 +170,10 @@ fn set_header(s: &mut Session, name: &str, kind: Kind, v: &Value, bad: impl Fn(S
         Kind::Real { min, strict } => {
             let f = real().filter(|f| if strict { *f > min } else { *f >= min });
             let f = f.ok_or_else(|| bad(format!("a number {} {min}", if strict { "above" } else { "of at least" })))?;
+            s.doc_mut()?.header.set_f64(name, f);
+        }
+        Kind::Size { max } => {
+            let f = real().filter(|f| *f > 0.0 && *f <= max).ok_or_else(|| bad(format!("a number above 0 and at most {max}")))?;
             s.doc_mut()?.header.set_f64(name, f);
         }
         Kind::AnyReal => {
