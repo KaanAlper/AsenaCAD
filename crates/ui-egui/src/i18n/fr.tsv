@@ -10,7 +10,6 @@
 	% of all commits	% de toutes les révisions
 	* Wildcard Match	* Correspondance générique
 	*VARIES*	*DIVER*
-	+  |  Top  |  2D Wireframe	+  |  Dessus  |  Filaire 2D
 	+Bin	+bin.
 	+LOC	+lignes
 	1 Viewport	1 fenêtre
@@ -470,6 +469,7 @@
 	Node	Nœud
 	None	Aucun
 	Not available	Non disponible
+	Not available now	Non disponible pour le moment
 	Not available yet	Pas encore disponible
 	OK	OK
 	Object	Objet
@@ -763,7 +763,7 @@
 	Specify center point of array	Spécifiez le point central de la matrice
 	Specify center point of base	Spécifiez le point central de la base
 	Specify corner of viewport	Spécifiez le coin de la fenêtre
-	Specify corner of window, enter a scale factor (nX or nXP)	Spécifiez le coin de la fenêtre, entrez un facteur d'échelle (nX ou nXP)
+	Specify corner of window, enter a scale factor (nX or nXP),	Spécifiez le coin de la fenêtre, entrez un facteur d'échelle (nX ou nXP),
 	Specify diameter of circle	Spécifiez le diamètre du cercle
 	Specify dimension arc line location	Spécifiez l'emplacement de l'arc de cote
 	Specify dimension line location	Spécifiez l'emplacement de la ligne de cote
@@ -1004,3 +1004,18 @@
 	Search for pattern	Rechercher un motif
 	Not a number or distance: {text}	Ni un nombre ni une distance : {text}
 	Query Texts	Interroger les textes
+	Show Full Ribbon	Afficher le ruban complet
+	Minimize to Panel Buttons	Réduire aux boutons de groupe
+	Minimize to Panel Titles	Réduire aux titres de groupe
+	Minimize to Tabs	Réduire aux onglets
+	Minimize Options	Options de réduction
+	Pin	Épingler
+	Top	Dessus
+	2D Wireframe	Filaire 2D
+	Annotate	Annoter
+	Manage	Gérer
+	Output	Sortie
+	Collaborate	Collaborer
+	Express Tools	Outils express
+	File Tabs	Onglets de fichiers
+	This tab is not built yet (M1b)	Cet onglet n'est pas encore construit (M1b)

@@ -35,7 +35,8 @@ pub struct Layout {
 
 impl Layout {
     pub fn new(canvas: Rect) -> Self {
-        let center = pos2(canvas.right() - 92.0, canvas.top() + 82.0);
+        // Where AutoCAD draws it: 84 pt in from the right edge, 106 pt down.
+        let center = pos2(canvas.right() - 84.0, canvas.top() + 106.0);
         let ring = 58.0;
         Layout {
             center,
@@ -98,7 +99,10 @@ pub fn show(app: &mut CadApp, ui: &mut egui::Ui, l: &Layout) {
     p.rect_filled(l.face, 2.0, face_col);
     p.rect_stroke(l.face, 2.0, Stroke::new(1.0, Color32::from_rgb(0x6c, 0x70, 0x76)), egui::StrokeKind::Inside);
     p.text(c, egui::Align2::CENTER_CENTER, crate::tl!("TOP"), egui::FontId::proportional(13.0), Color32::from_rgb(0x50, 0x54, 0x5a));
-    paint_home(&p, l.home, part == Some(Part::Home));
+    // Like AutoCAD's, the Home button shows only while the pointer is over the ViewCube.
+    if resp.hovered() {
+        paint_home(&p, l.home, part == Some(Part::Home));
+    }
 
     let resp = match part {
         Some(part) => resp.on_hover_cursor(CursorIcon::PointingHand).on_hover_text(part.tip()),

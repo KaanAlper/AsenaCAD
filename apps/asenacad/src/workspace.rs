@@ -42,6 +42,14 @@ fn snapshot(ui: &UiState) -> Result<Value, String> {
     if ui.history_lines > 12 {
         return Err("historyLines must be between 0 and 12".into());
     }
+    if ui.qat_shown.len() > 64 || ui.qat_shown.iter().any(|id| id.len() > 64) {
+        return Err("qatShown exceeds the workspace size limit".into());
+    }
+    // Saved as a valid set: each item once, in the Customization list's order.
+    let (status_shown, _) = cadcraft_ui_egui::chrome::statusbar::normalize(&ui.status_shown);
+    if !cadcraft_ui_egui::ribbon::model::is_tab(&ui.ribbon_tab) {
+        return Err("ribbonTab must name a ribbon tab".into());
+    }
     Ok(json!({
         "docking": ui.docking,
         "showToolsets": ui.show_toolsets,
@@ -58,6 +66,12 @@ fn snapshot(ui: &UiState) -> Result<Value, String> {
         "propertiesAll": ui.properties_all,
         "inWindowMenu": ui.in_window_menu,
         "historyLines": ui.history_lines,
+        "qatShown": ui.qat_shown,
+        "qatBelowRibbon": ui.qat_below_ribbon,
+        "ribbonTab": ui.ribbon_tab,
+        "ribbonMin": ui.ribbon_min,
+        "statusShown": status_shown,
+        "showNavbar": ui.show_navbar,
     }))
 }
 
@@ -89,6 +103,13 @@ fn read(path: &Path) -> Result<Option<UiState>, String> {
     {
         ui.docking = docking;
     }
+    // Status bar items this version doesn't know (a newer version's, or a typo) are dropped
+    // rather than refusing the whole workspace; duplicates go too.
+    let (status_shown, unknown) = cadcraft_ui_egui::chrome::statusbar::normalize(&ui.status_shown);
+    if !unknown.is_empty() {
+        log::warn!("{}: dropped unknown status bar items {unknown:?}", path.display());
+    }
+    ui.status_shown = status_shown;
     // Old or hand-edited files cannot reopen a dialog or replace the active drawing view.
     ui.dialog = None;
     ui.start_tab = false;
@@ -212,6 +233,12 @@ mod tests {
             toolset_tab: "Modeling".into(),
             collapsed_groups: vec!["Solid".into()],
             history_lines: 5,
+            qat_shown: vec!["open".into(), "u".into(), "preview".into()],
+            qat_below_ribbon: true,
+            ribbon_tab: "Annotate".into(),
+            ribbon_min: cadcraft_ui_egui::ribbon::RibbonMin::PanelTitles,
+            status_shown: vec!["coordinates".into(), "grid".into(), "dynmode".into()],
+            show_navbar: false,
             dialog: Some("layers".into()),
             start_tab: true,
             ..Default::default()
@@ -242,6 +269,7 @@ mod tests {
         let (mut store, _, _) = Workspace::at(Some(path.clone()));
         let mut ui = UiState::default();
         let mut app = cadcraft_ui_egui::CadApp::new(cadcraft_engine::Session::default(), Default::default());
+        app.run("ui.dock", json!({"operation":"open", "panel":"layers"})).unwrap();
         app.run("ui.dock", json!({"operation":"float", "panel":"layers", "rect":[120,90,340,410]})).unwrap();
         ui.docking = app.ui.docking;
         ui.docking.set_visible(Panel::ToolSets, false).unwrap();
@@ -258,6 +286,27 @@ mod tests {
     }
 
     #[test]
+    fn the_ribbon_tab_and_minimize_state_survive_and_older_files_open_on_home() {
+        let directory = temp_dir();
+        let path = directory.join("workspace.json");
+        let (mut store, _, _) = Workspace::at(Some(path.clone()));
+        let ui = UiState { ribbon_tab: "Express Tools".into(), ribbon_min: cadcraft_ui_egui::ribbon::RibbonMin::Tabs, ..Default::default() };
+        store.save_if_changed(&ui).unwrap();
+        let value: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        assert_eq!(value["workspace"]["ribbonTab"], "Express Tools");
+        assert_eq!(value["workspace"]["ribbonMin"], "tabs");
+        let restored = read(&path).unwrap().unwrap();
+        assert_eq!((restored.ribbon_tab.as_str(), restored.ribbon_min), ("Express Tools", cadcraft_ui_egui::ribbon::RibbonMin::Tabs));
+        // A workspace saved before the ribbon has neither field: Home, full ribbon.
+        fs::write(&path, br#"{"version":1,"workspace":{"showToolbar":true,"inWindowMenu":true}}"#).unwrap();
+        let older = read(&path).unwrap().unwrap();
+        assert_eq!((older.ribbon_tab.as_str(), older.ribbon_min), ("Home", cadcraft_ui_egui::ribbon::RibbonMin::Full));
+        assert!(older.show_toolbar && older.in_window_menu, "saved shell choices still load");
+        assert!(snapshot(&UiState { ribbon_tab: "x".repeat(300), ..Default::default() }).is_err());
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
     fn malformed_oversized_and_newer_state_are_reported_and_preserved() {
         let directory = temp_dir();
         let path = directory.join("workspace.json");
@@ -267,6 +316,12 @@ mod tests {
             br#"{"version":2,"workspace":{}}"#.to_vec(),
             br#"{"version":1,"workspace":{"toolsetTab":"unknown"}}"#.to_vec(),
             br#"{"version":1,"workspace":{"historyLines":18446744073709551615}}"#.to_vec(),
+            br#"{"version":1,"workspace":{"qatShown":"new"}}"#.to_vec(),
+            br#"{"version":1,"workspace":{"qatBelowRibbon":1}}"#.to_vec(),
+            br#"{"version":1,"workspace":{"ribbonTab":"Tool Sets"}}"#.to_vec(),
+            br#"{"version":1,"workspace":{"ribbonMin":"tiny"}}"#.to_vec(),
+            br#"{"version":1,"workspace":{"statusShown":"grid"}}"#.to_vec(),
+            format!(r#"{{"version":1,"workspace":{{"qatShown":[{}]}}}}"#, vec![r#""new""#; 65].join(",")).into_bytes(),
         ] {
             fs::write(&path, &bytes).unwrap();
             let (mut store, ui, error) = Workspace::at(Some(path.clone()));
@@ -275,6 +330,24 @@ mod tests {
             store.save_if_changed(&UiState { show_palettes: false, ..Default::default() }).unwrap();
             assert_eq!(fs::read(&path).unwrap(), bytes);
         }
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn unknown_and_repeated_status_bar_items_are_dropped_without_losing_the_workspace() {
+        let directory = temp_dir();
+        let path = directory.join("workspace.json");
+        fs::write(&path, br#"{"version":1,"workspace":{"statusShown":["osnap","no-such-item","grid","grid"],"showToolbar":true}}"#).unwrap();
+        let (mut store, ui, error) = Workspace::at(Some(path.clone()));
+        assert!(error.is_none(), "{error:?}");
+        let ui = ui.unwrap();
+        assert_eq!(ui.status_shown, ["grid", "osnap"], "known items once, in the Customization list's order");
+        assert!(ui.show_toolbar, "the rest of the workspace is restored");
+        // The file isn't left read-only: the next change is saved, normalized.
+        let changed = UiState { status_shown: vec!["dynmode".into(), "dynmode".into(), "grid".into()], ..ui };
+        store.save_if_changed(&changed).unwrap();
+        let value: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        assert_eq!(value["workspace"]["statusShown"], json!(["grid", "dynmode"]));
         fs::remove_dir_all(directory).unwrap();
     }
 
@@ -308,7 +381,7 @@ mod tests {
         let directory = temp_dir();
         let path = directory.join("workspace.json");
         let (mut store, _, _) = Workspace::at(Some(path.clone()));
-        let mut ui = UiState { show_palettes: false, ..Default::default() };
+        let mut ui = UiState { show_palettes: true, ..Default::default() };
         store.save_if_changed(&ui).unwrap();
         let good = fs::read(&path).unwrap();
         ui.collapsed_groups = vec!["x".repeat(257)];
@@ -324,13 +397,13 @@ mod tests {
         let (mut store, _, _) = Workspace::at(Some(path.clone()));
         // Simulate a destination becoming unavailable after startup.
         fs::create_dir(&path).unwrap();
-        let ui = UiState { show_palettes: false, ..Default::default() };
+        let ui = UiState { show_palettes: true, ..Default::default() };
         let first_error = store.save_if_changed(&ui).unwrap_err();
         fs::remove_dir(&path).unwrap();
         assert_eq!(store.save_if_changed(&ui).unwrap_err(), first_error);
         assert!(!path.exists(), "ordinary frames must not retry disk writes");
         store.save_on_exit(&ui).unwrap();
-        assert!(!read(&path).unwrap().unwrap().show_palettes);
+        assert!(read(&path).unwrap().unwrap().show_palettes);
         fs::remove_dir_all(directory).unwrap();
     }
 }

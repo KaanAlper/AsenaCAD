@@ -37,6 +37,13 @@ pub const UI_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
     ("ui.toggle.filetabs", "File Tab", &["Window", "File Tab"], None),
     ("ui.toggle.statusbar", "Status Bar", &["Window", "Status Bar"], None),
     ("ui.toggle.cmdline", "Command Line", &["Window", "Command Line"], Some("Cmd+9")),
+    // AutoCAD's COMMANDLINE and COMMANDLINEHIDE (the command line's ×).
+    ("commandline", "Command Line", &[], None),
+    ("commandlinehide", "Hide Command Line", &[], None),
+    // NAVBAR: the navigation bar on or off (`{on?: bool}`; its ⊗ turns it off).
+    ("navbar", "Navigation Bar", &[], None),
+    // The status bar's Customization menu: `{item, on?}` shows or hides one item.
+    ("ui.statusbar", "Customize Status Bar", &[], None),
     ("ui.toggle.viewcube", "ViewCube", &["View", "ViewCube", "On"], None),
     ("ui.toggle.ucsicon", "UCS Icon", &["View", "UCS Icon", "On"], None),
     ("ui.theme.system", "Use System Setting", &["View", "Interface Theme", "Use System Setting"], None),
@@ -54,6 +61,7 @@ pub const UI_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
     ("ui.saveversion.2000", "Version 2000", &["File", "Default Save Format", "Version 2000"], None),
     ("ui.saveversion", "Default Save Version", &[], None),
     ("ui.toggle.menubar", "In-window Menu Bar", &["Window", "In-window Menu Bar"], None),
+    ("ui.qat", "Customize Quick Access Toolbar", &[], None),
     ("ui.hidepalettes", "Hide Palettes", &["Window", "Hide Palettes"], None),
     ("ui.resetpalettes", "Reset Palettes", &["Window", "Reset Palettes"], None),
     ("ui.start", "Start", &["Window", "Start"], None),
@@ -230,6 +238,15 @@ fn run_ui_command_inner(app: &mut CadApp, id: &str, params: &Value) -> Option<Re
             toggle(&mut app.ui.show_command_line, params);
             Ok(Value::Null)
         }
+        "commandline" | "commandlinehide" => {
+            app.ui.show_command_line = id == "commandline";
+            Ok(json!({ "on": app.ui.show_command_line }))
+        }
+        "navbar" => {
+            toggle(&mut app.ui.show_navbar, params);
+            Ok(json!({ "on": app.ui.show_navbar }))
+        }
+        "ui.statusbar" => crate::chrome::statusbar::command(app, params),
         "ui.toggle.systemcursor" => {
             toggle(&mut app.ui.system_cursor, params);
             Ok(Value::Null)
@@ -246,6 +263,7 @@ fn run_ui_command_inner(app: &mut CadApp, id: &str, params: &Value) -> Option<Re
             toggle(&mut app.ui.in_window_menu, params);
             Ok(Value::Null)
         }
+        "ui.qat" => crate::chrome::qat::command(app, params),
         "ui.theme.system" | "ui.theme.light" | "ui.theme.dark" => {
             let pref = crate::theme::ThemePref::parse(id.trim_start_matches("ui.theme.")).unwrap_or_default();
             set_theme(app, pref)
@@ -546,7 +564,9 @@ pub(crate) fn entry_ui(ui: &mut egui::Ui, e: &Entry, clicked: &mut Option<String
             if let Some(s) = shortcut {
                 b = b.shortcut_text(shortcut_label(s, ui.ctx().os().is_mac()));
             }
-            if ui.add_enabled(*enabled, b).clicked() {
+            let resp = ui.add_enabled(*enabled, b);
+            crate::control::record_widget(ui, &resp, crate::i18n::t(label), "button", None);
+            if resp.clicked() {
                 *clicked = Some(id.clone());
                 ui.close();
             }

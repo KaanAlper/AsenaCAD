@@ -18,6 +18,10 @@ fn harness() -> Harness<'static, CadApp> {
     let mut app = CadApp::new(Session::default(), Services::default());
     app.ui.in_window_menu = false;
     app.integrated_titlebar = true;
+    // The Tool Sets palette is not in the default workspace.
+    app.ui.show_toolsets = true;
+    // The ribbon down to its tabs: its Home panels repeat the palette's labels (Draw, Line).
+    app.ui.ribbon_min = cadcraft_ui_egui::ribbon::RibbonMin::Tabs;
     let mut harness = Harness::builder().with_size(vec2(1280.0, 760.0)).build_ui_state(
         |ui, app: &mut CadApp| {
             app.logic(&ui.ctx().clone());

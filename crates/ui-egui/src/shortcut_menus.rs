@@ -67,6 +67,18 @@ pub fn command_line_entries(app: &CadApp) -> Vec<Vec<Entry>> {
     groups
 }
 
+/// The command line's Customize (wrench) menu: how many history lines show above it, and the
+/// Options dialog.
+pub fn command_line_customize_entries(app: &CadApp) -> Vec<Vec<Entry>> {
+    let mut groups = Vec::new();
+    let lines: Vec<Entry> = LINES.iter().filter_map(|n| run(&n.to_string(), "ui.cmdline.lines", json!({ "lines": n }))).collect();
+    if !lines.is_empty() {
+        groups.push(vec![Entry::Sub { label: "Lines of Command History".into(), children: lines }]);
+    }
+    push(&mut groups, item(app, "options", None).into_iter().collect());
+    groups
+}
+
 /// A drawing tab's menu (`index` into the open drawings): New, Open, Save, Save As, Save All,
 /// Close, Close All Other Drawings and Copy Full File Path. Save and Save As act on that drawing.
 pub fn drawing_tab_entries(app: &CadApp, index: usize) -> Vec<Vec<Entry>> {
@@ -86,6 +98,23 @@ pub fn drawing_tab_entries(app: &CadApp, index: usize) -> Vec<Vec<Entry>> {
     ];
     push(&mut groups, close);
     groups.push(vec![action("Copy Full File Path", format!("drawing:copypath:{index}"), path.is_some())]);
+    groups
+}
+
+/// The document tab bar's "≡" menu: Start and the open drawings ("*" while modified), then New,
+/// Open, Save All and Close All.
+pub fn file_tabs_menu_entries(app: &CadApp) -> Vec<Vec<Entry>> {
+    let mut docs: Vec<Entry> = item(app, "ui.start", None).into_iter().collect();
+    docs.extend(
+        app.session
+            .docs
+            .iter()
+            .enumerate()
+            .map(|(i, d)| action(&format!("{}{}", d.title, if d.is_dirty() { "*" } else { "" }), format!("drawing:switch:{i}"), true)),
+    );
+    let mut groups = Vec::new();
+    push(&mut groups, docs);
+    push(&mut groups, ["new", "ui.open", "saveall", "closeall"].iter().filter_map(|id| item(app, id, None)).collect());
     groups
 }
 
@@ -169,6 +198,12 @@ pub fn choose(app: &mut CadApp, ctx: &egui::Context, id: &str) {
 
 fn drawing_action(app: &mut CadApp, ctx: &egui::Context, op: &str, index: usize) {
     match op {
+        "switch" => {
+            if index != app.session.active {
+                let _ = app.run("document.switch", json!({ "index": index }));
+            }
+            app.ui.start_tab = false;
+        }
         "close" => app.request_close(Some(index)),
         "closeothers" => app.request_close_others(index),
         "copypath" => {

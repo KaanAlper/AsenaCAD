@@ -31,7 +31,6 @@
 	% of all commits	전체 커밋 중 비율(%)
 	* Wildcard Match	* 와일드카드 일치
 	*VARIES*	*다양함*
-	+  |  Top  |  2D Wireframe	+  |  평면  |  2D 와이어프레임
 	+Bin	+Bin
 	+LOC	+LOC
 	1 Viewport	뷰포트 1개
@@ -559,6 +558,7 @@
 	Node	노드
 	None	없음
 	Not available	사용할 수 없음
+	Not available now	지금은 사용할 수 없음
 	Not available yet	아직 사용할 수 없음
 	Numbered list	번호 매기기 목록
 	OK	확인
@@ -882,7 +882,7 @@
 	Specify center point of array	배열 중심점 지정
 	Specify center point of base	밑면 중심점 지정
 	Specify corner of viewport	뷰포트 구석 지정
-	Specify corner of window, enter a scale factor (nX or nXP)	창 구석 지정, 축척 비율 입력(nX 또는 nXP)
+	Specify corner of window, enter a scale factor (nX or nXP),	창 구석 지정, 축척 비율 입력(nX 또는 nXP),
 	Specify diameter of circle	원 지름 지정
 	Specify dimension arc line location	치수 호선 위치 지정
 	Specify dimension line location	치수선 위치 지정
@@ -1235,3 +1235,18 @@ menu	View	보기
 menu	Draw	그리기
 menu	Dimension	치수
 menu	Modify	수정
+	Show Full Ribbon	전체 리본 표시
+	Minimize to Panel Buttons	패널 버튼으로 최소화
+	Minimize to Panel Titles	패널 제목으로 최소화
+	Minimize to Tabs	탭으로 최소화
+	Minimize Options	최소화 옵션
+	Pin	고정
+	Top	평면
+	2D Wireframe	2D 와이어프레임
+	Annotate	주석
+	Manage	관리
+	Output	출력
+	Collaborate	공동 작업
+	Express Tools	익스프레스 도구
+	File Tabs	파일 탭
+	This tab is not built yet (M1b)	이 탭은 아직 만들어지지 않았습니다 (M1b)

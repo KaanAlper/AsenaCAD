@@ -420,7 +420,7 @@ impl Interactive for ZoomM {
             ZoomStage::Scale => return Prompt::new("Enter a scale factor (nX or nXP)", Accept::NUMBER),
         }
         match (self.window, self.first) {
-            (false, None) => Prompt::new("Specify corner of window, enter a scale factor (nX or nXP)", Accept::POINT_OR_NUMBER)
+            (false, None) => Prompt::new("Specify corner of window, enter a scale factor (nX or nXP),", Accept::POINT_OR_NUMBER)
                 .kw(&["All", "Center", "Dynamic", "Extents", "Previous", "Scale", "Window", "Object"])
                 .default("real time"),
             (true, None) => Prompt::new("Specify first corner", Accept::POINT),

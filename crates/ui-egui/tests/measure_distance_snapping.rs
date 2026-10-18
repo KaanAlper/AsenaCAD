@@ -43,6 +43,8 @@ fn harness(paper: bool, render: bool) -> Harness<'static, CadApp> {
     session.settings.snapmode = true;
     session.settings.orthomode = true;
     let mut app = CadApp::new(session, Services::default());
+    // These tests use CADCraft's Tool Bar (off by default; AutoCAD has none).
+    app.ui.show_toolbar = true;
     app.canvas.zoom_pending = false;
     let builder = Harness::builder().with_size(vec2(1600.0, 1000.0));
     let builder = if render { builder.wgpu() } else { builder };

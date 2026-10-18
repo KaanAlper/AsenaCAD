@@ -111,12 +111,28 @@ pub fn target(app: &CadApp) -> Option<(Handle, Viewport)> {
     }
 }
 
+/// The lock toggle's slot and the gap before the scale list.
+const LOCK_W: f32 = 24.0;
+
+/// The scale list's text and the viewport's scale and paper units (metric).
+fn scale_text(app: &CadApp, vp: &cadcraft_doc::Viewport) -> (String, f64, bool) {
+    let metric = app.session.doc().is_ok_and(|d| cadcraft_render::paper::paper_unit_mm(d) == 1.0);
+    let scale = if vp.view_height > 0.0 { vp.height / vp.view_height } else { 0.0 };
+    (label(scale, metric), scale, metric)
+}
+
+/// How wide [`status`] draws the lock and the scale list (0 when it draws nothing).
+pub fn width(app: &CadApp, ui: &egui::Ui) -> f32 {
+    let Some((_, vp)) = target(app) else { return 0.0 };
+    let g = ui.painter().layout_no_wrap(scale_text(app, &vp).0, crate::theme::small(), Tokens::get().text);
+    LOCK_W + g.size().x + 22.0
+}
+
 /// Draw the scale list and lock toggle ending at `right`; returns their left edge.
 pub fn status(app: &mut CadApp, ui: &mut egui::Ui, right: f32, cy: f32) -> f32 {
     let Some((h, vp)) = target(app) else { return right };
     let t = Tokens::get();
-    let metric = app.session.doc().is_ok_and(|d| cadcraft_render::paper::paper_unit_mm(d) == 1.0);
-    let scale = if vp.view_height > 0.0 { vp.height / vp.view_height } else { 0.0 };
+    let (text, scale, metric) = scale_text(app, &vp);
     let p = ui.painter().clone();
     // Lock toggle.
     let lr = Rect::from_min_size(pos2(right - 20.0, cy - 9.0), vec2(18.0, 18.0));
@@ -134,10 +150,9 @@ pub fn status(app: &mut CadApp, ui: &mut egui::Ui, right: f32, cy: f32) -> f32 {
         }
     }
     // Scale list.
-    let text = label(scale, metric);
     let g = p.layout_no_wrap(text, crate::theme::small(), if vp.locked { t.text_dim } else { t.text });
     let w = g.size().x + 22.0;
-    let sr = Rect::from_min_max(pos2(lr.left() - 4.0 - w, cy - 9.0), pos2(lr.left() - 4.0, cy + 9.0));
+    let sr = Rect::from_min_max(pos2(right - LOCK_W - w, cy - 9.0), pos2(right - LOCK_W, cy + 9.0));
     let sresp = ui.interact(sr, ui.id().with("vp_scale"), Sense::click());
     p.rect_filled(sr, 3.0, if sresp.hovered() { t.control_hover } else { t.control.gamma_multiply(0.5) });
     p.galley(pos2(sr.left() + 6.0, sr.center().y - g.size().y / 2.0), g, t.text);

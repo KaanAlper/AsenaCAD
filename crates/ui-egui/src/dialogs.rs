@@ -332,12 +332,17 @@ fn about(ctx: &egui::Context, open: &mut bool) {
         });
 }
 
+/// Where the Command Reference keeps its filter text (the InfoCenter search sets it).
+pub(crate) fn command_filter_id() -> egui::Id {
+    egui::Id::new("asenacad-command-reference-filter")
+}
+
 fn commands(app: &mut CadApp, ctx: &egui::Context, open: &mut bool) {
     let mut start = None;
     egui::Window::new(crate::tl!("Command Reference")).id(egui::Id::new("Command Reference")).open(open).default_size(vec2(640.0, 480.0)).show(
         ctx,
         |ui| {
-            let id = ui.id().with("cmdfilter");
+            let id = command_filter_id();
             let mut filter = ui.data_mut(|d| d.get_temp::<String>(id)).unwrap_or_default();
             ui.horizontal(|ui| {
                 ui.label(crate::tl!("Filter"));

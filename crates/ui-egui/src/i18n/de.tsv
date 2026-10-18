@@ -10,7 +10,6 @@
 	% of all commits	% aller Commits
 	* Wildcard Match	* Wildcard-Abgleich
 	*VARIES*	*VARIIERT*
-	+  |  Top  |  2D Wireframe	+  |  Oben  |  2D-Drahtmodell
 	+Bin	+Binär
 	+LOC	+Zeilen
 	1 Viewport	1 Ansichtsfenster
@@ -475,6 +474,7 @@
 	Node	Knoten
 	None	Keine
 	Not available	Nicht verfügbar
+	Not available now	Derzeit nicht verfügbar
 	Not available yet	Noch nicht verfügbar
 	OK	OK
 	Object	Objekt
@@ -769,7 +769,7 @@
 	Specify center point of array	Geben Sie den Mittelpunkt der Reihe an
 	Specify center point of base	Geben Sie den Mittelpunkt der Basis an
 	Specify corner of viewport	Geben Sie die Ecke des Ansichtsfensters an
-	Specify corner of window, enter a scale factor (nX or nXP)	Geben Sie die Ecke des Fensters an, geben Sie einen Skalierfaktor ein (nX oder nXP)
+	Specify corner of window, enter a scale factor (nX or nXP),	Geben Sie die Ecke des Fensters an, geben Sie einen Skalierfaktor ein (nX oder nXP),
 	Specify diameter of circle	Geben Sie den Durchmesser des Kreises an
 	Specify dimension arc line location	Geben Sie die Position der Bemaßungsbogenlinie an
 	Specify dimension line location	Geben Sie die Position der Bemaßungslinie an
@@ -1031,3 +1031,18 @@
 	Justify	Blocksatz
 	Text color	Textfarbe
 	Click the ruler to add a tab stop, right-click to remove one	Klick auf das Lineal setzt einen Tabstopp, Rechtsklick entfernt ihn
+	Show Full Ribbon	Vollständige Multifunktionsleiste anzeigen
+	Minimize to Panel Buttons	Auf Gruppenschaltflächen minimieren
+	Minimize to Panel Titles	Auf Gruppentitel minimieren
+	Minimize to Tabs	Auf Registerkarten minimieren
+	Minimize Options	Minimierungsoptionen
+	Pin	Fixieren
+	Top	Oben
+	2D Wireframe	2D-Drahtmodell
+	Annotate	Beschriften
+	Manage	Verwalten
+	Output	Ausgabe
+	Collaborate	Zusammenarbeit
+	Express Tools	Express-Werkzeuge
+	File Tabs	Dateiregisterkarten
+	This tab is not built yet (M1b)	Diese Registerkarte ist noch nicht fertig (M1b)

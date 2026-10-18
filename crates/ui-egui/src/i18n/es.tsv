@@ -10,7 +10,6 @@
 	% of all commits	% de todos los commits
 	* Wildcard Match	* Coincidencia con comodines
 	*VARIES*	*VARIOS*
-	+  |  Top  |  2D Wireframe	+  |  Superior  |  Estructura alámbrica 2D
 	+Bin	+Bin
 	+LOC	+Líneas
 	1 Viewport	1 ventana gráfica
@@ -587,6 +586,7 @@
 	None	Ninguno
 	Not Found	No encontrada
 	Not available	No disponible
+	Not available now	No disponible ahora
 	Not available yet	Aún no disponible
 	Not loaded	No cargada
 	Numbered list	Lista numerada
@@ -967,7 +967,7 @@
 	Specify center point of array	Indica el centro de la matriz
 	Specify center point of base	Indica el centro de la base
 	Specify corner of viewport	Indica una esquina de la ventana gráfica
-	Specify corner of window, enter a scale factor (nX or nXP)	Indica una esquina de ventana o un factor de escala (nX o nXP)
+	Specify corner of window, enter a scale factor (nX or nXP),	Indica una esquina de ventana o un factor de escala (nX o nXP),
 	Specify diameter of circle	Indica el diámetro del círculo
 	Specify dimension arc line location	Indica la posición del arco de cota
 	Specify dimension line location	Indica la posición de la línea de cota
@@ -1240,3 +1240,18 @@
 	Search for pattern	Buscar patrón
 	Not a number or distance: {text}	No es un número ni una distancia: {text}
 	Query Texts	Consultar textos
+	Show Full Ribbon	Mostrar cinta completa
+	Minimize to Panel Buttons	Minimizar a botones de grupo
+	Minimize to Panel Titles	Minimizar a títulos de grupo
+	Minimize to Tabs	Minimizar a fichas
+	Minimize Options	Opciones de minimización
+	Pin	Fijar
+	Top	Superior
+	2D Wireframe	Estructura alámbrica 2D
+	Annotate	Anotar
+	Manage	Administrar
+	Output	Salida
+	Collaborate	Colaborar
+	Express Tools	Herramientas exprés
+	File Tabs	Pestañas de archivo
+	This tab is not built yet (M1b)	Esta pestaña aún no está hecha (M1b)

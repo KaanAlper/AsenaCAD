@@ -78,7 +78,23 @@ pub struct Workspace {
 }
 
 impl Default for Workspace {
+    /// AutoCAD's default workspace: the drawing alone. The palettes are closed but keep the
+    /// places they open at: Tool Sets on the left, Layers above Properties on the right.
     fn default() -> Self {
+        let mut workspace = Self::with_palettes();
+        for panel in [Panel::ToolSets, Panel::Layers, Panel::Properties] {
+            if workspace.set_visible(panel, false).is_err() {
+                return Self { layout: Layout { root: Some(tabs(Panel::Canvas)), floating: Vec::new() }, hidden: Vec::new() };
+            }
+        }
+        workspace
+    }
+}
+
+impl Workspace {
+    /// CADCraft's arrangement with every palette open: Tool Sets on the left, the drawing, and
+    /// Layers above Properties on the right.
+    pub fn with_palettes() -> Self {
         Self {
             layout: Layout {
                 root: Some(split(

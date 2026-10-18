@@ -33,7 +33,6 @@
 	% of all commits	% усіх комітів
 	* Wildcard Match	* За шаблоном
 	*VARIES*	*РІЗНІ*
-	+  |  Top  |  2D Wireframe	+  |  Зверху  |  2D-каркас
 	+Bin	+двійк.
 	+LOC	+рядків
 	1 Viewport	1 видовий екран
@@ -567,6 +566,7 @@
 	Node	Вузол
 	None	Немає
 	Not available	Недоступно
+	Not available now	Зараз недоступно
 	Not available yet	Поки недоступно
 	Numbered list	Нумерований список
 	OK	Гаразд
@@ -897,7 +897,7 @@
 	Specify center point of array	Укажіть центр масиву
 	Specify center point of base	Укажіть центр основи
 	Specify corner of viewport	Укажіть кут видового екрана
-	Specify corner of window, enter a scale factor (nX or nXP)	Укажіть кут рамки, введіть коефіцієнт масштабу (nX або nXP)
+	Specify corner of window, enter a scale factor (nX or nXP),	Укажіть кут рамки, введіть коефіцієнт масштабу (nX або nXP),
 	Specify diameter of circle	Укажіть діаметр кола
 	Specify dimension arc line location	Укажіть розташування розмірної дуги
 	Specify dimension line location	Укажіть розташування розмірної лінії
@@ -1327,3 +1327,141 @@
 	Justify	За шириною
 	Text color	Колір тексту
 	Click the ruler to add a tab stop, right-click to remove one	Натисніть на лінійку, щоб додати табуляцію; права кнопка видаляє її
+# Ribbon (Home tab).
+	2-Point	2 точки
+	3-Point	3 точки
+	Annotation	Анотації
+	Blend Curves	Плавне з'єднання кривих
+	Break at Point	Розірвати в точці
+	Bring All Annotations to Front	Усі анотації на передній план
+	Bring Dimensions to Front	Розміри на передній план
+	Bring Leaders to Front	Виноски на передній план
+	Bring Text to Front	Текст на передній план
+	Copy Clip	Копіювати в буфер
+	Copy Objects to New Layer	Копіювати об'єкти на новий шар
+	Create	Створити
+	Detail View Style	Стиль виносного виду
+	Detect and Convert	Виявити й перетворити
+	Dimension Style	Розмірний стиль
+	Edit Attributes	Редагувати атрибути
+	Edit Hatch	Редагувати штрихування
+	Edit Polyline	Редагувати полілінію
+	Edit Spline	Редагувати сплайн
+	Group Bounding Box	Габаритна рамка групи
+	Group Manager	Диспетчер груп
+	Group Selection On/Off	Вибір груп увімк./вимк.
+	Layer Walk	Перегляд шарів
+	Layer fading	Затінення шарів
+	Locked Layer fading	Затінення заблокованих шарів
+	Manage Attributes	Керувати атрибутами
+	Merge	Об'єднати
+	Multileader Style	Стиль мультивиносок
+	Multiple Points	Кілька точок
+	Object Color	Колір об'єкта
+	Paste Special	Спеціальна вставка
+	Paste as Hyperlink	Вставити як гіперпосилання
+	Plot Style	Стиль друку
+	Quick Calculator	Калькулятор
+	Replace	Замінити
+	Search and Convert	Знайти й перетворити
+	Section View Style	Стиль виду розрізу
+	Set Base Point	Задати базову точку
+	Set to ByLayer	Установити за шаром
+	Single	Один
+	Single Line	Однорядковий
+	Spline CV	Сплайн за керувальними вершинами
+	Spline Fit	Сплайн за точками апроксимації
+	Table Style	Стиль таблиць
+	Text Style	Текстовий стиль
+	Transparency Mode	Режим прозорості
+	Unisolate	Скасувати ізоляцію
+	Unlock	Розблокувати
+	Utilities	Утиліти
+	VP Freeze in All Viewports except Current	Заморозити у всіх ВЕ, крім поточного
+	{label} options	{label}: варіанти
+	Retain Attribute Display	Зберегти відображення атрибутів
+	Display All Attributes	Показати всі атрибути
+	Hide All Attributes	Приховати всі атрибути
+	Show Full Ribbon	Показати повну стрічку
+	Minimize to Panel Buttons	Згорнути до кнопок панелей
+	Minimize to Panel Titles	Згорнути до назв панелей
+	Minimize to Tabs	Згорнути до вкладок
+	Minimize Options	Параметри згортання
+	Pin	Закріпити
+	Batch Plot	Пакетний друк
+	Render	Візуалізація
+	Sheet Set Manager	Диспетчер підшивок
+	Workspace	Робочий простір
+	Customize Quick Access Toolbar	Налаштувати панель швидкого доступу
+	More Commands...	Інші команди...
+	Show Menu Bar	Показати рядок меню
+	Hide Menu Bar	Сховати рядок меню
+	Show Below the Ribbon	Показати під стрічкою
+	Show Above the Ribbon	Показати над стрічкою
+	Nothing to undo	Немає що скасовувати
+	Nothing to redo	Немає що повторювати
+	Application Button	Кнопка програми
+	Search	Пошук
+	Hide search	Сховати пошук
+	Show search	Показати пошук
+	Type a keyword or phrase	Введіть ключове слово або фразу
+	Top	Зверху
+	2D Wireframe	2D-каркас
+	Annotate	Анотації
+	Manage	Керування
+	Output	Вивід
+	Collaborate	Співпраця
+	Express Tools	Експрес-інструменти
+	File Tabs	Вкладки файлів
+	This tab is not built yet (M1b)	Ця вкладка ще не готова (M1b)
+	2D Object Snap	2D об'єктна прив'язка
+	3D Object Snap	3D об'єктна прив'язка
+	Annotation Monitor	Монітор анотацій
+	Annotation Scale	Масштаб анотацій
+	AutoScale	Автомасштаб
+	Clean Screen	Чистий екран
+	Close Command Line	Закрити командний рядок
+	Close Drawing	Закрити креслення
+	Close Navigation Bar	Закрити панель навігації
+	Command Line Grip	Маркер командного рядка
+	Continuous Orbit	Безперервна орбіта
+	Coordinates	Координати
+	Customization	Налаштування
+	Customize	Налаштувати
+	Customize Navigation Bar	Налаштувати панель навігації
+	Customize Status Bar	Налаштувати рядок стану
+	Dynamic UCS	Динамічна ПСК
+	Free Orbit	Вільна орбіта
+	Full Navigation Wheel	Повне колесо навігації
+	Gizmo	Гізмо
+	Graphics Performance	Продуктивність графіки
+	Grid	Сітка
+	Grid Snap	Прив'язка до сітки
+	Hide Command Line	Приховати командний рядок
+	Isoplane Left	Ізоплощина ліва
+	Isoplane Right	Ізоплощина права
+	Isoplane Top	Ізоплощина верхня
+	LineWeight	Товщина лінії
+	Lock UI	Заблокувати інтерфейс
+	Minimize Drawing	Згорнути креслення
+	Model Space	Простір моделі
+	Model or Paper Space	Простір моделі або аркуша
+	More layouts	Інші аркуші
+	Navigation Bar	Панель навігації
+	No recent commands	Немає нещодавніх команд
+	Object Snap Settings...	Параметри об'єктної прив'язки...
+	Polar Snap	Полярна прив'язка
+	Restore Drawing	Відновити креслення
+	Selection Filtering	Фільтрування вибору
+	ShowMotion	ShowMotion
+	Snap Settings...	Параметри прив'язки...
+	Tracking Settings...	Параметри відстеження...
+	Units	Одиниці
+	Zoom Center	Масштаб за центром
+	Zoom Scale	Масштабувати за коефіцієнтом
+	Architectural	Архітектурні
+	Decimal	Десяткові
+	Engineering	Інженерні
+	Fractional	Дробові
+	Scientific	Наукові
+	The drawing has no layout to switch to.	У кресленні немає аркуша, на який можна перейти.

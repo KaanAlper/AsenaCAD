@@ -31,7 +31,6 @@
 	% of all commits	% všech commitů
 	* Wildcard Match	* Shoda se zástupnými znaky
 	*VARIES*	*RŮZNÉ*
-	+  |  Top  |  2D Wireframe	+  |  Shora  |  2D drátový model
 	+Bin	+Bin
 	+LOC	+LOC
 	1 Viewport	1 výřez
@@ -557,6 +556,7 @@
 	Node	Bod
 	None	Žádné
 	Not available	Není k dispozici
+	Not available now	Nyní není k dispozici
 	Not available yet	Zatím není k dispozici
 	Numbered list	Číslovaný seznam
 	OK	OK
@@ -883,7 +883,7 @@
 	Specify center point of array	Určete středový bod pole
 	Specify center point of base	Určete středový bod základny
 	Specify corner of viewport	Určete roh výřezu
-	Specify corner of window, enter a scale factor (nX or nXP)	Určete roh okna, zadejte faktor měřítka (nX nebo nXP)
+	Specify corner of window, enter a scale factor (nX or nXP),	Určete roh okna, zadejte faktor měřítka (nX nebo nXP),
 	Specify diameter of circle	Určete průměr kružnice
 	Specify dimension arc line location	Určete umístění kótovacího oblouku
 	Specify dimension line location	Určete umístění kótovací čáry
@@ -1214,3 +1214,18 @@ menu	Modify	Modifikace
 	Search for pattern	Hledat vzor
 	Not a number or distance: {text}	Není číslo ani vzdálenost: {text}
 	Query Texts	Dotaz na texty
+	Show Full Ribbon	Zobrazit celý pás karet
+	Minimize to Panel Buttons	Minimalizovat na tlačítka panelů
+	Minimize to Panel Titles	Minimalizovat na názvy panelů
+	Minimize to Tabs	Minimalizovat na karty
+	Minimize Options	Možnosti minimalizace
+	Pin	Připnout
+	Top	Shora
+	2D Wireframe	2D drátový model
+	Annotate	Poznámky
+	Manage	Správa
+	Output	Výstup
+	Collaborate	Spolupráce
+	Express Tools	Expresní nástroje
+	File Tabs	Karty souborů
+	This tab is not built yet (M1b)	Tato karta zatím není hotová (M1b)

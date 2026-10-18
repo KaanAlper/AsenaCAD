@@ -58,3 +58,13 @@ fn zoom_center_scale_dynamic_and_paper_space_all() {
     let v = view(&s);
     assert!(v.center.near(sheet.center(), 1e-9) && v.height < 297.0 && v.height >= sheet.height(), "{v:?} vs {sheet:?}");
 }
+
+#[test]
+fn zoom_first_prompt_reads_like_autocads() {
+    let mut s = Session::new();
+    s.cmdline("ZOOM").unwrap();
+    assert_eq!(
+        s.current_prompt().unwrap().display(),
+        "Specify corner of window, enter a scale factor (nX or nXP), or [All/Center/Dynamic/Extents/Previous/Scale/Window/Object] <real time>:"
+    );
+}

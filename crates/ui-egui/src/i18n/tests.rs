@@ -75,6 +75,11 @@ fn missing_commands_menus_tools_and_snap_labels(language: &str) -> Vec<String> {
         }
     }
     sources.extend(cadcraft_engine::snap::mode::ALL.iter().map(|(_, name)| *name));
+    sources.extend(crate::ribbon::model::labels());
+    sources.extend(crate::chrome::qat::labels());
+    sources.extend(crate::chrome::statusbar::labels());
+    sources.extend(crate::cmdbar::labels());
+    sources.extend(crate::navbar::labels());
     sources.into_iter().filter(|s| !s.is_empty() && !catalog.contains_key(&("", *s))).map(str::to_string).collect()
 }
 
@@ -107,6 +112,20 @@ fn missing_marked_ui_literals(language: &str) -> BTreeSet<String> {
         include_str!("../quick.rs"),
         include_str!("../vpscale.rs"),
         include_str!("../options/dialog.rs"),
+        include_str!("../ribbon/mod.rs"),
+        include_str!("../ribbon/model.rs"),
+        include_str!("../ribbon/home.rs"),
+        include_str!("../ribbon/widgets.rs"),
+        include_str!("../ribbon/bind.rs"),
+        include_str!("../ribbon/layout.rs"),
+        include_str!("../ribbon/slideout.rs"),
+        include_str!("../chrome/titlerow.rs"),
+        include_str!("../chrome/qat.rs"),
+        include_str!("../chrome/layouts.rs"),
+        include_str!("../chrome/statusbar.rs"),
+        include_str!("../chrome/statusmenus.rs"),
+        include_str!("../cmdbar.rs"),
+        include_str!("../navbar.rs"),
     ];
     let mut missing = BTreeSet::new();
     for source in sources {

@@ -10,7 +10,6 @@
 	% of all commits	% من كل الإيداعات
 	* Wildcard Match	* مطابقة أحرف البدل
 	*VARIES*	*متفاوت*
-	+  |  Top  |  2D Wireframe	+  |  علوي  |  هيكل سلكي ثنائي الأبعاد
 	+Bin	+Bin
 	+LOC	+LOC
 	1 Viewport	إطار عرض واحد
@@ -614,6 +613,7 @@
 	None	لا شيء
 	Not Found	غير موجود
 	Not available	غير متاح
+	Not available now	غير متاح الآن
 	Not available yet	غير متاح بعد
 	Not loaded	غير محمَّل
 	Numbered list	قائمة مرقمة
@@ -957,7 +957,7 @@
 	Specify center point of array	حدد نقطة مركز المصفوفة
 	Specify center point of base	حدد نقطة مركز الأساس
 	Specify corner of viewport	حدد زاوية إطار العرض
-	Specify corner of window, enter a scale factor (nX or nXP)	حدد زاوية النافذة، ثم أدخل معامل مقياس (nX أو nXP)
+	Specify corner of window, enter a scale factor (nX or nXP),	حدد زاوية النافذة، ثم أدخل معامل مقياس (nX أو nXP)،
 	Specify diameter of circle	حدد قطر الدائرة
 	Specify dimension arc line location	حدد موضع قوس خط التأشير
 	Specify dimension line location	حدد موضع خط التأشير
@@ -1230,3 +1230,18 @@ menu	Modify	تعديل
 menu	View	عرض
 @plural	{n} commit	{n} إيداع|{n} إيداع|{n} إيداعان|{n} إيداعات|{n} إيداعاً|{n} إيداع
 @plural	{n} contributor	{n} مساهم|{n} مساهم|{n} مساهمان|{n} مساهمين|{n} مساهماً|{n} مساهم
+	Show Full Ribbon	إظهار الشريط كاملاً
+	Minimize to Panel Buttons	تصغير إلى أزرار اللوحات
+	Minimize to Panel Titles	تصغير إلى عناوين اللوحات
+	Minimize to Tabs	تصغير إلى علامات التبويب
+	Minimize Options	خيارات التصغير
+	Pin	تثبيت
+	Top	علوي
+	2D Wireframe	هيكل سلكي ثنائي الأبعاد
+	Annotate	تعليقات توضيحية
+	Manage	إدارة
+	Output	إخراج
+	Collaborate	تعاون
+	Express Tools	أدوات سريعة
+	File Tabs	علامات تبويب الملفات
+	This tab is not built yet (M1b)	لم يتم إنشاء علامة التبويب هذه بعد (M1b)

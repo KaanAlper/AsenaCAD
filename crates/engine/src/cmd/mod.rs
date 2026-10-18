@@ -56,6 +56,9 @@ use crate::{EngineError, Interactive, Result, Session};
 
 pub type Run = fn(&mut Session, &Value) -> Result<Value>;
 pub type Enabled = fn(&Session) -> std::result::Result<(), String>;
+
+/// The params doc of a placeholder command ([`CommandSpec::stub`]).
+pub const NOT_AVAILABLE: &str = "not available yet";
 pub type Factory = fn(&Session) -> Result<Box<dyn Interactive>>;
 
 pub struct CommandSpec {
@@ -109,6 +112,16 @@ impl CommandSpec {
     pub const fn enabled(mut self, e: Enabled) -> Self {
         self.enabled = e;
         self
+    }
+    /// Mark a command AutoCAD has that AsenaCAD only names so far: it refuses to run, and menus,
+    /// the ribbon and toolbars show it disabled ([`CommandSpec::is_stub`]).
+    pub const fn stub(mut self) -> Self {
+        self.params = NOT_AVAILABLE;
+        self
+    }
+    /// Whether this is a placeholder made with [`CommandSpec::stub`].
+    pub fn is_stub(&self) -> bool {
+        self.params == NOT_AVAILABLE
     }
     pub const fn noundo(mut self) -> Self {
         self.undoable = false;
@@ -206,9 +219,11 @@ pub fn command_specs() -> &'static [CommandSpec] {
     })
 }
 
+/// The command `id` names, ignoring ASCII case (ids are lowercase). Allocation-free: the
+/// ribbon and menus look commands up every frame.
 pub fn find_command(id: &str) -> Option<&'static CommandSpec> {
-    let l = id.to_ascii_lowercase();
-    command_specs().iter().find(|c| c.id == l)
+    let lower_eq = |c: &str| c.len() == id.len() && c.bytes().zip(id.bytes()).all(|(a, b)| a == b.to_ascii_lowercase());
+    command_specs().iter().find(|c| lower_eq(c.id))
 }
 
 /// Resolve a typed name or alias (AutoCAD-style short names such as `L`, `C`, `PL`) to an id.

@@ -10,7 +10,6 @@
 	% of all commits	% de todos os commits
 	* Wildcard Match	* Correspondência com curinga
 	*VARIES*	*VARIADO*
-	+  |  Top  |  2D Wireframe	+  |  Superior  |  Wireframe 2D
 	+Bin	+bin.
 	+LOC	+linhas
 	1 Viewport	1 viewport
@@ -587,6 +586,7 @@
 	None	Nenhum
 	Not Found	Não encontrado
 	Not available	Não disponível
+	Not available now	Indisponível no momento
 	Not available yet	Ainda não disponível
 	Not loaded	Não carregada
 	Numbered list	Lista numerada
@@ -967,7 +967,7 @@
 	Specify center point of array	Especifique o ponto central da matriz
 	Specify center point of base	Especifique o ponto central da base
 	Specify corner of viewport	Especifique o canto do viewport
-	Specify corner of window, enter a scale factor (nX or nXP)	Especifique o canto da janela ou digite um fator de escala (nX ou nXP)
+	Specify corner of window, enter a scale factor (nX or nXP),	Especifique o canto da janela ou digite um fator de escala (nX ou nXP),
 	Specify diameter of circle	Especifique o diâmetro do círculo
 	Specify dimension arc line location	Especifique a posição da linha de arco da cota
 	Specify dimension line location	Especifique a posição da linha de cota
@@ -1241,3 +1241,18 @@
 	Query Texts	Consultar textos
 	Run Script...	Executar script...
 	Not a number or distance: {text}	Não é um número nem uma distância: {text}
+	Show Full Ribbon	Mostrar faixa de opções completa
+	Minimize to Panel Buttons	Minimizar para botões de painel
+	Minimize to Panel Titles	Minimizar para títulos de painel
+	Minimize to Tabs	Minimizar para guias
+	Minimize Options	Opções de minimização
+	Pin	Fixar
+	Top	Superior
+	2D Wireframe	Wireframe 2D
+	Annotate	Anotar
+	Manage	Gerenciar
+	Output	Saída
+	Collaborate	Colaborar
+	Express Tools	Ferramentas expressas
+	File Tabs	Abas de arquivos
+	This tab is not built yet (M1b)	Esta aba ainda não foi construída (M1b)

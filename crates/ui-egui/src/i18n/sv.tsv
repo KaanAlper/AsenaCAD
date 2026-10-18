@@ -14,7 +14,6 @@
 	% of all commits	% av alla commits
 	* Wildcard Match	* Jokerteckenmatchning
 	*VARIES*	*VARIERAR*
-	+  |  Top  |  2D Wireframe	+  |  Ovanifrån  |  2D-trådmodell
 	+Bin	+Bin
 	+LOC	+LOC
 	1 Viewport	1 vyfönster
@@ -591,6 +590,7 @@
 	None	Ingen
 	Not Found	Hittades inte
 	Not available	Inte tillgängligt
+	Not available now	Inte tillgängligt nu
 	Not available yet	Inte tillgängligt än
 	Not loaded	Inte inläst
 	Numbered list	Numrerad lista
@@ -966,7 +966,7 @@
 	Specify center point of array	Ange mönstrets centrumpunkt
 	Specify center point of base	Ange basens centrumpunkt
 	Specify corner of viewport	Ange vyfönstrets hörn
-	Specify corner of window, enter a scale factor (nX or nXP)	Ange fönstrets hörn eller en skalfaktor (nX eller nXP)
+	Specify corner of window, enter a scale factor (nX or nXP),	Ange fönstrets hörn eller en skalfaktor (nX eller nXP),
 	Specify diameter of circle	Ange cirkelns diameter
 	Specify dimension arc line location	Ange placering för måttbågen
 	Specify dimension line location	Ange placering för måttlinjen
@@ -1242,3 +1242,18 @@ menu	View	Visa
 menu	Draw	Rita
 menu	Dimension	Måttsättning
 menu	Modify	Ändra
+	Show Full Ribbon	Visa hela menyfliksområdet
+	Minimize to Panel Buttons	Minimera till panelknappar
+	Minimize to Panel Titles	Minimera till panelrubriker
+	Minimize to Tabs	Minimera till flikar
+	Minimize Options	Minimeringsalternativ
+	Pin	Fäst
+	Top	Ovanifrån
+	2D Wireframe	2D-trådmodell
+	Annotate	Kommentera
+	Manage	Hantera
+	Output	Utdata
+	Collaborate	Samarbeta
+	Express Tools	Expressverktyg
+	File Tabs	Filflikar
+	This tab is not built yet (M1b)	Den här fliken är inte byggd än (M1b)

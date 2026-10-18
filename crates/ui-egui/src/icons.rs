@@ -4,9 +4,15 @@
 //! the geometry a command creates and orange dots for picked points.
 
 use craft_ui::buttons::{ButtonVisuals, IconButton, IconButtonStyle};
-use egui::{Color32, Painter, Pos2, Rect, Stroke, pos2};
+use egui::{Color32, Painter, Rect, Stroke};
 
 use crate::theme::Tokens;
+
+mod pen;
+mod ribbon;
+mod shell;
+
+use pen::Pen;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Icon {
@@ -122,6 +128,11 @@ pub enum Icon {
     ChevronUp,
     ChevronLeft,
     ChevronRight,
+    /// A ribbon panel's dialog launcher: an arrow pointing down-right into a corner.
+    Launcher,
+    /// A slide-out's pin: pinned (upright pushpin) and unpinned (lying on its side).
+    Pin,
+    Unpin,
     Plus,
     Switcher,
     Close,
@@ -144,86 +155,145 @@ pub enum Icon {
     PickAdd,
     SelectObjects,
     QuickSelect,
-}
-
-struct Pen<'a> {
-    p: &'a Painter,
-    r: Rect,
-    w: f32,
-    base: Color32,
-    acc: Color32,
-    pt: Color32,
-}
-
-impl Pen<'_> {
-    fn at(&self, x: f32, y: f32) -> Pos2 {
-        let s = self.r.width() / 24.0;
-        pos2(self.r.min.x + x * s, self.r.min.y + y * s)
-    }
-    fn sc(&self) -> f32 {
-        self.r.width() / 24.0
-    }
-    fn st(&self, c: Color32) -> Stroke {
-        Stroke::new(self.w, c)
-    }
-    fn l(&self, x1: f32, y1: f32, x2: f32, y2: f32) {
-        self.p.line_segment([self.at(x1, y1), self.at(x2, y2)], self.st(self.base));
-    }
-    fn la(&self, x1: f32, y1: f32, x2: f32, y2: f32) {
-        self.p.line_segment([self.at(x1, y1), self.at(x2, y2)], self.st(self.acc));
-    }
-    fn poly(&self, pts: &[(f32, f32)], closed: bool, c: Color32) {
-        let mut v: Vec<Pos2> = pts.iter().map(|(x, y)| self.at(*x, *y)).collect();
-        if closed && let Some(f) = v.first().copied() {
-            v.push(f);
-        }
-        self.p.line(v, self.st(c));
-    }
-    fn c(&self, x: f32, y: f32, r: f32, c: Color32) {
-        self.p.circle_stroke(self.at(x, y), r * self.sc(), self.st(c));
-    }
-    fn fill_c(&self, x: f32, y: f32, r: f32, c: Color32) {
-        self.p.circle_filled(self.at(x, y), r * self.sc(), c);
-    }
-    /// Arc in degrees, counter-clockwise on screen (y up visually).
-    fn arc(&self, x: f32, y: f32, r: f32, a0: f32, a1: f32, c: Color32) {
-        let n = (((a1 - a0).abs() / 10.0).ceil() as usize).max(2);
-        let pts: Vec<Pos2> = (0..=n)
-            .map(|i| {
-                let a = (a0 + (a1 - a0) * i as f32 / n as f32).to_radians();
-                self.at(x + r * a.cos(), y - r * a.sin())
-            })
-            .collect();
-        self.p.line(pts, self.st(c));
-    }
-    fn rect(&self, x: f32, y: f32, w: f32, h: f32, c: Color32) {
-        self.poly(&[(x, y), (x + w, y), (x + w, y + h), (x, y + h)], true, c);
-    }
-    fn fill_rect(&self, x: f32, y: f32, w: f32, h: f32, c: Color32) {
-        self.p.rect_filled(Rect::from_min_max(self.at(x, y), self.at(x + w, y + h)), 0.0, c);
-    }
-    fn dot(&self, x: f32, y: f32) {
-        self.fill_c(x, y, 1.6, self.pt);
-    }
-    fn tri(&self, pts: [(f32, f32); 3], c: Color32) {
-        self.p.add(egui::Shape::convex_polygon(pts.iter().map(|(x, y)| self.at(*x, *y)).collect(), c, Stroke::NONE));
-    }
-    fn arrow_tip(&self, x: f32, y: f32, dx: f32, dy: f32, c: Color32) {
-        let l = (dx * dx + dy * dy).sqrt().max(1e-3);
-        let (ux, uy) = (dx / l, dy / l);
-        let (nx, ny) = (-uy, ux);
-        self.tri([(x, y), (x - ux * 3.0 + nx * 1.4, y - uy * 3.0 + ny * 1.4), (x - ux * 3.0 - nx * 1.4, y - uy * 3.0 - ny * 1.4)], c);
-    }
-    fn text(&self, x: f32, y: f32, s: &str, size: f32, c: Color32) {
-        self.p.text(self.at(x, y), egui::Align2::CENTER_CENTER, s, egui::FontId::proportional(size * self.sc()), c);
-    }
+    // Home ribbon variants and panel tools, drawn in `icons/ribbon.rs`.
+    CircleDiameter,
+    Circle2Point,
+    Circle3Point,
+    CircleTtr,
+    CircleTtt,
+    ArcSce,
+    ArcSca,
+    ArcScl,
+    ArcSea,
+    ArcSed,
+    ArcSer,
+    ArcCse,
+    ArcCsa,
+    ArcCsl,
+    ArcContinue,
+    EllipseAxis,
+    EllipseArc,
+    SplineCv,
+    Divide,
+    MeasurePoints,
+    Polyline3d,
+    Helix,
+    RevCloudPolygonal,
+    RevCloudFreehand,
+    Blend,
+    ArrayPath,
+    SetByLayer,
+    ChangeSpace,
+    EditPolyline,
+    EditSpline,
+    EditHatch,
+    EditArray,
+    Align,
+    BreakAtPoint,
+    Reverse,
+    CopyNested,
+    Overkill,
+    DrawOrderFront,
+    DrawOrderBack,
+    DrawOrderAbove,
+    DrawOrderUnder,
+    TextToFront,
+    DimsToFront,
+    LeadersToFront,
+    AnnotationsToFront,
+    HatchToBack,
+    Dimension,
+    DimJogged,
+    CollectLeaders,
+    TextStyle,
+    DimStyle,
+    MLeaderStyle,
+    TableStyle,
+    LayerOn,
+    LayerUniso,
+    LayerThaw,
+    LayerUnlock,
+    LayerCur,
+    CopyToLayer,
+    LayerWalk,
+    LayerVpFreeze,
+    LayerMerge,
+    LayerDelete,
+    LockedLayerFade,
+    DetectBlocks,
+    ConvertBlocks,
+    AttEdit,
+    AttEditMultiple,
+    BlockReplace,
+    AttManager,
+    AttSync,
+    BasePoint,
+    Group,
+    Ungroup,
+    GroupEdit,
+    GroupSelect,
+    GroupManager,
+    GroupBox,
+    MeasureRadius,
+    MeasureAngle,
+    Volume,
+    SelectAll,
+    QuickCalc,
+    IdPoint,
+    PointStyle,
+    Paste,
+    PasteBlock,
+    PasteHyperlink,
+    PasteOrig,
+    PasteSpecial,
+    Cut,
+    CopyClip,
+    ViewBase,
+    SectionViewStyle,
+    DetailViewStyle,
+    AutoScale,
+    AnnoMonitor,
+    Isolate,
+    CleanScreen,
+    SelCycling,
+    Osnap3d,
+    DynUcs,
+    SelFilter,
+    Gizmo,
+    GraphicsPerf,
+    Units,
+    Wrench,
+    Prompt,
+    NavWheel,
+    ShowMotion,
+    VpMinimize,
+    VpRestore,
+    ZoomIn,
+    ZoomOut,
+    ZoomAll,
+    ZoomPrevious,
+    ZoomRealtime,
 }
 
 /// Paint `icon` into `rect` (square), with `dim` for disabled.
 pub fn paint(p: &Painter, rect: Rect, icon: Icon, dim: bool) {
     let t = Tokens::get();
     let alpha = |c: Color32| if dim { c.gamma_multiply(0.4) } else { c };
-    let pen = Pen { p, r: rect, w: (rect.width() / 16.0).clamp(1.0, 1.6), base: alpha(t.icon), acc: alpha(t.icon_accent), pt: alpha(t.icon_point) };
+    let pen =
+        Pen { p, r: rect, w: (rect.width() / 16.0).clamp(1.0, 1.6), base: alpha(t.icon), acc: alpha(t.icon_accent), pt: alpha(t.icon_point), dim };
+    paint_pen(&pen, icon);
+}
+
+/// Paint `icon` into `rect` in one colour (every stroke, accent and point), for glyphs on a
+/// surface of their own such as the navigation bar's light strip.
+pub fn paint_tinted(p: &Painter, rect: Rect, icon: Icon, color: Color32) {
+    let pen = Pen { p, r: rect, w: (rect.width() / 16.0).clamp(1.0, 1.6), base: color, acc: color, pt: color, dim: false };
+    paint_pen(&pen, icon);
+}
+
+fn paint_pen(pen: &Pen, icon: Icon) {
+    let p = pen.p;
+    let alpha = |c: Color32| if pen.dim { c.gamma_multiply(0.4) } else { c };
     let (b, a) = (pen.base, pen.acc);
     use Icon::*;
     match icon {
@@ -445,7 +515,7 @@ pub fn paint(p: &Painter, rect: Rect, icon: Icon, dim: bool) {
         Gradient => {
             for i in 0..9 {
                 let c = Color32::from_rgb(40 + i * 22, 80 + i * 16, 160 + i * 9);
-                pen.fill_rect(3.0 + i as f32 * 2.0, 3.0, 2.0, 18.0, if dim { c.gamma_multiply(0.4) } else { c });
+                pen.fill_rect(3.0 + i as f32 * 2.0, 3.0, 2.0, 18.0, if pen.dim { c.gamma_multiply(0.4) } else { c });
             }
             pen.rect(3.0, 3.0, 18.0, 18.0, b);
         }
@@ -598,91 +668,6 @@ pub fn paint(p: &Painter, rect: Rect, icon: Icon, dim: bool) {
             pen.l(18.0, 6.0, 20.0, 6.0);
             pen.poly(&[(20.0, 6.0), (20.0, 11.0), (11.0, 11.0), (11.0, 14.0)], false, b);
             pen.fill_rect(9.5, 14.0, 3.0, 8.0, a);
-        }
-        DimLinear | DimAligned | DimBaseline | DimContinue | QDim => {
-            let (y0, y1) = (8.0, 18.0);
-            pen.l(4.0, y1, 4.0, 5.0);
-            pen.l(20.0, y1, 20.0, 5.0);
-            pen.la(4.0, y0, 20.0, y0);
-            pen.arrow_tip(4.0, y0, -1.0, 0.0, a);
-            pen.arrow_tip(20.0, y0, 1.0, 0.0, a);
-            match icon {
-                DimBaseline => pen.la(4.0, 4.0, 13.0, 4.0),
-                DimContinue => {
-                    pen.l(12.0, y1, 12.0, 5.0);
-                }
-                QDim => pen.text(12.0, 15.0, "Q", 7.0, b),
-                DimAligned => {}
-                _ => pen.text(12.0, 14.5, "1.5", 6.0, b),
-            }
-        }
-        DimRadius => {
-            pen.arc(12.0, 14.0, 8.0, 0.0, 180.0, b);
-            pen.la(12.0, 14.0, 17.6, 8.4);
-            pen.arrow_tip(17.6, 8.4, 1.0, -1.0, a);
-            pen.dot(12.0, 14.0);
-        }
-        DimDiameter => {
-            pen.c(12.0, 12.0, 8.0, b);
-            pen.la(6.4, 17.6, 17.6, 6.4);
-            pen.arrow_tip(6.4, 17.6, -1.0, 1.0, a);
-            pen.arrow_tip(17.6, 6.4, 1.0, -1.0, a);
-        }
-        DimAngular => {
-            pen.l(4.0, 20.0, 20.0, 20.0);
-            pen.l(4.0, 20.0, 16.0, 6.0);
-            pen.arc(4.0, 20.0, 11.0, 0.0, 49.0, a);
-        }
-        DimArc => {
-            pen.arc(12.0, 18.0, 8.0, 20.0, 160.0, b);
-            pen.arc(12.0, 18.0, 12.0, 25.0, 155.0, a);
-        }
-        DimOrdinate => {
-            pen.l(4.0, 20.0, 4.0, 4.0);
-            pen.l(4.0, 20.0, 20.0, 20.0);
-            pen.la(10.0, 20.0, 10.0, 8.0);
-            pen.la(16.0, 20.0, 16.0, 11.0);
-        }
-        MLeader | AddLeader | RemoveLeader | AlignLeaders => {
-            pen.la(3.0, 20.0, 10.0, 9.0);
-            pen.la(10.0, 9.0, 14.0, 9.0);
-            pen.arrow_tip(3.0, 20.0, -0.55, 1.0, a);
-            pen.l(15.0, 6.0, 22.0, 6.0);
-            pen.l(15.0, 10.0, 21.0, 10.0);
-            match icon {
-                AddLeader => pen.text(19.0, 18.0, "+", 9.0, pen.pt),
-                RemoveLeader => pen.text(19.0, 18.0, "−", 9.0, pen.pt),
-                _ => {}
-            }
-        }
-        BlockCreate | Insert | BlockEdit | AttDef => {
-            pen.poly(&[(9.0, 4.0), (17.0, 8.0), (9.0, 12.0), (1.0, 8.0)], true, b);
-            pen.poly(&[(1.0, 8.0), (1.0, 15.0), (9.0, 19.0), (17.0, 15.0), (17.0, 8.0)], false, b);
-            match icon {
-                BlockCreate => pen.text(19.0, 5.0, "✳", 9.0, pen.pt),
-                Insert => {
-                    pen.la(14.0, 20.0, 22.0, 20.0);
-                    pen.arrow_tip(13.0, 20.0, -1.0, 0.0, a);
-                }
-                BlockEdit => pen.la(14.0, 22.0, 22.0, 14.0),
-                _ => pen.text(19.0, 19.0, "A", 9.0, a),
-            }
-        }
-        LayerOff | LayerIso | LayerFreeze | LayerLock | LayerMatch | MakeCurrent | LayerPrev => {
-            pen.poly(&[(2.0, 9.0), (10.0, 5.0), (18.0, 9.0), (10.0, 13.0)], true, b);
-            pen.poly(&[(2.0, 13.0), (10.0, 17.0), (18.0, 13.0)], false, b);
-            let (x, y) = (18.0, 17.0);
-            match icon {
-                LayerOff => pen.fill_c(x, y, 3.5, Color32::from_rgb(0x8a, 0x8a, 0x5a)),
-                LayerIso => pen.fill_c(x, y, 3.5, a),
-                LayerFreeze => pen.text(x, y, "❄", 9.0, Color32::from_rgb(0x9f, 0xd4, 0xff)),
-                LayerLock => pen.rect(x - 3.0, y - 1.0, 6.0, 5.0, Color32::from_rgb(0xe6, 0xb4, 0x3c)),
-                LayerMatch => pen.la(x - 4.0, y, x + 4.0, y),
-                MakeCurrent => pen.text(x, y, "✓", 9.0, Color32::from_rgb(0x6f, 0xe0, 0x6f)),
-                _ => {
-                    pen.arc(x, y, 3.5, 90.0, 360.0, a);
-                }
-            }
         }
         Bulb | BulbOff => {
             let c = if icon == Bulb { Color32::from_rgb(0xf5, 0xd0, 0x3b) } else { Color32::from_rgb(0x70, 0x78, 0x86) };
@@ -904,6 +889,22 @@ pub fn paint(p: &Painter, rect: Rect, icon: Icon, dim: bool) {
             // A filter funnel with a spark.
             pen.poly(&[(3.0, 4.0), (19.0, 4.0), (13.0, 11.0), (13.0, 19.0), (9.0, 17.0), (9.0, 11.0)], true, b);
             pen.poly(&[(20.0, 10.0), (16.5, 15.5), (20.0, 15.5), (17.0, 21.0)], false, a);
+        }
+        DimLinear | DimAligned | DimBaseline | DimContinue | QDim | DimRadius | DimDiameter | DimAngular | DimArc | DimOrdinate | MLeader
+        | AddLeader | RemoveLeader | AlignLeaders | BlockCreate | Insert | BlockEdit | AttDef | LayerOff | LayerIso | LayerFreeze | LayerLock
+        | LayerMatch | MakeCurrent | LayerPrev | Launcher | Pin | Unpin | CircleDiameter | Circle2Point | Circle3Point | CircleTtr | CircleTtt
+        | ArcSce | ArcSca | ArcScl | ArcSea | ArcSed | ArcSer | ArcCse | ArcCsa | ArcCsl | ArcContinue | EllipseAxis | EllipseArc | SplineCv
+        | Divide | MeasurePoints | Polyline3d | Helix | RevCloudPolygonal | RevCloudFreehand | Blend | ArrayPath | SetByLayer | ChangeSpace
+        | EditPolyline | EditSpline | EditHatch | EditArray | Align | BreakAtPoint | Reverse | CopyNested | Overkill | DrawOrderFront
+        | DrawOrderBack | DrawOrderAbove | DrawOrderUnder | TextToFront | DimsToFront | LeadersToFront | AnnotationsToFront | HatchToBack
+        | Dimension | DimJogged | CollectLeaders | TextStyle | DimStyle | MLeaderStyle | TableStyle | LayerOn | LayerUniso | LayerThaw
+        | LayerUnlock | LayerCur | CopyToLayer | LayerWalk | LayerVpFreeze | LayerMerge | LayerDelete | LockedLayerFade | DetectBlocks
+        | ConvertBlocks | AttEdit | AttEditMultiple | BlockReplace | AttManager | AttSync | BasePoint | Group | Ungroup | GroupEdit | GroupSelect
+        | GroupManager | GroupBox | MeasureRadius | MeasureAngle | Volume | SelectAll | QuickCalc | IdPoint | PointStyle | Paste | PasteBlock
+        | PasteHyperlink | PasteOrig | PasteSpecial | Cut | CopyClip | ViewBase | SectionViewStyle | DetailViewStyle => ribbon::paint(pen, icon),
+        AutoScale | AnnoMonitor | Isolate | CleanScreen | SelCycling | Osnap3d | DynUcs | SelFilter | Gizmo | GraphicsPerf | Units | Wrench
+        | Prompt | NavWheel | ShowMotion | VpMinimize | VpRestore | ZoomIn | ZoomOut | ZoomAll | ZoomPrevious | ZoomRealtime => {
+            shell::paint(pen, icon)
         }
     }
 }

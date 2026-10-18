@@ -1,6 +1,6 @@
 # UI parity
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-12 · **Change:** minor (animation effects follow the operating system's setting) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0)
+> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-18 · **Change:** major (Windows AutoCAD 2026 baseline for the shell and the Home tab) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0); the Windows baseline section: Autodesk AutoCAD 2026 (Windows)
 
 How AsenaCAD's interaction compares with AutoCAD's: point entry, object snaps, tracking, dynamic
 input, grips, selection, the command line, chrome and navigation. A drafter's speed in AutoCAD
@@ -12,6 +12,96 @@ running snaps, polar/ortho, object snap tracking and the palettes are real, and 
 Extension, Parallel and Apparent Intersection snaps (#379); dynamic input is a read-only
 tooltip; FROM, M2P, TK and point filters don't exist; hot-grip options are advertised but
 ignored; there are no context menus. Remaining: **≈ 110–170 Opus 5.5 hours**.
+
+## Windows AutoCAD 2026 baseline
+
+> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-18 · **Change:** major (first side-by-side pass of the Windows shell and the Home tab) · **Target:** Autodesk AutoCAD 2026 (Windows)
+
+The rest of this doc still measures against AutoCAD 2027 for Mac; this section is the first part
+re-measured against the Windows target (milestone M1a: title row, ribbon, document tabs and the
+shell around the drawing).
+
+**How this was measured.** AutoCAD 2026 for Windows was observed on the reference PC on
+2026-10-18: an empty Drawing1 in the default workspace with the Home tab open, in a 1906 × 1026
+window and in a 1280 px wide one, plus a UI Automation read of every Home panel, slide-out and
+split-button list (local notes, never committed). AsenaCAD (branch `m1a-ribbon`) was rendered by
+the headless test harness at the same window sizes with the sample drawing. Slide-outs and
+drop-down lists were compared against the observed item lists (structure, order, labels, control
+types), not against screenshots. "Matches" means what the [parity method](../.claude/rules/parity-method.md)
+says: position and order, label text, control type and when an item is enabled. Pixels, icons
+and colours are ours by design.
+
+**Measured: 25 rows, 9 ✅, 15 ◐, 1 ✗.**
+
+| Element | Status | AutoCAD 2026 (Windows) | AsenaCAD and the differences |
+|---|---|---|---|
+| Title row: Application button | ◐ | Leftmost in the window's own caption row, with a ▾; opens the Application menu | Same place and ▾, but it opens the File menu's entries until the Application menu lands (row below). On Windows and Linux the title row sits under the system's title bar, so the window buttons are the system's, not on the title row's right end; on macOS it starts after the traffic lights |
+| Title row: Quick Access Toolbar | ✅ | New, Open, Save, Save As, two Web & Mobile buttons, Plot, Undo and Redo split buttons, Customize ▾, Share; the Customize list has 17 commands, More Commands, Show Menu Bar, Show Below the Ribbon | Same buttons in the same order without the Autodesk online ones ([below](#intentionally-absent-autodesk-online-services)); same Customize list and options |
+| Title row: title | ✅ | Product and drawing name, centred | "AsenaCAD  <drawing>.dwg", centred; it slides or is cut short to stay between the toolbar and the InfoCenter |
+| Title row: InfoCenter | ✅ | Hide-search ▸, search box, Search, Sign In ▾, App Store, Stay Connected ▾, Help split | Hide-search ▸, search box with the same placeholder, Search, Help split; the online items are left out on purpose. Search starts a command whose name or alias is typed, else opens our Command Reference (AutoCAD searches its online help) |
+| Ribbon tab row | ◐ | Home, Insert, Annotate, Parametric, View, Manage, Output, Collaborate, Express Tools; then the minimize button (cycles Full, Panel Buttons, Panel Titles, Tabs) and its ▾ menu | Same nine tabs in order and the same minimize button and menu. Only Home has panels: the other eight show a "not built yet" note until M1b |
+| Home ▸ Draw | ✅ | Line, Polyline, Circle ▾, Arc ▾ (large); Rectangle ▾, Ellipse ▾ (its face reads "Center"), Hatch ▾ (small, icons only); 13-item slide-out ending with Revision Cloud ▾ | Same items, sizes, rows, list entries and separators; every item runs its command |
+| Home ▸ Modify | ◐ | Move/Copy/Stretch, Rotate/Mirror/Scale, Trim ▾/Fillet ▾/Array ▾ with labels, Erase/Explode/Offset as icons; 15-item slide-out ending with the draw-order split | Same layout and lists; Set to ByLayer has no command yet, so it is disabled |
+| Home ▸ Annotation | ✅ | Text ▾ and Dimension (large); Linear ▾, Leader ▾, Table (small, labelled); slide-out of four style buttons, each with its style list | Same items, lists and four-row slide-out; the style lists set the current style |
+| Home ▸ Layers | ◐ | Layer Properties (large toggle), the layer list, two rows of layer tools ending with Make Current and Match Layer; slide-out with Layer State, eight tools and the locked-layer fading toggle and slider | Same layout. The layer list shows only the layer's name (AutoCAD's also shows its on, freeze, lock and colour states); Copy Objects to New Layer, Layer Walk, VP Freeze in All Viewports except Current and Locked Layer fading have no command yet; the fading slider shows its value but is disabled |
+| Home ▸ Block | ◐ | Insert (large, opens a gallery of the drawing's blocks), Detect and Convert ▾ (large), Create, Edit, Edit Attributes ▾; slide-out of six | Same layout and lists. Insert is a plain button that starts INSERT, with no gallery; Detect and Convert, Search and Convert and Replace have no command yet |
+| Home ▸ Properties | ◐ | Match Properties; Object Color, Lineweight and Linetype lists, each with a small icon on its left and a colour swatch or line preview in the box; slide-out with Plot Style, transparency mode and slider, List; dialog launcher | Same layout, lists and launcher. The lists have no row icons, swatches or line previews; the transparency mode and slider are disabled (new objects' transparency is not modelled yet). Plot Style is disabled with ByColor in a colour-dependent drawing, as in AutoCAD |
+| Home ▸ Groups | ◐ | Group (large), Ungroup, Group Edit, Group Selection toggle; slide-out with Group Manager and the Group Bounding Box toggle | Same layout; Group Manager and Group Bounding Box have no command yet |
+| Home ▸ Utilities | ◐ | Measure ▾ (Quick, Distance, Radius, Angle, Area, Volume), Quick Select, Select All, Quick Calculator toggle; slide-out with ID Point and Point Style | Same layout and list. The Measure face runs Quick, which has no command yet, so the face is disabled (its ▾ list works); Volume has no command yet |
+| Home ▸ Clipboard | ◐ | Paste ▾ (five entries), Cut and Copy Clip as icons, each drawn with a small ▾ mark | Same layout and Paste list; Paste as Hyperlink and Paste Special have no command yet. Cut and Copy Clip are plain icon buttons: what AutoCAD's ▾ marks open wasn't captured. Paste is disabled while there is nothing to paste |
+| Home ▸ View | ◐ | Base (large); slide-out with Section and Detail View Style buttons and lists; Drafting Standard launcher | Same layout, but model documentation isn't built: Base, both styles and the launcher are disabled |
+| Ribbon collapse | ✅ | At 1906 px every Home panel is full. At 1280 px Modify, Annotation, Layers and Block drop their small items' labels, and Properties, Groups, Utilities, Clipboard and View become panel buttons (icon, name on one line, ▾) that open the panel below them | Same panels shrink and collapse at both widths, at any display scale. Narrower windows collapse more panels from the right. A panel button never breaks a word of its name: it gets wider when a word doesn't fit (Annotation in a 900-point window) |
+| Document tab bar | ✅ | File-tabs menu ≡, Start (no close button), drawing tabs with × and a * while unsaved, + | Same controls in the same order |
+| Viewport controls | ✅ | [−][Top][2D Wireframe] menus at the top left; minimize, restore and close at the top right | Same controls and places |
+| ViewCube | ◐ | Compass ring with N, E, S, W, the TOP face, WCS ▾ below; the Home button appears while the pointer is over the cube | Same parts and places, Home shown only on hover. Top and Home zoom to the extents; the cube can't be dragged or rotated (2D only, #7) |
+| Navigation bar | ◐ | Under the ViewCube: Full Navigation Wheel, Pan, Zoom ▾, Orbit ▾, ShowMotion; a close button | Same tools in the same order (NAVBAR, ⊗ closes it). Pan and Zoom with its eleven variants work (the face shows the last one); the wheel, Orbit and its variants, ShowMotion and the bar's Customize are disabled (no SteeringWheels or 3D views) |
+| Command line | ◐ | A floating bar over the drawing's bottom: grip, close, Customize, recent commands, input box ("Type a command"), history toggle; the history shows each prompt with the value typed after it | Same bar and controls (COMMANDLINEHIDE, COMMANDLINE or Ctrl+9 bring it back; history lines setting). The history shows "Command: LINE" but not the prompts with the values typed; the bar can't be dragged or docked and has no transparency |
+| Layout bar | ✅ | Layouts menu ≡, Model, Layout1, Layout2, + at the status bar's left | Same controls in the same order; in a narrow window ≡, Model, the current layout and + always stay |
+| Status bar | ◐ | 16 default items from MODEL to Clean Screen, then Customization ≡; some with ▾ menus (snap type, polar angles, isoplanes, object snaps, annotation scale, workspaces) | Same items, order and ▾ menus; in a narrow window the items that don't fit go from the left end. Workspace Switching, Annotation Monitor and Clean Screen are disabled until their commands exist |
+| Status bar Customization | ◐ | A check list of 29 items with separators, 14 hidden by default | Same list, order, separators and defaults, saved with the workspace. 3D Object Snap, Dynamic UCS, Selection Filtering, Gizmo, Lock UI and Graphics Performance are disabled |
+| Application menu | ✗ | Search box; New, Open, Save, Save As, Import, Export, Publish, Print, Drawing Utilities, Close with sub-panes; Recent and Open Documents; Options and Exit | Not built (M1c): the Application button lists the File menu's entries |
+
+The ZOOM prompt now has AutoCAD's comma: "Specify corner of window, enter a scale factor (nX or
+nXP), or [All/Center/…] <real time>:".
+
+### Intentionally absent (Autodesk online services)
+
+These need an Autodesk account or Autodesk's servers. AsenaCAD uses no Autodesk service, so they
+are left out of the shell rather than shown disabled:
+
+- **Share** (Quick Access Toolbar): sends a link to the drawing through Autodesk's cloud.
+- **Sign In** (InfoCenter): signs in to an Autodesk account.
+- **Autodesk App Store** (InfoCenter): Autodesk's add-on store.
+- **Stay Connected** (InfoCenter): links to Autodesk's online channels and feedback.
+- **Open from Web & Mobile** and **Save to Web & Mobile** (Quick Access Toolbar): drawings stored
+  in Autodesk's online storage.
+
+### Ribbon items without a command
+
+Ribbon items that name an AutoCAD command AsenaCAD doesn't have yet. They are shown disabled with
+"Not available yet". This list is `ribbon::model::tests::UNBUILT`; a test fails when the two
+differ.
+
+| Command | Ribbon item |
+|---|---|
+| `setbylayer` | Modify ▸ Set to ByLayer |
+| `copytolayer` | Layers ▸ Copy Objects to New Layer |
+| `laywalk` | Layers ▸ Layer Walk |
+| `layvpi` | Layers ▸ VP Freeze in All Viewports except Current |
+| `laylockfadectl` | Layers ▸ Locked Layer fading (toggle) |
+| `bdetect` | Block ▸ Detect and Convert |
+| `bconvert` | Block ▸ Search and Convert |
+| `breplace` | Block ▸ Replace |
+| `classicgroup` | Groups ▸ Group Manager |
+| `groupdisplaymode` | Groups ▸ Group Bounding Box (toggle) |
+| `measuregeom.quick` | Utilities ▸ Measure ▸ Quick |
+| `measuregeom.volume` | Utilities ▸ Measure ▸ Volume |
+| `pastehlnk` | Clipboard ▸ Paste ▸ Paste as Hyperlink |
+| `pastespec` | Clipboard ▸ Paste ▸ Paste Special |
+| `viewbase` | View ▸ Base |
+| `viewsectionstyle` | View ▸ Section View Style |
+| `viewdetailstyle` | View ▸ Detail View Style |
+| `viewstd` | View ▸ Drafting Standard (dialog launcher) |
 
 ## How this was measured
 
@@ -149,7 +239,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 | UNDO with Mark, Back, BEgin, End, Auto, Control | yes | count only, whole-document snapshots capped at 2,000 (`lib.rs:477`, `edit.rs:56`) |
 | SETVAR for every system variable | ~1,000 sysvars | about 60 session/header variables by name (`sysvars.rs`) |
 | Scripts (SCRIPT, `.scr`) | yes | script text via CLI/MCP/control; no `.scr` file command |
-| Floating/docked command window, transparency, lines of history | yes | floating overlay, history lines setting |
+| Floating/docked command window, transparency, lines of history | yes | the Windows command line bar: see [Windows baseline](#windows-autocad-2026-baseline) |
 
 ## Chrome and palettes (≈ 45%)
 
@@ -161,9 +251,9 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 | Properties Inspector, Quick Properties | yes | yes (every control acts or is visibly unavailable, #182); block references show read-only Position X/Y/Z from their stored insertion point; coordinate editing is still missing |
 | Layer Properties Manager (filters, states, VP overrides) | yes | yes |
 | Blocks palette, Content | yes | Blocks window (click to insert, #28) |
-| Status bar toggles | ~25 | most toggles; Annotation Visibility and Workspace do nothing |
+| Status bar toggles | ~25 | the Windows status bar, its ▾ menus and Customization list: see [Windows baseline](#windows-autocad-2026-baseline) |
 | ViewCube | interactive 3D | clickable for 2D (Top/Home → extents); dragging does nothing (#7) |
-| Navigation bar, SteeringWheels | yes | no |
+| Navigation bar, SteeringWheels | yes | the Windows navigation bar: see [Windows baseline](#windows-autocad-2026-baseline); no SteeringWheels |
 | Workspaces | Drafting & Annotation, 3D Modeling | no |
 | Options / Preferences dialog | many tabs | **no** (issue #23) |
 | Customisation (CUI, aliases editor, tool palettes) | yes | no |
@@ -202,6 +292,11 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-18 | major | Windows AutoCAD 2026 baseline: side-by-side rows for the title row, tab row, each Home panel, ribbon collapse, document tabs, viewport controls, ViewCube, navigation bar, command line, layout bar, status bar and Application menu (9 ✅, 15 ◐, 1 ✗); Autodesk online items listed as intentionally absent; ribbon items without a command listed (checked by a test); collapsed panel buttons keep whole words; ViewCube Home on hover; ZOOM prompt comma. The Mac table's command line, status bar and navigation bar rows point to it |
+| 2026-10-18 | minor | Status bar fits narrow windows; placeholder commands (ATTACH, SHARE, 3DORBIT) show disabled; 2D Object Snap with no modes opens Drafting Settings |
+| 2026-10-18 | minor | Navigation bar below the ViewCube (Pan, Zoom and its variants, Orbit; NAVBAR) and the drawing window's buttons at the top-right corner |
+| 2026-10-18 | minor | Command line bar as AutoCAD 2026 for Windows: grip, close (COMMANDLINEHIDE), Customize, recent commands, history toggle |
+| 2026-10-18 | minor | Status bar row as AutoCAD 2026 for Windows: layout bar (≡ · Model · layouts · +), separator band, default items in order, ▾ menus, Customization list |
 | 2026-10-12 | minor | Selected and hovered objects redrawn in the selection colour (text and arrowheads included); Options ▸ Selection laid out as AutoCAD's: Object grouping, Show grips, grip object limit, selection preview, Visual Effect Settings (selection area, preview filter) |
 | 2026-10-12 | minor | Animation effects (dialog and menu fades, smoothed wheel scrolling and ⌘/Ctrl+wheel zoom) follow the operating system's setting; View ▸ Accessibility ▸ Animation Effects chooses System, On or Off |
 | 2026-10-12 | minor | Hatch and Gradient / Hatch Edit dialogs (HATCH, GRADIENT, HATCHEDIT, double-click a hatch; HPDLGMODE) |

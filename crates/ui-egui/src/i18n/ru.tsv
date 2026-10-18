@@ -10,7 +10,6 @@
 	% of all commits	% всех коммитов
 	* Wildcard Match	* По шаблону
 	*VARIES*	*РАЗНЫЕ*
-	+  |  Top  |  2D Wireframe	+  |  Сверху  |  2D-каркас
 	+Bin	+двоич.
 	+LOC	+строк
 	1 Viewport	1 видовой экран
@@ -470,6 +469,7 @@
 	Node	Узел
 	None	Нет
 	Not available	Недоступно
+	Not available now	Сейчас недоступно
 	Not available yet	Пока недоступно
 	OK	ОК
 	Object	Объект
@@ -763,7 +763,7 @@
 	Specify center point of array	Укажите центр массива
 	Specify center point of base	Укажите центр основания
 	Specify corner of viewport	Укажите угол видового экрана
-	Specify corner of window, enter a scale factor (nX or nXP)	Укажите угол рамки, введите масштабный коэффициент (nX или nXP)
+	Specify corner of window, enter a scale factor (nX or nXP),	Укажите угол рамки, введите масштабный коэффициент (nX или nXP),
 	Specify diameter of circle	Укажите диаметр круга
 	Specify dimension arc line location	Укажите положение размерной дуги
 	Specify dimension line location	Укажите положение размерной линии
@@ -1005,3 +1005,18 @@
 	Sheet Books to PDF...	Книги листов в PDF...
 	Not a number or distance: {text}	Не число и не расстояние: {text}
 	Query Texts	Запрос текстов
+	Show Full Ribbon	Показать полную ленту
+	Minimize to Panel Buttons	Свернуть до кнопок панелей
+	Minimize to Panel Titles	Свернуть до заголовков панелей
+	Minimize to Tabs	Свернуть до вкладок
+	Minimize Options	Параметры сворачивания
+	Pin	Закрепить
+	Top	Сверху
+	2D Wireframe	2D-каркас
+	Annotate	Аннотации
+	Manage	Управление
+	Output	Вывод
+	Collaborate	Совместная работа
+	Express Tools	Экспресс-инструменты
+	File Tabs	Вкладки файлов
+	This tab is not built yet (M1b)	Эта вкладка ещё не готова (M1b)

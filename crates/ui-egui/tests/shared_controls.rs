@@ -8,6 +8,11 @@ use egui_kittest::kittest::Queryable;
 
 fn app() -> CadApp {
     let mut app = CadApp::new(Session::default(), Services::default());
+    // CADCraft's palettes (closed by default, as in AutoCAD).
+    app.ui.show_palettes = true;
+    app.ui.show_toolsets = true;
+    // The ribbon down to its tabs: its Home panels repeat the palette's labels (Line, Circle).
+    app.ui.ribbon_min = cadcraft_ui_egui::ribbon::RibbonMin::Tabs;
     app.run("ui.sample", serde_json::json!({})).unwrap();
     app
 }
