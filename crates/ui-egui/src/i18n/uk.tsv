@@ -1378,3 +1378,7 @@
 	Unlock	Розблокувати
 	Utilities	Утиліти
 	VP Freeze in All Viewports except Current	Заморозити у всіх ВЕ, крім поточного
+	{label} options	{label}: варіанти
+	Retain Attribute Display	Зберегти відображення атрибутів
+	Display All Attributes	Показати всі атрибути
+	Hide All Attributes	Приховати всі атрибути

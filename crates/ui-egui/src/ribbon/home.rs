@@ -1,7 +1,7 @@
 //! The Home tab: AutoCAD 2026's ten panels with their items in AutoCAD's order (column by
 //! column, top to bottom), sizes, rows, split menus, slide-outs and dialog launchers.
 
-use super::model::{Combo, Entry, Item, Panel, Size, Slider, Tab};
+use super::model::{Combo, Entry, Item, Panel, Size, Slider, Tab, Toggle};
 use crate::icons::Icon;
 
 const SEP: Entry = Entry::Separator;
@@ -22,6 +22,10 @@ const fn icon(icon: Icon, label: &'static str, cmd: &'static str, row: u8) -> It
 /// Small, icon and label.
 const fn labeled(icon: Icon, label: &'static str, cmd: &'static str, row: u8) -> Item {
     Item::Button { icon, label, cmd, size: Size::Small { label: true }, row }
+}
+
+const fn toggle(icon: Icon, label: &'static str, cmd: &'static str, size: Size, row: u8, state: Toggle) -> Item {
+    Item::Toggle { icon, label, cmd, size, row, state }
 }
 
 const fn large_split(label: Option<&'static str>, menu: &'static [Entry]) -> Item {
@@ -228,7 +232,7 @@ const ANNOTATION: Panel = Panel {
 const LAYERS: Panel = Panel {
     label: "Layers",
     items: &[
-        large(Icon::LayerProps, "Layer Properties", "layer"),
+        toggle(Icon::LayerProps, "Layer Properties", "layer", Size::Large, 0, Toggle::LayerPalette),
         combo(Combo::Layer, 208.0, 1),
         icon(Icon::LayerOff, "Off", "layoff", 2),
         icon(Icon::LayerIso, "Isolate", "layiso", 2),
@@ -250,7 +254,7 @@ const LAYERS: Panel = Panel {
         icon(Icon::LayerVpFreeze, "VP Freeze in All Viewports except Current", "layvpi", 2),
         icon(Icon::LayerMerge, "Merge", "laymrg", 2),
         icon(Icon::LayerDelete, "Delete", "laydel", 2),
-        icon(Icon::LockedLayerFade, "Locked Layer fading", "laylockfadectl", 3),
+        toggle(Icon::LockedLayerFade, "Locked Layer fading", "laylockfadectl", Size::Small { label: false }, 3, Toggle::LockedLayerFade),
         Item::Slider { kind: Slider::LockedLayerFade, width: 200.0, row: 3 },
     ],
     launcher: None,
@@ -309,11 +313,11 @@ const GROUPS: Panel = Panel {
         large(Icon::Group, "Group", "group"),
         icon(Icon::Ungroup, "Ungroup", "ungroup", 1),
         icon(Icon::GroupEdit, "Group Edit", "groupedit", 2),
-        icon(Icon::GroupSelect, "Group Selection On/Off", "pickstyle", 3),
+        toggle(Icon::GroupSelect, "Group Selection On/Off", "pickstyle", Size::Small { label: false }, 3, Toggle::GroupSelection),
     ],
     slideout: &[
         labeled(Icon::GroupManager, "Group Manager", "classicgroup", 1),
-        labeled(Icon::GroupBox, "Group Bounding Box", "groupdisplaymode", 2),
+        toggle(Icon::GroupBox, "Group Bounding Box", "groupdisplaymode", Size::Small { label: true }, 2, Toggle::GroupBox),
     ],
     launcher: None,
 };
@@ -335,7 +339,7 @@ const UTILITIES: Panel = Panel {
         large_split(Some("Measure"), MEASURE),
         icon(Icon::QuickSelect, "Quick Select", "qselect", 1),
         icon(Icon::SelectAll, "Select All", "selectall", 2),
-        icon(Icon::QuickCalc, "Quick Calculator", "ui.panel.quickcalc", 3),
+        toggle(Icon::QuickCalc, "Quick Calculator", "ui.panel.quickcalc", Size::Small { label: false }, 3, Toggle::QuickCalcPalette),
     ],
     slideout: &[labeled(Icon::IdPoint, "ID Point", "id", 1), labeled(Icon::PointStyle, "Point Style...", "ddptype", 2)],
     launcher: None,

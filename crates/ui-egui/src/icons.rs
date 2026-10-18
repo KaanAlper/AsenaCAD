@@ -122,6 +122,8 @@ pub enum Icon {
     ChevronUp,
     ChevronLeft,
     ChevronRight,
+    /// A ribbon panel's dialog launcher: an arrow pointing down-right into a corner.
+    Launcher,
     Plus,
     Switcher,
     Close,
@@ -894,6 +896,10 @@ pub fn paint(p: &Painter, rect: Rect, icon: Icon, dim: bool) {
         ChevronUp => pen.poly(&[(6.0, 15.0), (12.0, 9.0), (18.0, 15.0)], false, b),
         ChevronLeft => pen.poly(&[(15.0, 6.0), (9.0, 12.0), (15.0, 18.0)], false, b),
         ChevronRight => pen.poly(&[(9.0, 6.0), (15.0, 12.0), (9.0, 18.0)], false, b),
+        Launcher => {
+            pen.l(6.0, 6.0, 17.0, 17.0);
+            pen.poly(&[(17.0, 10.0), (17.0, 17.0), (10.0, 17.0)], false, b);
+        }
         Plus => {
             pen.l(12.0, 4.0, 12.0, 20.0);
             pen.l(4.0, 12.0, 20.0, 12.0);

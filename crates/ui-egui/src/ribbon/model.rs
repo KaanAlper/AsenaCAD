@@ -28,7 +28,7 @@ pub enum Entry {
 }
 
 /// What a combo box (or data-bound drop-down) shows and edits.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Combo {
     Layer,
     Color,
@@ -71,7 +71,7 @@ impl Combo {
 }
 
 /// A slider with a value box at its right end.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Slider {
     /// How much locked layers fade (LAYLOCKFADECTL, 0–90 %).
     LockedLayerFade,
@@ -88,6 +88,21 @@ impl Slider {
     }
 }
 
+/// What a toggle button's pressed look follows (read by `widgets::is_on`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Toggle {
+    /// The Layer Properties Manager is open.
+    LayerPalette,
+    /// Locked layers are faded (LAYLOCKFADECTL > 0).
+    LockedLayerFade,
+    /// Picking a group member selects the group (PICKSTYLE bit 1).
+    GroupSelection,
+    /// Selected groups show one bounding box (GROUPDISPLAYMODE 2).
+    GroupBox,
+    /// The QuickCalc palette is open.
+    QuickCalcPalette,
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum Item {
     Button {
@@ -96,6 +111,15 @@ pub enum Item {
         cmd: &'static str,
         size: Size,
         row: u8,
+    },
+    /// A button that shows pressed while `state` is on; clicking runs `cmd` (which flips it).
+    Toggle {
+        icon: Icon,
+        label: &'static str,
+        cmd: &'static str,
+        size: Size,
+        row: u8,
+        state: Toggle,
     },
     /// Face runs the last-used entry (initially `menu[default]`); ▾ opens the menu.
     /// `label: None` — the face shows the remembered entry's label (Trim → Extend);
@@ -153,7 +177,7 @@ pub fn command_ids() -> Vec<&'static str> {
         for panel in tab.panels {
             for item in panel.items.iter().chain(panel.slideout) {
                 match item {
-                    Item::Button { cmd, .. } => ids.push(*cmd),
+                    Item::Button { cmd, .. } | Item::Toggle { cmd, .. } => ids.push(*cmd),
                     Item::Split { menu, .. } => ids.extend(entry_commands(menu)),
                     Item::Combo { .. } | Item::Slider { .. } => {}
                 }
@@ -174,7 +198,7 @@ pub fn labels() -> Vec<&'static str> {
             out.push(panel.label);
             for item in panel.items.iter().chain(panel.slideout) {
                 match item {
-                    Item::Button { label, .. } => out.push(*label),
+                    Item::Button { label, .. } | Item::Toggle { label, .. } => out.push(*label),
                     Item::Split { label, menu, .. } => {
                         out.extend(*label);
                         out.extend(menu.iter().filter_map(|e| match e {
@@ -245,18 +269,25 @@ mod tests {
             for item in p.items {
                 match item {
                     Item::Button { size: Size::Small { .. }, row, .. }
+                    | Item::Toggle { size: Size::Small { .. }, row, .. }
                     | Item::Split { size: Size::Small { .. }, row, .. }
                     | Item::Combo { row, .. }
                     | Item::Slider { row, .. } => {
                         assert!((1..=3).contains(row), "{}: row {row}", p.label)
                     }
-                    Item::Button { size: Size::Large, row, .. } | Item::Split { size: Size::Large, row, .. } => {
+                    Item::Button { size: Size::Large, row, .. }
+                    | Item::Toggle { size: Size::Large, row, .. }
+                    | Item::Split { size: Size::Large, row, .. } => {
                         assert_eq!(*row, 0, "{}: large items use row 0", p.label)
                     }
                 }
             }
             for item in p.slideout {
-                let (Item::Button { row, .. } | Item::Split { row, .. } | Item::Combo { row, .. } | Item::Slider { row, .. }) = item;
+                let (Item::Button { row, .. }
+                | Item::Toggle { row, .. }
+                | Item::Split { row, .. }
+                | Item::Combo { row, .. }
+                | Item::Slider { row, .. }) = item;
                 assert!((1..=4).contains(row), "{} slide-out: row {row}", p.label);
             }
             for item in p.items.iter().chain(p.slideout) {
