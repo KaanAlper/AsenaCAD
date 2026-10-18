@@ -15,6 +15,11 @@ Every doc starts with a status line:
 `> **Last reviewed:** YYYY-MM-DD · **Last updated:** YYYY-MM-DD · **Change:** minor|major (what) · **Target:** Autodesk AutoCAD 2026 (Windows)`
 and ends with a revision-history table (Date | Change | Summary).
 
+**Baseline.** Existing parity rows and `cargo xtask parity` are measured against AutoCAD 2027 for
+Mac until re-measured in M1. Change a row's status and the doc's Target only after a Windows
+observation. The Mac menu catalog (`xtask/data/menu-catalog.txt`) is to be replaced by a Windows
+ribbon/command catalog (M1).
+
 When work lands: update the affected rows, the status line and the revision history in the same
 commit. Numbers are either **measured** (counted from code or from a side-by-side comparison) or
 **estimated**, and each says which.

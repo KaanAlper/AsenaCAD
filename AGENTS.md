@@ -3,13 +3,32 @@
 AsenaCAD is an open-source, clean-room, pure-Rust CAD application whose **interface, commands and
 workflow match Autodesk AutoCAD 2026 (Windows) one to one**. Matching AutoCAD is the goal; we do
 not add our own twists to its UI or commands. It runs on Linux, Windows, macOS, FreeBSD and the web
-(WASM). It is a fork of [CADCraft](https://github.com/storytold/cadcraft) (see `NOTICE`).
+(WASM). It is a fork of [CADCraft](https://github.com/storytold/cadcraft) (see `NOTICE`). The
+only intended differences from AutoCAD are the ones clean-room forces on us: our own icons,
+colours, fonts and help text.
+
+This file is the single source of agent instructions. `CLAUDE.md` contains only `@AGENTS.md`
+(Claude Code imports this file through it); edit `AGENTS.md`, never `CLAUDE.md`.
 
 ## Start every session here
-1. Read `plan/STATUS.md` (milestone, next task, reference PC, AutoCAD path). `plan/` is local and
-   gitignored; if it is missing, create it from the template in `.claude/rules/parity-method.md`.
-2. Milestones and goals: `docs/specs/2026-10-18-asenacad-design.md`. Work list: `docs/gaps.md`.
-3. Library decisions and licence limits: `docs/architecture.md`, `NOTICE`.
+`plan/` is local and gitignored (layout in `.claude/rules/parity-method.md`); never commit it.
+1. Read `plan/STATUS.md`. If it is missing, create it with these lines (ask the owner for values
+   you don't know):
+   - `Milestone:` the current milestone (see the design spec below).
+   - `Next task:` what to do next.
+   - `Reference PC:` a note about the reference PC. Only the exact line `Reference PC: disposable`
+     allows force-closing AutoCAD there (see the `autocad-observe` skill).
+   - `AutoCAD exe:` path and version of the reference AutoCAD.
+   - `Upstream reviewed:` the last upstream CADCraft commit reviewed (`.claude/rules/cherry-pick.md`).
+2. Check `plan/autocad/env.sh`. Every bash block of the AutoCAD skills starts with
+   `. plan/autocad/env.sh; AS=${AS:-asenascale}`. If it is missing, create it (ask the owner):
+   ```sh
+   export ASENACAD_REF=<the reference PC's AsenaScale device name>
+   export ACAD='C:\Program Files\Autodesk\AutoCAD 2026\acad.exe'   # AutoCAD exe on that PC
+   export AS=/path/to/asenascale                                  # optional; default: asenascale on PATH
+   ```
+3. Milestones and goals: `docs/specs/2026-10-18-asenacad-design.md`. Work list: `docs/gaps.md`.
+4. Library decisions and licence limits: `docs/architecture.md`, `NOTICE`.
 
 ## Never crash
 Outranks feature work. Standard: [`docs/standards/never-crash.md`](docs/standards/never-crash.md).
@@ -25,6 +44,9 @@ use it with synthetic drawings, take screenshots and command-line logs. Details:
   templates, CUI/PGP files, artwork or help text.
 - **Never commit** AutoCAD screenshots, logs or files AutoCAD produced. They live only under
   `plan/autocad/`. This repo is public.
+- **Privacy:** never commit the reference PC's device name, the owner's Windows user paths
+  (`C:\Users\…`), e-mail addresses or Autodesk account names. AutoCAD's title bar and InfoCenter
+  can show the owner's Autodesk ID and file paths: notes never copy them.
 - File formats come from public specifications (Autodesk's DXF Reference, the ODA's public DWG
   specification) and our own synthetic tests. Never copy or link GPL/LGPL/AGPL CAD code
   (LibreDWG, LibreCAD, QCAD, FreeCAD, SolveSpace, OpenCASCADE); don't read their sources.
@@ -44,9 +66,9 @@ use it with synthetic drawings, take screenshots and command-line logs. Details:
   tests. UI-only commands live in `crates/ui-egui/src/menus.rs` (`UI_COMMANDS`). Command line,
   ribbon, menus, scripts, CLI, control channel and MCP all reach the same commands.
 - **Programmatic calls never open dialogs.** `engine.execute` runs the JSON form with defaults.
-- **Layering** (`cargo xtask layers`): L0 `geom`, `dxf` → L1 `color`, `doc` → L2 `fonts`,
-  `render`, `constraints` → L3 `io` → L4 `engine` → L5 `ui-egui`, `mcp` → apps. Nothing below L5
-  depends on egui/eframe/winit/wgpu/rfd.
+- **Layering** (`cargo xtask layers`): L0 `geom`, `color` and the standalone `dxf`, `dwg` (no
+  workspace dependencies) → L1 `doc` → L2 `fonts`, `render`, `constraints` → L3 `io` → L4
+  `engine` → L5 `ui-egui`, `mcp` → apps. Nothing below L5 depends on egui/eframe/winit/wgpu/rfd.
 - **The UI is thin**: panels read engine state and act through `app.run(id, params)` /
   `app.start(id)` / `app.cmdline(text)`. Colours come from `theme::Tokens`.
 - **Rust only**, never break wasm (`cargo xtask wasm`).
@@ -65,6 +87,11 @@ Every feature is done the same way (details in
 A feature is not done until step 3 shows no differences, or the remaining ones are listed in
 `docs/gaps.md`.
 
+**Parity baseline.** Existing parity rows and `cargo xtask parity` are measured against AutoCAD
+2027 for Mac until re-measured in M1. Change a row's status and the doc's Target only after a
+Windows observation. The Mac menu catalog (`xtask/data/menu-catalog.txt`) is to be replaced by a
+Windows ribbon/command catalog (M1).
+
 ## Running and looking at the app
 - `cargo run --release -p asenacad -- --sample --control PORT` (sample drawing + control channel;
   pick a free port).
@@ -77,26 +104,30 @@ A feature is not done until step 3 shows no differences, or the remaining ones a
   locked) use `ui.render` or `asenacad-cli`.
 - Headless: `asenacad-cli run --sample --script 'LINE 0,0 10,10\n' --export out.png`;
   `asenacad-cli info file.dxf`; `asenacad-cli mcp`.
-- **The reference AutoCAD:** `asenascale windows|exec|shot "$ASENACAD_REF" …` (see the
-  `autocad-observe` skill; the device name is in `plan/STATUS.md`). These commands need an
+- **The reference AutoCAD:** `asenascale windows|exec "$ASENACAD_REF" …` (see the
+  `autocad-observe` skill; the device name is in `plan/autocad/env.sh`). These commands need an
   AsenaScale release with the PC-to-PC commands (KaanAlper/AsenaScale#2); if the `asenascale` on
-  your `PATH` is older, point `AS=/path/to/newer/asenascale` at a newer build (every script and
-  skill calls `${AS:-asenascale}`).
+  your `PATH` is older, set `AS=/path/to/newer/asenascale` in `plan/autocad/env.sh` (every script
+  and skill calls `${AS:-asenascale}`).
 - **AutoCAD helpers** in `tools/autocad/` (see its `README.md`): `shot-acad.sh` is the only way to
-  screenshot AutoCAD (it finds AutoCAD's window and crops to it, so the owner's other windows are
-  never captured); `uia-dump.ps1` dumps the UI Automation tree of AutoCAD's main window. Their
-  output goes only to `plan/autocad/`.
+  screenshot AutoCAD (it crops to AutoCAD's window on the PC, so no other pixel of the owner's
+  screens leaves it; never call `asenascale shot` yourself); `uia-dump.ps1` dumps the UI
+  Automation tree of AutoCAD's main window. Their output goes only to `plan/autocad/`.
 - Parallel agents: separate `CARGO_TARGET_DIR=target/agent-<name>`, edit only the crates you own,
   delete your target dir when done.
-- **Disk:** dev builds set `CARGO_PROFILE_DEV_DEBUG=line-tables-only`. Test executables in
-  `target/debug/deps` take ~25 GB; after test/CI runs delete them:
+- **Disk:** run dev builds, tests and CI with `CARGO_PROFILE_DEV_DEBUG=line-tables-only` set
+  (full debug info filled the disk). Test executables in `target/debug/deps` take ~25 GB; after
+  test/CI runs delete them:
   `find target/debug/deps -maxdepth 1 -type f -perm -u+x ! -name '*.so' -delete`.
 - Shell gotcha: `mv`/`cp` may be aliased interactive — use `/bin/mv -f` / `/bin/cp -f`.
 
 ## Quality gate
 `cargo xtask ci` (fmt, clippy -D warnings, tests, assets, layers, wasm) before every commit.
-Before committing anything that touches assets, UI text or `docs/`, run the
-`clean-room-auditor` agent on the diff.
+Before committing anything that touches assets (images, icons, fonts), UI strings, `docs/`, test
+fixtures (`.dxf`/`.dwg`) or `tools/autocad/`, run the `clean-room-auditor` agent on the diff.
+
+## Pull requests
+Work on a branch; open a PR to `KaanAlper/AsenaCAD` `main`; never push to `main`.
 
 ## Upstream
 We forked CADCraft and diverge; there are no regular merges. Taking a single upstream fix is
@@ -111,7 +142,9 @@ status line and revision history in the same commit as the work.
 ## Contributor credits (About window)
 About ▸ Contributors/Models are compiled from `contributors/contributors.json` (generated, never
 hand-edit) and `contributors/people.toml` (names people chose for themselves); see
-`docs/contributors.md`. When you prepare a PR for a contributor whose GitHub username has no
-`[people.<username>]` entry, ask them once whether they want to be credited by more than their
-username; if yes, add **only their own** entry (template at the top of the file). Never add, edit,
-guess or copy anyone else's entry or name.
+`docs/contributors.md`. The script that regenerates `contributors.json` lives in the private
+`craftrules` repo and is not available in this fork: leave the file as it is. When you prepare a
+PR for a contributor whose GitHub username has no `[people.<username>]` entry, ask them once
+whether they want to be credited by more than their username; if yes, add **only their own**
+entry (template at the top of the file). Never add, edit, guess or copy anyone else's entry or
+name.
