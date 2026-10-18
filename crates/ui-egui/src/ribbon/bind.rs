@@ -105,6 +105,10 @@ fn current(app: &CadApp, kind: Combo) -> (String, bool) {
         Combo::NamedView => (crate::tl!("Unsaved View").to_string(), space_views(app, d).next().is_some()),
         // No action macros can be recorded yet.
         Combo::ActionMacro => (String::new(), false),
+        // The export area and the page setup override aren't modelled yet: AutoCAD's defaults,
+        // shown disabled.
+        Combo::ExportArea => (crate::tl!("Export: Display").to_string(), false),
+        Combo::ExportPageSetup => (crate::tl!("Page Setup: Current").to_string(), false),
     }
 }
 
@@ -161,7 +165,9 @@ fn choices(app: &CadApp, kind: Combo) -> Vec<Choice> {
         | Combo::DimLayer
         | Combo::CenterLayer
         | Combo::MLeaderLayer
-        | Combo::ActionMacro => Vec::new(),
+        | Combo::ActionMacro
+        | Combo::ExportArea
+        | Combo::ExportPageSetup => Vec::new(),
     }
 }
 

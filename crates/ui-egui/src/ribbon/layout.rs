@@ -158,12 +158,15 @@ pub fn item_key(prefix: &str, i: usize) -> String {
 pub fn place(ui: &Ui, prefix: &str, list: &[Item], compact: bool, origin: Pos2) -> (Vec<(usize, Rect)>, f32) {
     let mut out = Vec::new();
     let mut x = origin.x;
+    let mut prev_large = false;
     for (n, column) in columns(list).iter().enumerate() {
-        if n > 0 {
-            x += GAP;
-        }
         let mut column_w: f32 = 0.0;
         let rows = column.iter().filter_map(|(_, r)| *r).max().unwrap_or(0);
+        // Large buttons stand side by side with no gap (their labels already have room).
+        if n > 0 && !(prev_large && rows == 0) {
+            x += GAP;
+        }
+        prev_large = rows == 0;
         if rows == 0 {
             for (i, _) in column {
                 if let Some(it) = list.get(*i) {

@@ -2,17 +2,11 @@
 //! column, top to bottom), sizes, rows, split menus, slide-outs and dialog launchers.
 
 use super::build::*;
-use super::model::{Combo, Entry, Item, Panel, Size, Tab, Toggle};
+use super::model::{Combo, Entry, Panel, Size, Tab, Toggle};
 use crate::icons::Icon;
 
-const LARGE: Size = Size::Large;
 const SMALL: Size = Size::Small { label: false };
 const LABELED: Size = Size::Small { label: true };
-
-/// A large toggle.
-const fn large_toggle(icon: Icon, label: &'static str, cmd: &'static str, state: Toggle) -> Item {
-    toggle(icon, label, cmd, LARGE, 0, state)
-}
 
 // ---- Viewport Tools ----
 

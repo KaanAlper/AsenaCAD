@@ -15,6 +15,7 @@ pub mod insert;
 pub mod layout;
 pub mod manage;
 pub mod model;
+pub mod output;
 pub mod parametric;
 pub mod slideout;
 pub mod view;

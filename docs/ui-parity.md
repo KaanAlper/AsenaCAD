@@ -15,7 +15,7 @@ ignored; there are no context menus. Remaining: **≈ 110–170 Opus 5.5 hours**
 
 ## Windows AutoCAD 2026 baseline
 
-> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** minor (the Insert, Annotate, Parametric, View and Manage tabs) · **Target:** Autodesk AutoCAD 2026 (Windows)
+> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** minor (the Insert, Annotate, Parametric, View, Manage, Output and Collaborate tabs) · **Target:** Autodesk AutoCAD 2026 (Windows)
 
 The rest of this doc still measures against AutoCAD 2027 for Mac; this section is the first part
 re-measured against the Windows target (milestone M1a: title row, ribbon, document tabs and the
@@ -82,6 +82,12 @@ panels and a screenshot of each tab at 1906 px (layout and labels only).
 | Manage ▸ CAD Standards | ◐ | Layer Translator, Check, Configure | Same layout; none of the three has a command yet |
 | Manage ▸ Cleanup | ◐ | Find Non-Purgeable Items (large); Purge, Overkill, Audit | Same layout; Purge, Overkill and Audit run their commands, Find Non-Purgeable Items has no command yet |
 | Manage ▸ Performance | ◐ | Performance Analyzer (large) | Same button, disabled: no performance analyzer yet |
+| Output ▸ Plot | ✅ | Plot, Batch Plot, Preview (large); Page Setup Manager, View Details, Plotter Manager; the Plot launcher | Same layout and launcher. Plot and the launcher open the Plot dialog, Batch Plot opens Publish, Preview, Page Setup Manager and Plotter Manager run their commands; View Details (the last plot's report) has no command yet |
+| Output ▸ Export to DWF/PDF | ◐ | Export ▾ (DWFx, DWF, PDF) (large); the export area list ("Export: Display") with Export Window; the page setup list ("Page Setup: Current") with Page Setup; Preview, DWF options and PDF options icons | Same layout and list. The PDF entry runs EXPORTPDF; DWFx and DWF export, the two lists and the five small tools have no command yet, so the lists show AutoCAD's defaults disabled |
+| Collaborate ▸ Share | ◐ | Share Drawing (large), Shared Views (large toggle) | Same items, disabled: both use Autodesk's online services ([below](#intentionally-absent-autodesk-online-services)) |
+| Collaborate ▸ Autodesk Docs | ◐ | Push to Autodesk Docs (large toggle) | Same toggle, disabled: it needs Autodesk Docs |
+| Collaborate ▸ Traces | ◐ | Traces Palette (large toggle), Markup Import (large) | Same items, disabled: both need Autodesk's online services |
+| Collaborate ▸ Compare | ✅ | DWG Compare (large) | Same button; it runs COMPARE |
 | Ribbon collapse | ✅ | At 1906 px every Home panel is full. At 1280 px Modify, Annotation, Layers and Block drop their small items' labels, and Properties, Groups, Utilities, Clipboard and View become panel buttons (icon, name on one line, ▾) that open the panel below them | Same panels shrink and collapse at both widths, at any display scale. Narrower windows collapse more panels from the right. A panel button never breaks a word of its name: it gets wider when a word doesn't fit (Annotation in a 900-point window) |
 | Document tab bar | ✅ | File-tabs menu ≡, Start (no close button), drawing tabs with × and a * while unsaved, + | Same controls in the same order |
 | Viewport controls | ✅ | [−][Top][2D Wireframe] menus at the top left; minimize, restore and close at the top right | Same controls and places |
@@ -107,6 +113,17 @@ are left out of the shell rather than shown disabled:
 - **Stay Connected** (InfoCenter): links to Autodesk's online channels and feedback.
 - **Open from Web & Mobile** and **Save to Web & Mobile** (Quick Access Toolbar): drawings stored
   in Autodesk's online storage.
+
+The Collaborate tab's tools are such services too. Unlike the items above they stay in the
+ribbon, disabled, so the tab has AutoCAD's panels and buttons; only DWG Compare works:
+
+- **Share Drawing**: hands out a link to the drawing kept in Autodesk's cloud.
+- **Shared Views**: publishes views of the drawing for others to look at and comment on in a web
+  browser.
+- **Push to Autodesk Docs**: sends layouts as PDF sheets to an Autodesk Docs project.
+- **Traces Palette**: overlays for reviewing a drawing, kept with Autodesk's online services.
+- **Markup Import**: brings marks made on a printed or PDF sheet into the drawing through
+  Autodesk's markup service.
 
 ### Ribbon items without a command
 
@@ -210,6 +227,18 @@ differ.
 | `standards` | Manage ▸ CAD Standards ▸ Configure |
 | `purge.nonpurgeable` | Manage ▸ Cleanup ▸ Find Non-Purgeable Items (PURGE on its non-purgeable items view) |
 | `performanceanalyzer` | Manage ▸ Performance ▸ Performance Analyzer |
+| `viewplotdetails` | Output ▸ Plot ▸ View Details (the report of the last plots) |
+| `exportdwfx` | Output ▸ Export to DWF/PDF ▸ Export ▸ DWFx |
+| `exportdwf` | Output ▸ Export to DWF/PDF ▸ Export ▸ DWF |
+| `eplotexport.window` | Output ▸ Export to DWF/PDF ▸ Export Window (picks the area to export) |
+| `eplotexport.pagesetup` | Output ▸ Export to DWF/PDF ▸ Page Setup (overrides the page setup for the export) |
+| `eplotexport.preview` | Output ▸ Export to DWF/PDF ▸ Preview (of the export) |
+| `exportsettings.dwf` | Output ▸ Export to DWF/PDF ▸ Export to DWF Options |
+| `exportsettings.pdf` | Output ▸ Export to DWF/PDF ▸ Export to PDF Options |
+| `sharedviews` | Collaborate ▸ Share ▸ Shared Views (Autodesk online service) |
+| `pushtodocsopen` | Collaborate ▸ Autodesk Docs ▸ Push to Autodesk Docs (Autodesk online service) |
+| `tracepaletteopen` | Collaborate ▸ Traces ▸ Traces Palette (Autodesk online service) |
+| `markupimport` | Collaborate ▸ Traces ▸ Markup Import (Autodesk online service) |
 
 ## How this was measured
 
@@ -400,6 +429,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | Windows baseline: the Output tab's two panels and the Collaborate tab's four (6 rows: 2 ✅, 4 ◐); Collaborate's online tools listed as intentionally absent but shown disabled; 12 more ribbon items without a command; adjacent large buttons stand with no gap between them, as in AutoCAD |
 | 2026-10-19 | minor | Windows baseline: the Manage tab's six panels (6 rows, all ◐); 22 more ribbon items without a command |
 | 2026-10-19 | minor | Windows baseline: the View tab's seven panels (7 rows: 1 ✅, 6 ◐); Layout Tabs shows and hides the layout tabs; TEXTSCR is a known command; large buttons are at least 38 px wide and panels can draw AutoCAD's thin separators between groups (Parametric's Geometric and Dimensional panels) |
 | 2026-10-19 | minor | Windows baseline: the Parametric tab's three panels (3 rows: 1 ✅, 2 ◐); three more ribbon items without a command |

@@ -64,6 +64,10 @@ pub enum Combo {
     NamedView,
     /// The recorded action macros to play (the Action Recorder isn't built: empty, disabled).
     ActionMacro,
+    /// What Output ▸ Export takes: the display, the extents or a window (not built: disabled).
+    ExportArea,
+    /// Whether Output ▸ Export uses the current page setup or an override (not built: disabled).
+    ExportPageSetup,
 }
 
 impl Combo {
@@ -96,6 +100,8 @@ impl Combo {
             Self::MLeaderLayer => "Mleader Layer Gallery",
             Self::NamedView => "Named Views",
             Self::ActionMacro => "Available Action Macro",
+            // AutoCAD names both export lists "EplotExport".
+            Self::ExportArea | Self::ExportPageSetup => "EplotExport",
         }
     }
 }
@@ -262,8 +268,8 @@ const TABS: &[Tab] = &[
     crate::ribbon::parametric::PARAMETRIC,
     crate::ribbon::view::VIEW,
     crate::ribbon::manage::MANAGE,
-    unbuilt("Output"),
-    unbuilt("Collaborate"),
+    crate::ribbon::output::OUTPUT,
+    crate::ribbon::output::COLLABORATE,
     unbuilt("Express Tools"),
 ];
 
@@ -442,6 +448,20 @@ mod tests {
         "standards",           // CAD Standards ▸ Configure
         "purge.nonpurgeable",  // Cleanup ▸ Find Non-Purgeable Items
         "performanceanalyzer", // Performance ▸ Performance Analyzer
+        // ---- Output ----
+        "viewplotdetails",       // Plot ▸ View Details
+        "exportdwfx",            // Export to DWF/PDF ▸ Export ▸ DWFx
+        "exportdwf",             // Export to DWF/PDF ▸ Export ▸ DWF
+        "eplotexport.window",    // Export to DWF/PDF ▸ Export Window
+        "eplotexport.pagesetup", // Export to DWF/PDF ▸ Page Setup (override)
+        "eplotexport.preview",   // Export to DWF/PDF ▸ Preview
+        "exportsettings.dwf",    // Export to DWF/PDF ▸ Export to DWF Options
+        "exportsettings.pdf",    // Export to DWF/PDF ▸ Export to PDF Options
+        // ---- Collaborate (Autodesk online services) ----
+        "sharedviews",      // Share ▸ Shared Views (toggle)
+        "pushtodocsopen",   // Autodesk Docs ▸ Push to Autodesk Docs (toggle)
+        "tracepaletteopen", // Traces ▸ Traces Palette (toggle)
+        "markupimport",     // Traces ▸ Markup Import
     ];
 
     #[test]
@@ -477,7 +497,7 @@ mod tests {
     fn the_tab_row_has_autocads_nine_tabs_in_order() {
         let labels: Vec<_> = tabs().iter().map(|t| t.label).collect();
         assert_eq!(labels, ["Home", "Insert", "Annotate", "Parametric", "View", "Manage", "Output", "Collaborate", "Express Tools"]);
-        assert!(tabs()[..6].iter().all(|t| !t.panels.is_empty()), "Home, Insert, Annotate, Parametric, View and Manage are built");
+        assert!(tabs()[..8].iter().all(|t| !t.panels.is_empty()), "every tab up to Collaborate is built");
         assert!(is_tab("Express Tools") && !is_tab("Tool Sets") && !is_tab(""));
     }
 

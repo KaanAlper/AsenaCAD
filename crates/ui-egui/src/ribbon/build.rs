@@ -31,6 +31,11 @@ pub(crate) const fn toggle(icon: Icon, label: &'static str, cmd: &'static str, s
     Item::Toggle { icon, label, cmd, size, row, state }
 }
 
+/// A large toggle.
+pub(crate) const fn large_toggle(icon: Icon, label: &'static str, cmd: &'static str, state: Toggle) -> Item {
+    toggle(icon, label, cmd, Size::Large, 0, state)
+}
+
 pub(crate) const fn large_split(label: Option<&'static str>, menu: &'static [Entry]) -> Item {
     Item::Split { label, size: Size::Large, row: 0, menu, default: 0 }
 }

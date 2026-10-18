@@ -795,6 +795,79 @@ fn manage_is_as_wide_as_autocads() {
     );
 }
 
+#[test]
+fn output_matches_autocad() {
+    check_tab(
+        "Output",
+        &[
+            WantPanel {
+                label: "Plot",
+                items: &[
+                    b("Plot", "large", 0, "plot"),
+                    // PUBLISH: AutoCAD's Batch Plot opens the Publish dialog.
+                    b("Batch Plot", "large", 0, "publish"),
+                    b("Preview", "large", 0, "preview"),
+                    b("Page Setup Manager", "small+label", 1, "pagesetup"),
+                    b("View Details", "small+label", 2, "viewplotdetails"),
+                    b("Plotter Manager", "small+label", 3, "plottermanager"),
+                ],
+                slideout: &[],
+                launcher: Some(("plot", "Plot, Plot Options Dialog")),
+            },
+            WantPanel {
+                label: "Export to DWF/PDF",
+                items: &[
+                    sp("Export", "large", 0, &[("DWFx", "exportdwfx"), ("DWF", "exportdwf"), ("PDF", "exportpdf")], 0),
+                    // Both lists are named "EplotExport" in AutoCAD; they show "Export: Display"
+                    // and "Page Setup: Current".
+                    cb("EplotExport", "ExportArea", 1, 200.0),
+                    b("Export Window", "small", 1, "eplotexport.window"),
+                    cb("EplotExport", "ExportPageSetup", 2, 200.0),
+                    b("Page Setup", "small", 2, "eplotexport.pagesetup"),
+                    b("Preview", "small", 3, "eplotexport.preview"),
+                    b("Export to DWF Options", "small", 3, "exportsettings.dwf"),
+                    b("Export to PDF Options", "small", 3, "exportsettings.pdf"),
+                ],
+                slideout: &[],
+                launcher: None,
+            },
+        ],
+    );
+}
+
+#[test]
+fn output_is_as_wide_as_autocads() {
+    check_widths("Output", &[("Plot", 268.0), ("Export to DWF/PDF", 294.0)]);
+}
+
+#[test]
+fn collaborate_matches_autocad() {
+    check_tab(
+        "Collaborate",
+        &[
+            WantPanel {
+                label: "Share",
+                items: &[b("Share Drawing", "large", 0, "share"), tg("Shared Views", "large", 0, "sharedviews")],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel { label: "Autodesk Docs", items: &[tg("Push to Autodesk Docs", "large", 0, "pushtodocsopen")], slideout: &[], launcher: None },
+            WantPanel {
+                label: "Traces",
+                items: &[tg("Traces Palette", "large", 0, "tracepaletteopen"), b("Markup Import", "large", 0, "markupimport")],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel { label: "Compare", items: &[b("DWG Compare", "large", 0, "compare")], slideout: &[], launcher: None },
+        ],
+    );
+}
+
+#[test]
+fn collaborate_is_as_wide_as_autocads() {
+    check_widths("Collaborate", &[("Share", 97.0), ("Autodesk Docs", 90.0), ("Traces", 94.0), ("Compare", 60.0)]);
+}
+
 // ---- Large labels ----
 
 /// The texts the ribbon paints with `tab` open at 1906 px, as laid out ("\n" = line break).
@@ -906,6 +979,8 @@ fn large_labels_wrap_as_in_autocads_screenshots() {
                 "Performance\nAnalyzer",
             ][..],
         ),
+        ("Output", &["Plot", "Batch\nPlot", "Preview", "Export"][..]),
+        ("Collaborate", &["Share\nDrawing", "Shared\nViews", "Push to\nAutodesk Docs", "Traces\nPalette", "Markup\nImport", "DWG\nCompare"][..]),
     ] {
         let painted = painted_labels(tab);
         let missing: Vec<_> = labels.iter().filter(|l| !painted.iter().any(|p| p == *l)).collect();
