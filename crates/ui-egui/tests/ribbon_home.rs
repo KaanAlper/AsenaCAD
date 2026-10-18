@@ -294,6 +294,7 @@ fn item_labels(items: &[Item]) -> Vec<&'static str> {
             },
             Item::Combo { kind, .. } => kind.label(),
             Item::Slider { kind, .. } => kind.label(),
+            Item::Separator => "|",
         })
         .collect()
 }

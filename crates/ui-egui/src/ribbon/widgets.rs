@@ -91,6 +91,16 @@ pub fn is_on(app: &CadApp, state: Toggle) -> bool {
         // CCONSTRAINTFORM isn't modelled yet: every constraint is dynamic, AutoCAD's default.
         Toggle::DynamicConstraints => var("CCONSTRAINTFORM").unwrap_or(0) != 1,
         Toggle::AnnotationalConstraints => var("CCONSTRAINTFORM") == Some(1),
+        Toggle::UcsIcon => app.ui.show_ucs_icon,
+        Toggle::ViewCube => app.ui.show_viewcube,
+        Toggle::NavBar => app.ui.show_navbar,
+        Toggle::CommandLine => app.ui.show_command_line,
+        Toggle::FileTabs => app.ui.show_file_tabs,
+        Toggle::LayoutTabs => app.ui.show_layout_tabs,
+        Toggle::PropertiesPalette => app.ui.docking.layout.contains(&crate::docking::Panel::Properties),
+        Toggle::BlocksPalette => app.ui.dialog.as_deref() == Some("blocks"),
+        Toggle::XrefPalette => app.ui.docking.layout.contains(&crate::docking::Panel::ExternalRefs),
+        Toggle::NotBuilt => false,
     }
 }
 
@@ -180,9 +190,9 @@ fn paint_large(ui: &Ui, rect: Rect, icon: Icon, label: &str, enabled: bool, chev
 
 /// A large button's width: its widest label line with 3 px either side (AutoCAD's "Layer /
 /// Properties" is its "Properties" line plus about that), and never narrower than the icon
-/// with 5 px either side.
+/// with 3 px either side (View ▸ Viewport Tools' UCS Icon and View Cube are 38 px).
 fn large_width(ui: &Ui, label: &str) -> f32 {
-    (large_label(ui, label, true).size().x + 6.0).max(LARGE_ICON + 10.0)
+    (large_label(ui, label, true).size().x + 6.0).max(LARGE_ICON + 6.0)
 }
 
 /// A large split button's width. With a two-line label AutoCAD's button is wider than the
@@ -410,7 +420,19 @@ pub fn item_width(ui: &Ui, key: &str, item: &Item, compact: bool) -> f32 {
             Size::Small { .. } => width(size, label) + SMALL_SPLIT_ARROW_W,
         },
         Item::Combo { width, .. } | Item::Slider { width, .. } => width,
+        Item::Separator => SEPARATOR_W,
     }
+}
+
+/// An in-panel separator's width; its line runs down the middle.
+const SEPARATOR_W: f32 = 10.0;
+
+/// A thin vertical line between two groups of a panel's columns, filling the item's rect.
+pub fn separator(ui: &mut Ui) -> Response {
+    let (rect, resp) = ui.allocate_exact_size(vec2(SEPARATOR_W, LARGE_H), Sense::hover());
+    let x = rect.center().x.round() + 0.5;
+    ui.painter().vline(x, rect.y_range().shrink(4.0), Stroke::new(1.0, Tokens::get().border));
+    resp
 }
 
 /// One row of a split button's menu: icon and label.

@@ -60,6 +60,8 @@ pub enum Combo {
     DimLayer,
     CenterLayer,
     MLeaderLayer,
+    /// The model or layout views saved in the drawing (VIEW); choosing one restores it.
+    NamedView,
 }
 
 impl Combo {
@@ -90,6 +92,7 @@ impl Combo {
             Self::DimLayer => "Dim Layer Gallery",
             Self::CenterLayer => "Center Layer Gallery",
             Self::MLeaderLayer => "Mleader Layer Gallery",
+            Self::NamedView => "Named Views",
         }
     }
 }
@@ -136,6 +139,26 @@ pub enum Toggle {
     DynamicConstraints,
     /// New dimensional constraints are annotational (CCONSTRAINTFORM 1).
     AnnotationalConstraints,
+    /// The UCS icon is shown in the drawing area.
+    UcsIcon,
+    /// The ViewCube is shown.
+    ViewCube,
+    /// The navigation bar is shown (NAVBAR).
+    NavBar,
+    /// The command line is shown.
+    CommandLine,
+    /// The drawing (file) tabs are shown.
+    FileTabs,
+    /// The layout tabs are shown on the status bar.
+    LayoutTabs,
+    /// The Properties palette is open.
+    PropertiesPalette,
+    /// The Blocks palette is open.
+    BlocksPalette,
+    /// The External References palette is open.
+    XrefPalette,
+    /// The palette or display the button opens isn't built yet: never shown pressed.
+    NotBuilt,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -186,6 +209,10 @@ pub enum Item {
         width: f32,
         row: u8,
     },
+    /// A thin vertical line between two groups of a panel's columns, a column of its own
+    /// (AutoCAD draws one between Parametric ▸ Geometric's constraint icons and its Show/Hide
+    /// column).
+    Separator,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -230,7 +257,7 @@ const TABS: &[Tab] = &[
     crate::ribbon::insert::INSERT,
     crate::ribbon::annotate::ANNOTATE,
     crate::ribbon::parametric::PARAMETRIC,
-    unbuilt("View"),
+    crate::ribbon::view::VIEW,
     unbuilt("Manage"),
     unbuilt("Output"),
     unbuilt("Collaborate"),
@@ -258,7 +285,7 @@ pub fn command_ids() -> Vec<&'static str> {
                 match item {
                     Item::Button { cmd, .. } | Item::Toggle { cmd, .. } => ids.push(*cmd),
                     Item::Split { menu, .. } | Item::Menu { menu, .. } => ids.extend(entry_commands(menu)),
-                    Item::Combo { .. } | Item::Slider { .. } => {}
+                    Item::Combo { .. } | Item::Slider { .. } | Item::Separator => {}
                 }
             }
             ids.extend(panel.launcher);
@@ -296,6 +323,7 @@ pub fn labels() -> Vec<&'static str> {
                     }
                     Item::Combo { kind, .. } => out.push(kind.label()),
                     Item::Slider { kind, .. } => out.push(kind.label()),
+                    Item::Separator => {}
                 }
             }
         }
@@ -357,6 +385,37 @@ mod tests {
         "dcconvert",                    // Dimensional ▸ Convert
         "cconstraintform.dynamic",      // Dimensional ▸ Dynamic Constraint Mode (toggle, slide-out)
         "cconstraintform.annotational", // Dimensional ▸ Annotational Constraint Mode (toggle, slide-out)
+        // ---- View ----
+        "navsmotion",          // Viewport Tools ▸ Show Motion (toggle, slide-out)
+        "newview",             // Named Views ▸ New View
+        "vports.2v",           // Model Viewports ▸ Viewport Configuration ▸ Two: Vertical
+        "vports.2h",           // Model Viewports ▸ Viewport Configuration ▸ Two: Horizontal
+        "vports.3r",           // Model Viewports ▸ Viewport Configuration ▸ Three: Right
+        "vports.3l",           // Model Viewports ▸ Viewport Configuration ▸ Three: Left
+        "vports.3a",           // Model Viewports ▸ Viewport Configuration ▸ Three: Above
+        "vports.3b",           // Model Viewports ▸ Viewport Configuration ▸ Three: Below
+        "vports.3v",           // Model Viewports ▸ Viewport Configuration ▸ Three: Vertical
+        "vports.3h",           // Model Viewports ▸ Viewport Configuration ▸ Three: Horizontal
+        "vports.4r",           // Model Viewports ▸ Viewport Configuration ▸ Four: Right
+        "vports.4l",           // Model Viewports ▸ Viewport Configuration ▸ Four: Left
+        "vports.join",         // Model Viewports ▸ Join
+        "vports.toggle",       // Model Viewports ▸ Restore
+        "activityinsights",    // History ▸ Activity Insights (toggle)
+        "toolpalettes",        // Palettes ▸ Tool Palettes (toggle)
+        "commandmacros",       // Palettes ▸ Command Macros (toggle)
+        "sheetset",            // Palettes ▸ Sheet Set Manager (toggle)
+        "markup",              // Palettes ▸ Markup Set Manager (toggle)
+        "adcenter",            // Palettes ▸ Design Center (toggle)
+        "matbrowseropen",      // Palettes ▸ Materials Browser (toggle, slide-out)
+        "mateditoropen",       // Palettes ▸ Materials Editor (toggle, slide-out)
+        "visualstyles",        // Palettes ▸ Visual Styles (toggle, slide-out)
+        "rpref",               // Palettes ▸ Render Settings (toggle, slide-out)
+        "lightlist",           // Palettes ▸ Lights in Model (toggle, slide-out)
+        "sunproperties",       // Palettes ▸ Sun Properties (toggle, slide-out)
+        "switchwindows",       // Interface ▸ Switch Windows (the list of open drawings)
+        "syswindows.tilehorz", // Interface ▸ Tile Horizontally
+        "syswindows.tilevert", // Interface ▸ Tile Vertically
+        "syswindows.cascade",  // Interface ▸ Cascade
     ];
 
     #[test]
@@ -392,7 +451,7 @@ mod tests {
     fn the_tab_row_has_autocads_nine_tabs_in_order() {
         let labels: Vec<_> = tabs().iter().map(|t| t.label).collect();
         assert_eq!(labels, ["Home", "Insert", "Annotate", "Parametric", "View", "Manage", "Output", "Collaborate", "Express Tools"]);
-        assert!(tabs()[..4].iter().all(|t| !t.panels.is_empty()), "Home, Insert, Annotate and Parametric are built");
+        assert!(tabs()[..5].iter().all(|t| !t.panels.is_empty()), "Home, Insert, Annotate, Parametric and View are built");
         assert!(is_tab("Express Tools") && !is_tab("Tool Sets") && !is_tab(""));
     }
 
@@ -421,16 +480,22 @@ mod tests {
                     | Item::Menu { size: Size::Large, row, .. } => {
                         assert_eq!(*row, 0, "{}: large items use row 0", p.label)
                     }
+                    Item::Separator => {}
                 }
             }
             for item in p.slideout {
-                let (Item::Button { row, .. }
-                | Item::Toggle { row, .. }
-                | Item::Split { row, .. }
-                | Item::Menu { row, .. }
-                | Item::Combo { row, .. }
-                | Item::Slider { row, .. }) = item;
-                assert!((1..=4).contains(row), "{} slide-out: row {row}", p.label);
+                // Large items fill a slide-out's height too (View ▸ Palettes ▸ Text Window).
+                match crate::ribbon::layout::small_row(item) {
+                    Some(row) => assert!((1..=4).contains(&row), "{} slide-out: row {row}", p.label),
+                    None => assert!(
+                        matches!(
+                            item,
+                            Item::Button { row: 0, .. } | Item::Toggle { row: 0, .. } | Item::Split { row: 0, .. } | Item::Menu { row: 0, .. }
+                        ),
+                        "{} slide-out: large items use row 0",
+                        p.label
+                    ),
+                }
             }
             for item in p.items.iter().chain(p.slideout) {
                 if let Item::Split { menu, .. } | Item::Menu { menu, .. } = item {

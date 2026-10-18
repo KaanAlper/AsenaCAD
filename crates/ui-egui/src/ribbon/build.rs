@@ -48,6 +48,9 @@ pub(crate) const fn large_menu(icon: Icon, label: &'static str, menu: &'static [
 /// Insert dialog until the gallery is built.
 pub(crate) const INSERT_GALLERY: &[Entry] = &[e(Icon::Insert, "More Options...", "insert")];
 
+/// A thin line between two groups of a panel's columns.
+pub(crate) const GROUP_SEP: Item = Item::Separator;
+
 pub(crate) const fn combo(kind: Combo, width: f32, row: u8) -> Item {
     Item::Combo { kind, width, row }
 }

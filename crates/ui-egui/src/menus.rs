@@ -35,6 +35,8 @@ pub const UI_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
     ("ui.animations", "Animation Effects", &[], None),
     ("ui.toggle.toolbar", "Tool Bar", &["Window", "Tool Bar"], None),
     ("ui.toggle.filetabs", "File Tab", &["Window", "File Tab"], None),
+    // The layout tabs on the status bar on or off (`{on?: bool}`).
+    ("ui.toggle.layouttabs", "Layout Tabs", &[], None),
     ("ui.toggle.statusbar", "Status Bar", &["Window", "Status Bar"], None),
     ("ui.toggle.cmdline", "Command Line", &["Window", "Command Line"], Some("Cmd+9")),
     // AutoCAD's COMMANDLINE and COMMANDLINEHIDE (the command line's ×).
@@ -73,6 +75,8 @@ pub const UI_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
     ("ui.dialog.about", "About AsenaCAD", &["Help", "About AsenaCAD"], None),
     ("ui.dialog.commands", "Command Reference", &["Help", "AsenaCAD Help"], Some("F1")),
     ("ui.toggle.history", "Command History", &["Window", "Command History"], Some("F2")),
+    // AutoCAD's TEXTSCR: opens the command history (its text window).
+    ("textscr", "Text Window", &[], None),
     ("ui.cmdline.lines", "Command Line History Lines", &[], None),
     ("ui.cmdline.clear", "Clear Command History", &[], None),
     ("ui.dialog.language", "Interface Language", &["Edit", "Interface Language"], None),
@@ -225,6 +229,10 @@ fn run_ui_command_inner(app: &mut CadApp, id: &str, params: &Value) -> Option<Re
         "ui.toggle.filetabs" => {
             toggle(&mut app.ui.show_file_tabs, params);
             Ok(Value::Null)
+        }
+        "ui.toggle.layouttabs" => {
+            toggle(&mut app.ui.show_layout_tabs, params);
+            Ok(json!({ "on": app.ui.show_layout_tabs }))
         }
         // Typed or chosen from a menu or the tool bar: ask for the file (or show the preview).
         "export" | "exp" | "import" | "imp" | "publish" | "preview" | "pre" if params.is_null() && app.session.state().is_ok() => {

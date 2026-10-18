@@ -147,14 +147,16 @@ pub fn show(app: &mut CadApp, ui: &mut Ui) {
         let tabs_row = Rect::from_min_max(pos2(r.left() + if left_dock > 60.0 { left_dock + 8.0 } else { 0.0 }, row.top()), row.max);
         // The layout bar's minimum (≡, Model, the current layout, +) always fits; the items that
         // don't fit beside it go from the group's left end, Customization stays.
-        let tabs_min = tabs_row.left() + super::layouts::min_width(app, ui);
+        // View ▸ Interface ▸ Layout Tabs off: the layout bar is not drawn.
+        let tabs = app.ui.show_layout_tabs;
+        let tabs_min = tabs_row.left() + if tabs { super::layouts::min_width(app, ui) } else { 0.0 };
         let mut right = customization(app, ui, row.right() - 4.0, cy) - GAP;
         for it in fitting(app, ui, right - tabs_min - GAP).iter().rev() {
             right = item_ui(app, ui, it, right, cy) - GAP;
         }
         let message = app.status.as_ref().filter(|(_, at)| crate::now_ms() - at < 5000.0).map(|(m, _)| m.clone());
         let reserve = if message.is_some() { READOUT_MIN } else { 8.0 };
-        let tabs_end = super::layouts::show(app, ui, tabs_row, band.top(), (right - reserve).max(tabs_min));
+        let tabs_end = if tabs { super::layouts::show(app, ui, tabs_row, band.top(), (right - reserve).max(tabs_min)) } else { tabs_row.left() };
         if let Some(text) = message {
             readout(ui, &text, Rect::from_min_max(pos2(tabs_end + 8.0, row.top()), pos2(right - 8.0, row.bottom())));
         }

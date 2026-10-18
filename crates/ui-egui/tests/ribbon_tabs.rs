@@ -72,6 +72,9 @@ const fn sl(label: &'static str, kind: &'static str, row: u8, width: f32) -> Wan
 
 const SEP: (&str, &str) = ("---", "");
 
+/// A thin line between two groups of a panel's columns.
+const BAR: Want = want("|", "separator", "", 0);
+
 fn tab(label: &str) -> &'static Tab {
     tabs().iter().find(|t| t.label == label).unwrap_or_else(|| panic!("no tab {label}"))
 }
@@ -108,6 +111,7 @@ fn describe(item: &Item) -> Got {
         Item::Menu { label, size, row, menu, .. } => (label.to_string(), "menu", size_name(*size), *row, String::new(), entries(menu), 0, 0.0),
         Item::Combo { kind, row, width } => (kind.label().to_string(), "combo", format!("{kind:?}"), *row, String::new(), vec![], 0, *width),
         Item::Slider { kind, row, width } => (kind.label().to_string(), "slider", format!("{kind:?}"), *row, String::new(), vec![], 0, *width),
+        Item::Separator => ("|".into(), "separator", String::new(), 0, String::new(), vec![], 0, 0.0),
     }
 }
 
@@ -537,6 +541,7 @@ fn parametric_matches_autocad() {
                     b("Smooth", "small", 3, "gcsmooth"),
                     b("Symmetric", "small", 3, "gcsymmetric"),
                     b("Equal", "small", 3, "gcequal"),
+                    BAR,
                     b("Show/Hide", "small+label", 1, "constraintbar"),
                     b("Show All", "small+label", 2, "constraintbar.showall"),
                     b("Hide All", "small+label", 3, "constraintbar.hideall"),
@@ -553,6 +558,7 @@ fn parametric_matches_autocad() {
                     b("Diameter", "small", 1, "dcdiameter"),
                     b("Angular", "small", 2, "dcangular"),
                     b("Convert", "small", 2, "dcconvert"),
+                    BAR,
                     b("Show/Hide", "small+label", 1, "dcdisplay"),
                     b("Show All", "small+label", 2, "dcdisplay.showall"),
                     b("Hide All", "small+label", 3, "dcdisplay.hideall"),
@@ -576,6 +582,127 @@ fn parametric_matches_autocad() {
 #[test]
 fn parametric_is_as_wide_as_autocads() {
     check_widths("Parametric", &[("Geometric", 260.0), ("Dimensional", 256.0), ("Manage", 136.0)]);
+}
+
+// ---- View ----
+
+#[test]
+fn view_matches_autocad() {
+    check_tab(
+        "View",
+        &[
+            WantPanel {
+                label: "Viewport Tools",
+                items: &[
+                    tg("UCS Icon", "large", 0, "ui.toggle.ucsicon"),
+                    tg("View Cube", "large", 0, "ui.toggle.viewcube"),
+                    tg("Navigation Bar", "large", 0, "navbar"),
+                ],
+                slideout: &[tg("Show Motion", "small+label", 1, "navsmotion")],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Named Views",
+                items: &[
+                    cb("Named Views", "NamedView", 1, 200.0),
+                    b("New View", "small+label", 2, "newview"),
+                    b("View Manager", "small+label", 3, "view"),
+                ],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Model Viewports",
+                items: &[
+                    sp(
+                        "Viewport Configuration",
+                        "large",
+                        0,
+                        &[
+                            ("Single", "vports.1"),
+                            ("Two: Vertical", "vports.2v"),
+                            ("Two: Horizontal", "vports.2h"),
+                            ("Three: Right", "vports.3r"),
+                            ("Three: Left", "vports.3l"),
+                            ("Three: Above", "vports.3a"),
+                            ("Three: Below", "vports.3b"),
+                            ("Three: Vertical", "vports.3v"),
+                            ("Three: Horizontal", "vports.3h"),
+                            ("Four: Equal", "vports.4"),
+                            ("Four: Right", "vports.4r"),
+                            ("Four: Left", "vports.4l"),
+                        ],
+                        0,
+                    ),
+                    b("Named", "small+label", 1, "vports"),
+                    b("Join", "small+label", 2, "vports.join"),
+                    b("Restore", "small+label", 3, "vports.toggle"),
+                ],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel { label: "Review", items: &[b("DWG Compare", "large", 0, "compare")], slideout: &[], launcher: None },
+            WantPanel { label: "History", items: &[tg("Activity Insights", "large", 0, "activityinsights")], slideout: &[], launcher: None },
+            WantPanel {
+                label: "Palettes",
+                items: &[
+                    tg("Tool Palettes", "large", 0, "toolpalettes"),
+                    tg("Properties", "large", 0, "properties"),
+                    tg("Blocks", "large", 0, "ui.dialog.blocks"),
+                    tg("Count", "large", 0, "countlist"),
+                    tg("Command Macros", "large", 0, "commandmacros"),
+                    tg("Sheet Set Manager", "large", 0, "sheetset"),
+                    tg("Command Line", "small", 1, "ui.toggle.cmdline"),
+                    tg("Markup Set Manager", "small", 1, "markup"),
+                    tg("Layer Properties", "small", 2, "layer"),
+                    tg("Quick Calculator", "small", 2, "ui.panel.quickcalc"),
+                    tg("Design Center", "small", 3, "adcenter"),
+                    tg("External References", "small", 3, "xref"),
+                ],
+                slideout: &[
+                    b("Text Window", "large", 0, "textscr"),
+                    tg("Materials Browser", "small+label", 1, "matbrowseropen"),
+                    tg("Materials Editor", "small+label", 2, "mateditoropen"),
+                    tg("Visual Styles", "small+label", 3, "visualstyles"),
+                    tg("Render Settings", "small", 1, "rpref"),
+                    tg("Lights in Model", "small", 2, "lightlist"),
+                    tg("Sun Properties", "small", 3, "sunproperties"),
+                ],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Interface",
+                items: &[
+                    // A drop-down in AutoCAD's screenshot (▾ right of the label), not a plain
+                    // button: it lists the open drawings.
+                    mn("Switch Windows", "large", 0, &[("Switch Windows", "switchwindows")]),
+                    tg("File Tabs", "large", 0, "ui.toggle.filetabs"),
+                    tg("Layout Tabs", "large", 0, "ui.toggle.layouttabs"),
+                    b("Tile Horizontally", "small+label", 1, "syswindows.tilehorz"),
+                    b("Tile Vertically", "small+label", 2, "syswindows.tilevert"),
+                    b("Cascade", "small+label", 3, "syswindows.cascade"),
+                ],
+                slideout: &[],
+                launcher: Some(("options", "Options, Display Tab")),
+            },
+        ],
+    );
+}
+
+#[test]
+fn view_is_as_wide_as_autocads() {
+    check_widths(
+        "View",
+        &[
+            ("Viewport Tools", 145.0),
+            ("Named Views", 206.0),
+            ("Model Viewports", 175.0),
+            ("Review", 60.0),
+            ("History", 52.0),
+            ("Palettes", 356.0),
+            ("Interface", 268.0),
+        ],
+    );
 }
 
 // ---- Large labels ----
@@ -657,6 +784,26 @@ fn large_labels_wrap_as_in_autocads_screenshots() {
             ][..],
         ),
         ("Parametric", &["Auto\nConstrain", "Linear", "Aligned", "Delete\nConstraints", "Parameters\nManager"][..]),
+        (
+            "View",
+            &[
+                "UCS\nIcon",
+                "View\nCube",
+                "Navigation\nBar",
+                "Viewport\nConfiguration",
+                "DWG\nCompare",
+                "Activity\nInsights",
+                "Tool\nPalettes",
+                "Properties",
+                "Blocks",
+                "Count",
+                "Command\nMacros",
+                "Sheet Set\nManager",
+                "Switch\nWindows",
+                "File\nTabs",
+                "Layout\nTabs",
+            ][..],
+        ),
     ] {
         let painted = painted_labels(tab);
         let missing: Vec<_> = labels.iter().filter(|l| !painted.iter().any(|p| p == *l)).collect();

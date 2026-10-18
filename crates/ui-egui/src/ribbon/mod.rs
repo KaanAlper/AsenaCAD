@@ -16,6 +16,7 @@ pub mod layout;
 pub mod model;
 pub mod parametric;
 pub mod slideout;
+pub mod view;
 pub mod widgets;
 
 pub use bind::{combo, slider};
@@ -322,6 +323,7 @@ fn item(ui: &mut Ui, app: &mut CadApp, key: &str, item: &Item, compact: bool) ->
         Item::Combo { kind, width, .. } => combo(ui, app, kind, width),
         Item::Menu { icon, label, size: s, menu, .. } => widgets::menu_button(ui, app, key, icon, label, size(s), menu),
         Item::Slider { kind, width, .. } => slider(ui, app, kind, width),
+        Item::Separator => widgets::separator(ui),
     }
 }
 
@@ -330,7 +332,7 @@ pub fn panel_icon(ctx: &egui::Context, key: &str, panel: &Panel) -> Icon {
     let icon_of = |(i, it): (usize, &Item)| match *it {
         Item::Button { icon, .. } | Item::Toggle { icon, .. } | Item::Menu { icon, .. } => Some(icon),
         Item::Split { menu, default, .. } => Some(widgets::split_face(ctx, &layout::item_key(key, i), menu, default).0),
-        Item::Combo { .. } | Item::Slider { .. } => None,
+        Item::Combo { .. } | Item::Slider { .. } | Item::Separator => None,
     };
     let items = || panel.items.iter().enumerate();
     items().filter(|(_, it)| layout::small_row(it).is_none()).find_map(icon_of).or_else(|| items().find_map(icon_of)).unwrap_or(Icon::Menu)

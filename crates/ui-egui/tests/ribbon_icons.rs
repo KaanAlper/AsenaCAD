@@ -31,7 +31,7 @@ fn ribbon_icons() -> Vec<Icon> {
                             push(*icon)
                         }
                     }),
-                    Item::Combo { .. } | Item::Slider { .. } => {}
+                    Item::Combo { .. } | Item::Slider { .. } | Item::Separator => {}
                 }
             }
         }

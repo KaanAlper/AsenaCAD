@@ -101,7 +101,17 @@ fn current(app: &CadApp, kind: Combo) -> (String, bool) {
         // TEXTLAYER, DIMLAYER, CENTERLAYER and the multileader layer aren't modelled yet: new
         // annotations go on the current layer, which is what "Use Current" means.
         Combo::TextLayer | Combo::DimLayer | Combo::CenterLayer | Combo::MLeaderLayer => (crate::tl!("Use Current").to_string(), false),
+        // The drawing doesn't record which view was restored last.
+        Combo::NamedView => (crate::tl!("Unsaved View").to_string(), space_views(app, d).next().is_some()),
     }
+}
+
+/// The named views of the space shown: model space views in the Model tab, the layout's own in a
+/// layout.
+fn space_views<'d>(app: &CadApp, d: &'d Drawing) -> impl Iterator<Item = &'d str> {
+    let space = app.session.layout_space();
+    let layout = space.layout().map(str::to_string);
+    d.views.iter().filter(move |v| v.layout == layout).map(|v| v.name.as_str())
 }
 
 /// The entries of `kind`'s list, built only while the list is open.
@@ -136,6 +146,7 @@ fn choices(app: &CadApp, kind: Combo) -> Vec<Choice> {
                 names(BY.into_iter().chain(t.styles.iter().map(|s| s.name.as_str())), "plotstyle", |n| json!({ "name": n }))
             })
         }
+        Combo::NamedView => names(space_views(app, d), "view", |n| json!({ "option": "restore", "name": n })),
         Combo::AttributeDisplay => ATTMODES.iter().map(|(_, l, k)| (crate::i18n::t(l).to_string(), "attdisp", json!({ "mode": k }))).collect(),
         Combo::Transparency
         | Combo::SectionViewStyle

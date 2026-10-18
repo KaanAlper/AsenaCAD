@@ -15,7 +15,7 @@ ignored; there are no context menus. Remaining: **≈ 110–170 Opus 5.5 hours**
 
 ## Windows AutoCAD 2026 baseline
 
-> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** minor (the Insert, Annotate and Parametric tabs) · **Target:** Autodesk AutoCAD 2026 (Windows)
+> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** minor (the Insert, Annotate, Parametric and View tabs) · **Target:** Autodesk AutoCAD 2026 (Windows)
 
 The rest of this doc still measures against AutoCAD 2027 for Mac; this section is the first part
 re-measured against the Windows target (milestone M1a: title row, ribbon, document tabs and the
@@ -33,7 +33,7 @@ and colours are ours by design.
 The other tabs (M1b) were compared the same way, against a UI Automation read of each tab's
 panels and a screenshot of each tab at 1906 px (layout and labels only).
 
-**Measured: 42 rows, 12 ✅, 29 ◐, 1 ✗.**
+**Measured: 49 rows, 13 ✅, 35 ◐, 1 ✗.**
 
 | Element | Status | AutoCAD 2026 (Windows) | AsenaCAD and the differences |
 |---|---|---|---|
@@ -41,7 +41,7 @@ panels and a screenshot of each tab at 1906 px (layout and labels only).
 | Title row: Quick Access Toolbar | ✅ | New, Open, Save, Save As, two Web & Mobile buttons, Plot, Undo and Redo split buttons, Customize ▾, Share; the Customize list has 17 commands, More Commands, Show Menu Bar, Show Below the Ribbon | Same buttons in the same order without the Autodesk online ones ([below](#intentionally-absent-autodesk-online-services)); same Customize list and options |
 | Title row: title | ✅ | Product and drawing name, centred | "AsenaCAD  <drawing>.dwg", centred; it slides or is cut short to stay between the toolbar and the InfoCenter |
 | Title row: InfoCenter | ✅ | Hide-search ▸, search box, Search, Sign In ▾, App Store, Stay Connected ▾, Help split | Hide-search ▸, search box with the same placeholder, Search, Help split; the online items are left out on purpose. Search starts a command whose name or alias is typed, else opens our Command Reference (AutoCAD searches its online help) |
-| Ribbon tab row | ◐ | Home, Insert, Annotate, Parametric, View, Manage, Output, Collaborate, Express Tools; then the minimize button (cycles Full, Panel Buttons, Panel Titles, Tabs) and its ▾ menu | Same nine tabs in order and the same minimize button and menu. Home, Insert, Annotate and Parametric have their panels; the other tabs show a "not built yet" note until M1b fills them |
+| Ribbon tab row | ◐ | Home, Insert, Annotate, Parametric, View, Manage, Output, Collaborate, Express Tools; then the minimize button (cycles Full, Panel Buttons, Panel Titles, Tabs) and its ▾ menu | Same nine tabs in order and the same minimize button and menu. Home, Insert, Annotate, Parametric and View have their panels; the other tabs show a "not built yet" note until M1b fills them |
 | Home ▸ Draw | ✅ | Line, Polyline, Circle ▾, Arc ▾ (large); Rectangle ▾, Ellipse ▾ (its face reads "Center"), Hatch ▾ (small, icons only); 13-item slide-out ending with Revision Cloud ▾ | Same items, sizes, rows, list entries and separators; every item runs its command |
 | Home ▸ Modify | ◐ | Move/Copy/Stretch, Rotate/Mirror/Scale, Trim ▾/Fillet ▾/Array ▾ with labels, Erase/Explode/Offset as icons; 15-item slide-out ending with the draw-order split | Same layout and lists; Set to ByLayer has no command yet, so it is disabled |
 | Home ▸ Annotation | ◐ | Text ▾ and Dimension (large); Linear ▾, Leader ▾, Table (small, labelled); slide-out of four style buttons, each with its style list | Same items, lists and four-row slide-out; the style lists set the current style. Dimension starts our DIM, which makes only linear dimensions (AutoCAD's DIM picks the kind from the object under the cursor) |
@@ -68,6 +68,13 @@ panels and a screenshot of each tab at 1906 px (layout and labels only).
 | Annotate ▸ Annotation Scaling | ✅ | Add Current Scale ▾ (Add Current Scale, Delete Current Scale) (large); Scale List, Add/Delete Scales, Sync Scale Positions | Same items and list; every item runs its command |
 | Parametric ▸ Geometric | ✅ | Auto Constrain (large); the twelve geometric constraints as icons in three rows of four; Show/Hide, Show All, Hide All; Constraint Settings launcher | Same layout and launcher; every item runs its command. The launcher opens our Constraint Settings dialog, which shows its geometric, dimensional and AutoConstrain settings on one page (AutoCAD's dialog has a tab for each) |
 | Parametric ▸ Dimensional | ◐ | Linear ▾ (Linear, Horizontal, Vertical), Aligned (large); Radius, Diameter, Angular, Convert (icons); Show/Hide, Show All, Hide All; slide-out with the Dynamic and Annotational Constraint Mode toggles; Constraint Settings launcher | Same layout, list, slide-out and launcher. Convert has no command yet. Both mode toggles are disabled: annotational constraints aren't modelled (CCONSTRAINTFORM), every constraint is dynamic, so Dynamic Constraint Mode shows pressed as in AutoCAD's default |
+| View ▸ Viewport Tools | ◐ | UCS Icon, View Cube, Navigation Bar (large toggles); slide-out with the Show Motion toggle | Same layout. The three toggles show and hide the UCS icon, the ViewCube and the navigation bar and show pressed while they are on; Show Motion is disabled (no ShowMotion) |
+| View ▸ Named Views | ◐ | The named views list ("Unsaved View"); New View, View Manager | Same layout. The list shows "Unsaved View" and lists the views of the current space; choosing one restores it (VIEW Restore). The list is disabled while the drawing has no views; New View has no command yet; View Manager runs VIEW |
+| View ▸ Model Viewports | ◐ | Viewport Configuration ▾ (large; Single, two, three and four-viewport arrangements); Named, Join, Restore | Same layout and list. Single and Four: Equal tile the model space (VPORTS); the other ten arrangements, Join and Restore have no command of their own yet (-VPORTS takes the arrangements and Join as options, not Four: Right, Four: Left or Toggle). Named runs VPORTS, which asks on the command line (AutoCAD opens the Viewports dialog's Named Viewports tab) |
+| View ▸ Review | ✅ | DWG Compare (large) | Same button; it runs COMPARE |
+| View ▸ History | ◐ | Activity Insights (large toggle) | Same toggle, disabled: there is no Activity Insights palette |
+| View ▸ Palettes | ◐ | Tool Palettes, Properties, Blocks, Count, Command Macros, Sheet Set Manager (large toggles); Command Line, Markup Set Manager, Layer Properties, Quick Calculator, Design Center, External References (icon toggles); slide-out with Text Window and six rendering palette toggles | Same layout and slide-out. Properties, Blocks, Command Line, Layer Properties, Quick Calculator and External References open their palettes and show pressed while open; Text Window opens the command history (TEXTSCR); Count runs COUNTLIST, which reports the counts on the command line (no Count palette, so it never shows pressed); Blocks opens a plain list of the drawing's blocks. Tool Palettes, Command Macros, Sheet Set Manager, Markup Set Manager, Design Center and the six rendering palettes aren't built. Clicking a pressed palette toggle doesn't close its palette (AutoCAD's does) |
+| View ▸ Interface | ◐ | Switch Windows ▾ (large drop-down listing the open drawings), File Tabs, Layout Tabs (large toggles); Tile Horizontally, Tile Vertically, Cascade; Options launcher (Display tab) | Same layout and launcher. File Tabs and Layout Tabs show and hide the drawing tabs and the layout tabs. Switch Windows is a drop-down without the list of drawings, so it is disabled; the three window arrangements are disabled (AsenaCAD shows one drawing at a time). The launcher opens Options on its Display tab |
 | Parametric ▸ Manage | ◐ | Delete Constraints (large), Parameters Manager (large toggle) | Same items; both run their commands and the toggle shows pressed while the Parameters Manager is open. Clicking the pressed toggle doesn't close the manager (AutoCAD's does) |
 | Ribbon collapse | ✅ | At 1906 px every Home panel is full. At 1280 px Modify, Annotation, Layers and Block drop their small items' labels, and Properties, Groups, Utilities, Clipboard and View become panel buttons (icon, name on one line, ▾) that open the panel below them | Same panels shrink and collapse at both widths, at any display scale. Narrower windows collapse more panels from the right. A panel button never breaks a word of its name: it gets wider when a word doesn't fit (Annotation in a 900-point window) |
 | Document tab bar | ✅ | File-tabs menu ≡, Start (no close button), drawing tabs with × and a * while unsaved, + | Same controls in the same order |
@@ -145,6 +152,36 @@ differ.
 | `dcconvert` | Parametric ▸ Dimensional ▸ Convert |
 | `cconstraintform.dynamic` | Parametric ▸ Dimensional ▸ Dynamic Constraint Mode (toggle, slide-out; sets CCONSTRAINTFORM to 0) |
 | `cconstraintform.annotational` | Parametric ▸ Dimensional ▸ Annotational Constraint Mode (toggle, slide-out; sets CCONSTRAINTFORM to 1) |
+| `navsmotion` | View ▸ Viewport Tools ▸ Show Motion (toggle, slide-out; also the navigation bar's ShowMotion) |
+| `newview` | View ▸ Named Views ▸ New View |
+| `vports.2v` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Two: Vertical (-VPORTS 2 Vertical) |
+| `vports.2h` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Two: Horizontal (-VPORTS 2 Horizontal) |
+| `vports.3r` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Three: Right (-VPORTS 3 Right) |
+| `vports.3l` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Three: Left (-VPORTS 3 Left) |
+| `vports.3a` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Three: Above (-VPORTS 3 Above) |
+| `vports.3b` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Three: Below (-VPORTS 3 Below) |
+| `vports.3v` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Three: Vertical (-VPORTS 3 Vertical) |
+| `vports.3h` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Three: Horizontal (-VPORTS 3 Horizontal) |
+| `vports.4r` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Four: Right (an arrangement -VPORTS doesn't have yet) |
+| `vports.4l` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Four: Left (an arrangement -VPORTS doesn't have yet) |
+| `vports.join` | View ▸ Model Viewports ▸ Join (-VPORTS Join) |
+| `vports.toggle` | View ▸ Model Viewports ▸ Restore (-VPORTS Toggle) |
+| `activityinsights` | View ▸ History ▸ Activity Insights (toggle) |
+| `toolpalettes` | View ▸ Palettes ▸ Tool Palettes (toggle) |
+| `commandmacros` | View ▸ Palettes ▸ Command Macros (toggle) |
+| `sheetset` | View ▸ Palettes ▸ Sheet Set Manager (toggle) |
+| `markup` | View ▸ Palettes ▸ Markup Set Manager (toggle) |
+| `adcenter` | View ▸ Palettes ▸ Design Center (toggle) |
+| `matbrowseropen` | View ▸ Palettes ▸ Materials Browser (toggle, slide-out) |
+| `mateditoropen` | View ▸ Palettes ▸ Materials Editor (toggle, slide-out) |
+| `visualstyles` | View ▸ Palettes ▸ Visual Styles (toggle, slide-out) |
+| `rpref` | View ▸ Palettes ▸ Render Settings (toggle, slide-out) |
+| `lightlist` | View ▸ Palettes ▸ Lights in Model (toggle, slide-out) |
+| `sunproperties` | View ▸ Palettes ▸ Sun Properties (toggle, slide-out) |
+| `switchwindows` | View ▸ Interface ▸ Switch Windows (the list of open drawings) |
+| `syswindows.tilehorz` | View ▸ Interface ▸ Tile Horizontally |
+| `syswindows.tilevert` | View ▸ Interface ▸ Tile Vertically |
+| `syswindows.cascade` | View ▸ Interface ▸ Cascade |
 
 ## How this was measured
 
@@ -335,6 +372,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | Windows baseline: the View tab's seven panels (7 rows: 1 ✅, 6 ◐); Layout Tabs shows and hides the layout tabs; TEXTSCR is a known command; large buttons are at least 38 px wide and panels can draw AutoCAD's thin separators between groups (Parametric's Geometric and Dimensional panels) |
 | 2026-10-19 | minor | Windows baseline: the Parametric tab's three panels (3 rows: 1 ✅, 2 ◐); three more ribbon items without a command |
 | 2026-10-19 | minor | Review fixes: Set Location and the block gallery (Home and Insert) are drop-down buttons; launchers carry AutoCAD's names; Home ▸ Annotation drops to ◐ (DIM makes only linear dimensions); Annotation Text Height drops down a list of heights; TEXTSIZE is capped at 1,000,000 |
 | 2026-10-19 | minor | Windows baseline: the Annotate tab's seven panels (7 rows: 2 ✅, 5 ◐); Find Text finds and selects text, Annotation Text Height sets TEXTSIZE (now checked by SETVAR) |

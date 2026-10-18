@@ -116,7 +116,8 @@ pub fn small_row(item: &Item) -> Option<u8> {
         Item::Button { size: Size::Large, .. }
         | Item::Toggle { size: Size::Large, .. }
         | Item::Split { size: Size::Large, .. }
-        | Item::Menu { size: Size::Large, .. } => None,
+        | Item::Menu { size: Size::Large, .. }
+        | Item::Separator => None,
         Item::Button { row, .. }
         | Item::Toggle { row, .. }
         | Item::Split { row, .. }
