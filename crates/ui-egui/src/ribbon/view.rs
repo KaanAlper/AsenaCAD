@@ -38,8 +38,8 @@ const NAMED_VIEWS: Panel = Panel {
 
 // ---- Model Viewports ----
 
-/// The tiled viewport arrangements. Single and Four: Equal are VPORTS 1 and 4; the others are
-/// -VPORTS with an arrangement, which have no command of their own yet.
+/// The tiled viewport arrangements: VPORTS 1 and 4, and VPORTS 2 or 3 with an arrangement.
+/// Four: Right and Four: Left are arrangements -VPORTS doesn't have yet.
 const VIEWPORT_CONFIGURATION: &[Entry] = &[
     e(Icon::VpSingle, "Single", "vports.1"),
     e(Icon::VpTwoV, "Two: Vertical", "vports.2v"),

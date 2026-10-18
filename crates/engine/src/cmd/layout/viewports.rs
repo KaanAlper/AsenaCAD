@@ -559,6 +559,11 @@ impl MviewM {
     pub fn new(count: usize, choose: bool) -> Self {
         MviewM { count, choose, arrangement: String::new(), stage: Stage::default() }
     }
+    /// `count` viewports in a fixed `arrangement` (the ribbon's Viewport Configuration list):
+    /// straight to the area's corners.
+    pub fn arranged(count: usize, arrangement: &str) -> Self {
+        MviewM { arrangement: arrangement.to_string(), ..MviewM::new(count, false) }
+    }
     /// View > Viewports > Polygonal Viewport: straight to the polygon's points.
     pub fn polygonal() -> Self {
         MviewM { stage: Stage::Polygon(PolygonInput::default()), ..MviewM::new(1, true) }

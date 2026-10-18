@@ -71,7 +71,7 @@ panels and a screenshot of each tab at 1906 px (layout and labels only).
 | Parametric ▸ Manage | ◐ | Delete Constraints (large), Parameters Manager (large toggle) | Same items; both run their commands and the toggle shows pressed while the Parameters Manager is open. Clicking the pressed toggle doesn't close the manager (AutoCAD's does) |
 | View ▸ Viewport Tools | ◐ | UCS Icon, View Cube, Navigation Bar (large toggles); slide-out with the Show Motion toggle | Same layout. The three toggles show and hide the UCS icon, the ViewCube and the navigation bar and show pressed while they are on; Show Motion is disabled (no ShowMotion) |
 | View ▸ Named Views | ◐ | The named views list ("Unsaved View"); New View, View Manager | Same layout. The list shows "Unsaved View" and lists the views of the current space; choosing one restores it (VIEW Restore). The list is disabled while the drawing has no views; New View has no command yet; View Manager runs VIEW |
-| View ▸ Model Viewports | ◐ | Viewport Configuration ▾ (large; Single, two, three and four-viewport arrangements); Named, Join, Restore | Same layout and list. Single and Four: Equal tile the model space (VPORTS); the other ten arrangements, Join and Restore have no command of their own yet (-VPORTS takes the arrangements and Join as options, not Four: Right, Four: Left or Toggle). Named runs VPORTS, which asks on the command line (AutoCAD opens the Viewports dialog's Named Viewports tab) |
+| View ▸ Model Viewports | ◐ | Viewport Configuration ▾ (large; Single, two, three and four-viewport arrangements); Named, Join, Restore | Same layout and list. Single, the two and three-viewport arrangements and Four: Equal tile the model space (in a layout they make layout viewports), and Join joins two tiles; Four: Right, Four: Left and Restore (-VPORTS Toggle) have no command yet. Named runs VPORTS, which asks on the command line (AutoCAD opens the Viewports dialog's Named Viewports tab) |
 | View ▸ Review | ✅ | DWG Compare (large) | Same button; it runs COMPARE |
 | View ▸ History | ◐ | Activity Insights (large toggle) | Same toggle, disabled: there is no Activity Insights palette |
 | View ▸ Palettes | ◐ | Tool Palettes, Properties, Blocks, Count, Command Macros, Sheet Set Manager (large toggles); Command Line, Markup Set Manager, Layer Properties, Quick Calculator, Design Center, External References (icon toggles); slide-out with Text Window and six rendering palette toggles | Same layout and slide-out. Properties, Blocks, Command Line, Layer Properties, Quick Calculator and External References open their palettes and show pressed while open; Text Window opens the command history (TEXTSCR); Count runs COUNTLIST, which reports the counts on the command line (no Count palette, so it never shows pressed); Blocks opens a plain list of the drawing's blocks. Tool Palettes, Command Macros, Sheet Set Manager, Markup Set Manager, Design Center and the six rendering palettes aren't built. Clicking a pressed palette toggle doesn't close its palette (AutoCAD's does) |
@@ -185,17 +185,8 @@ differ.
 | `cconstraintform.annotational` | Parametric ▸ Dimensional ▸ Annotational Constraint Mode (toggle, slide-out; sets CCONSTRAINTFORM to 1) |
 | `navsmotion` | View ▸ Viewport Tools ▸ Show Motion (toggle, slide-out; also the navigation bar's ShowMotion) |
 | `newview` | View ▸ Named Views ▸ New View |
-| `vports.2v` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Two: Vertical (-VPORTS 2 Vertical) |
-| `vports.2h` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Two: Horizontal (-VPORTS 2 Horizontal) |
-| `vports.3r` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Three: Right (-VPORTS 3 Right) |
-| `vports.3l` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Three: Left (-VPORTS 3 Left) |
-| `vports.3a` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Three: Above (-VPORTS 3 Above) |
-| `vports.3b` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Three: Below (-VPORTS 3 Below) |
-| `vports.3v` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Three: Vertical (-VPORTS 3 Vertical) |
-| `vports.3h` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Three: Horizontal (-VPORTS 3 Horizontal) |
 | `vports.4r` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Four: Right (an arrangement -VPORTS doesn't have yet) |
 | `vports.4l` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Four: Left (an arrangement -VPORTS doesn't have yet) |
-| `vports.join` | View ▸ Model Viewports ▸ Join (-VPORTS Join) |
 | `vports.toggle` | View ▸ Model Viewports ▸ Restore (-VPORTS Toggle) |
 | `activityinsights` | View ▸ History ▸ Activity Insights (toggle) |
 | `toolpalettes` | View ▸ Palettes ▸ Tool Palettes (toggle) |
@@ -481,6 +472,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | View ▸ Model Viewports: the two and three-viewport arrangements and Join are commands of their own (`vports.2v` … `vports.3h`, `vports.join`); nine fewer ribbon items without a command |
 | 2026-10-19 | minor | Windows baseline: the Express Tools tab's eight panels (8 rows, all ◐); every ribbon tab is built; 44 more ribbon items without a command |
 | 2026-10-19 | minor | Windows baseline: the Output tab's two panels and the Collaborate tab's four (6 rows: 2 ✅, 4 ◐); Collaborate's online tools listed as intentionally absent but shown disabled; 12 more ribbon items without a command; adjacent large buttons stand with no gap between them, as in AutoCAD |
 | 2026-10-19 | minor | Windows baseline: the Manage tab's six panels (6 rows, all ◐); 22 more ribbon items without a command |

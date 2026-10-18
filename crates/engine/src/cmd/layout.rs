@@ -17,6 +17,25 @@ mod plotstyle;
 mod prompts;
 mod viewports;
 
+/// VPORTS 2 or 3 in a fixed arrangement, a command of its own (the ribbon's Viewport
+/// Configuration list): tiles in the Model tab, layout viewports in a layout.
+macro_rules! arranged {
+    ($id:literal, $label:literal, $n:literal, $arrangement:literal) => {
+        CommandSpec::new($id, $label, |s, p| run_mview_n(s, &with_arrangement(p, $arrangement), $n)).params("{p1?, p2?, layout?}").interactive(|s| {
+            Ok(super::view::model_vports_arranged(s, $n, $arrangement).unwrap_or_else(|| Box::new(MviewM::arranged($n, $arrangement))))
+        })
+    };
+}
+
+/// `p` with `arrangement` set, whatever the caller passed.
+fn with_arrangement(p: &Value, arrangement: &str) -> Value {
+    let mut p = if p.is_object() { p.clone() } else { json!({}) };
+    if let Some(o) = p.as_object_mut() {
+        o.insert("arrangement".into(), json!(arrangement));
+    }
+    p
+}
+
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         CommandSpec::new("layout", "Layout", run_layout)
@@ -65,6 +84,14 @@ pub fn specs() -> Vec<CommandSpec> {
             .menu(&["View", "Viewports", "4 Viewports"])
             .params("{p1?, p2?, layout?}")
             .interactive(|s| Ok(super::view::model_vports(s, Some(4)).unwrap_or_else(|| Box::new(MviewM::new(4, false))))),
+        arranged!("vports.2v", "Two: Vertical", 2, "vertical"),
+        arranged!("vports.2h", "Two: Horizontal", 2, "horizontal"),
+        arranged!("vports.3r", "Three: Right", 3, "right"),
+        arranged!("vports.3l", "Three: Left", 3, "left"),
+        arranged!("vports.3a", "Three: Above", 3, "above"),
+        arranged!("vports.3b", "Three: Below", 3, "below"),
+        arranged!("vports.3v", "Three: Vertical", 3, "vertical"),
+        arranged!("vports.3h", "Three: Horizontal", 3, "horizontal"),
         CommandSpec::new("viewport.set", "Viewport Properties", run_viewport_set).params(
             "{handle? (default: selected viewports), scale?: paper units per model unit | \"1:50\", viewHeight?, center?: [x,y], locked?, freeze?: [layer], thaw?: [layer], colors?: {layer: color | null}}",
         ),

@@ -93,7 +93,8 @@ fn viewport_configuration_lists_autocads_arrangements_and_remembers_the_choice()
     let tops: Vec<f32> = names.iter().map(|l| h.get_by_label(l).rect().top()).collect();
     assert!(tops.windows(2).all(|w| w[0] < w[1]), "entries in AutoCAD's order: {tops:?}");
     assert!(!h.get_by_label("Single").accesskit_node().is_disabled());
-    assert!(h.get_by_label("Two: Vertical").accesskit_node().is_disabled(), "-VPORTS 2 Vertical has no command of its own yet");
+    assert!(!h.get_by_label("Two: Vertical").accesskit_node().is_disabled());
+    assert!(h.get_by_label("Four: Right").accesskit_node().is_disabled(), "-VPORTS has no Four: Right arrangement yet");
     h.get_by_label("Four: Equal").click();
     h.run_steps(3);
     assert_eq!(RibbonState::split(&h.ctx, "View/Model Viewports/0", 0), 9);

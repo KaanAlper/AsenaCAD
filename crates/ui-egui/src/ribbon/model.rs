@@ -391,17 +391,8 @@ mod tests {
         // ---- View ----
         "navsmotion",          // Viewport Tools ▸ Show Motion (toggle, slide-out)
         "newview",             // Named Views ▸ New View
-        "vports.2v",           // Model Viewports ▸ Viewport Configuration ▸ Two: Vertical
-        "vports.2h",           // Model Viewports ▸ Viewport Configuration ▸ Two: Horizontal
-        "vports.3r",           // Model Viewports ▸ Viewport Configuration ▸ Three: Right
-        "vports.3l",           // Model Viewports ▸ Viewport Configuration ▸ Three: Left
-        "vports.3a",           // Model Viewports ▸ Viewport Configuration ▸ Three: Above
-        "vports.3b",           // Model Viewports ▸ Viewport Configuration ▸ Three: Below
-        "vports.3v",           // Model Viewports ▸ Viewport Configuration ▸ Three: Vertical
-        "vports.3h",           // Model Viewports ▸ Viewport Configuration ▸ Three: Horizontal
         "vports.4r",           // Model Viewports ▸ Viewport Configuration ▸ Four: Right
         "vports.4l",           // Model Viewports ▸ Viewport Configuration ▸ Four: Left
-        "vports.join",         // Model Viewports ▸ Join
         "vports.toggle",       // Model Viewports ▸ Restore
         "activityinsights",    // History ▸ Activity Insights (toggle)
         "toolpalettes",        // Palettes ▸ Tool Palettes (toggle)
