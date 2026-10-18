@@ -16,13 +16,13 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package
       Name="AsenaCAD"
-      Manufacturer="Learning Machines LLC"
+      Manufacturer="AsenaCAD contributors"
       Version="$(var.Version)"
-      UpgradeCode="119D7D76-0167-4A9E-8F37-09DA0235F68E"
+      UpgradeCode="6795A885-A819-473E-BDB3-F26E369637A7"
       Scope="perMachine"
       Compressed="yes"
       Language="1033">
-    <SummaryInformation Description="AsenaCAD computer-aided design" Manufacturer="Learning Machines LLC" />
+    <SummaryInformation Description="AsenaCAD computer-aided design" Manufacturer="AsenaCAD contributors" />
     <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
          (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
     <MajorUpgrade AllowSameVersionUpgrades="yes"
@@ -31,9 +31,9 @@
 
     <Icon Id="CadcraftIcon.ico" SourceFile="$(var.IconPath)" />
     <Property Id="ARPPRODUCTICON" Value="CadcraftIcon.ico" />
-    <Property Id="ARPURLINFOABOUT" Value="https://getartcraft.com/apps/asenacad" />
-    <Property Id="ARPURLUPDATEINFO" Value="https://getartcraft.com/apps/asenacad" />
-    <Property Id="ARPHELPLINK" Value="https://discord.gg/artcraft" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/KaanAlper/AsenaCAD" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/KaanAlper/AsenaCAD/releases" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/KaanAlper/AsenaCAD/issues" />
 
     <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="INSTALLFOLDER" Name="AsenaCAD" />
@@ -48,7 +48,7 @@
     <!-- The previous install's choice (the shortcut component's HKCU key path, so the installing
          user's), so upgrades keep the desktop shortcut without asking again. -->
     <Property Id="PREVIOUSDESKTOPSHORTCUT">
-      <RegistrySearch Id="PreviousDesktopShortcut" Root="HKCU" Key="Software\Learning Machines LLC\AsenaCAD"
+      <RegistrySearch Id="PreviousDesktopShortcut" Root="HKCU" Key="Software\AsenaCAD contributors\AsenaCAD"
           Name="DesktopShortcut" Type="raw" />
     </Property>
     <!-- Only when DESKTOPSHORTCUT wasn't given; "first" runs it once (in the UI sequence when there
@@ -65,7 +65,7 @@
 
   <Fragment>
     <ComponentGroup Id="CadcraftFiles" Directory="INSTALLFOLDER">
-      <Component Id="CadcraftApp" Guid="2AC18056-48DE-4079-AB79-4FDEF4FBB075">
+      <Component Id="CadcraftApp" Guid="68C2D731-EB27-49D6-8D6A-B1989F089DF3">
         <File Id="CadcraftExe" Source="$(var.BinDir)\asenacad.exe" KeyPath="yes">
           <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="AsenaCAD"
               Description="AsenaCAD computer-aided design" WorkingDirectory="INSTALLFOLDER" Advertise="yes"
@@ -86,11 +86,11 @@
       <!-- Optional desktop shortcut, removed on uninstall. A non-advertised shortcut needs a registry
            key path, and one in a profile folder (DesktopFolder, even though ALLUSERS=1 makes it the
            Public desktop) must be under HKCU (ICE38, ICE43, ICE57). -->
-      <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="76029CD7-EBDB-420F-AC34-FF0E82A99E32"
+      <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="713EA458-2A94-4F08-ADA2-E85BA7677179"
           Condition="DESKTOPSHORTCUT = &quot;1&quot;">
         <Shortcut Id="DesktopShortcut" Name="AsenaCAD" Description="AsenaCAD computer-aided design"
             Target="[INSTALLFOLDER]asenacad.exe" WorkingDirectory="INSTALLFOLDER" Icon="CadcraftIcon.ico" IconIndex="0" />
-        <RegistryValue Root="HKCU" Key="Software\Learning Machines LLC\AsenaCAD" Name="DesktopShortcut"
+        <RegistryValue Root="HKCU" Key="Software\AsenaCAD contributors\AsenaCAD" Name="DesktopShortcut"
             Value="1" Type="string" KeyPath="yes" />
       </Component>
     </ComponentGroup>

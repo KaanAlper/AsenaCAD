@@ -14,8 +14,11 @@ fn main() {
     }
     res.set("ProductName", "AsenaCAD")
         .set("FileDescription", "AsenaCAD computer-aided design")
-        .set("CompanyName", "Learning Machines LLC")
-        .set("LegalCopyright", "Copyright (c) 2026 ArtCraft Team and the AsenaCAD contributors. MIT OR Apache-2.0.")
+        .set("CompanyName", "AsenaCAD contributors")
+        .set(
+            "LegalCopyright",
+            "Copyright (c) 2026 AsenaCAD contributors; based on CADCraft (c) 2026 ArtCraft Team and the CADCraft contributors. MIT OR Apache-2.0.",
+        )
         .set("OriginalFilename", "asenacad.exe")
         .set("InternalName", "asenacad");
     if let Err(e) = res.compile() {
