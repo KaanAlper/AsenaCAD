@@ -1,11 +1,14 @@
-CADCraft
-Copyright (c) 2026 ArtCraft Team and the CADCraft contributors.
-Licensed under the MIT License or the Apache License, Version 2.0, at your option
-(LICENSE-MIT, LICENSE-APACHE).
+AsenaCAD
+Copyright (c) 2026 the AsenaCAD contributors.
 
-The ArtCraft name, wordmark and logos in docs/brand/ are trademarks of the ArtCraft Team. They are
-not open source and are not covered by the license above; their terms are in
-docs/brand/LICENSE-brand.txt.
+AsenaCAD is a fork of CADCraft (https://github.com/storytold/cadcraft, commit 714111d528acc86dc6b41e03f9a82cabc1066dca),
+Copyright (c) 2026 ArtCraft Team and the CADCraft contributors.
+Both are licensed under the MIT License or the Apache License, Version 2.0, at your option
+(LICENSE-MIT, LICENSE-APACHE). The CADCraft contributors are credited in contributors/ and in
+the About window.
+
+AsenaCAD contains no ArtCraft trademarks: the ArtCraft name, wordmark and logos that CADCraft
+ships in docs/brand/ were removed from this fork.
 
 Third-party material
 
@@ -14,11 +17,10 @@ crate (DWG reading and writing, https://github.com/hakanaktt/acadrust) is licens
 Mozilla Public License 2.0 and is used unmodified as a separate library (crates/dwg). Its source
 is available from crates.io and the repository above.
 
-
-None: every bundled asset is original to CADCraft (icons, drafting font, hatch patterns and
+Every bundled asset is original to AsenaCAD or CADCraft (icons, drafting font, hatch patterns and
 linetypes are drawn or defined in code). The per-file list is in ATTRIBUTION.md. Builds made with
 the optional craft-fonts input (CRAFT_FONTS_DIR) embed the fonts listed in its ATTRIBUTION.md,
 each under the SIL Open Font License 1.1.
 
-CADCraft is an independent project and is not affiliated with, sponsored by or endorsed by
+AsenaCAD is an independent project and is not affiliated with, sponsored by or endorsed by
 Autodesk, Inc. AutoCAD and DWG are trademarks of Autodesk, Inc.

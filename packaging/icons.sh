@@ -1,40 +1,43 @@
 #!/usr/bin/env bash
-# Regenerate the derived app icons from assets/app-icon/cadcraft-1024.png (macOS: sips, iconutil).
+# Regenerate every derived app icon from assets/app-icon/asenacad.svg.
+# Needs resvg, ImageMagick (magick) and python3 with Pillow; runs on Linux or macOS.
 # The outputs are committed, so builds and packaging never need these tools.
 #
 #   packaging/icons.sh
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIR="$ROOT/assets/app-icon"
-SRC="$DIR/cadcraft-1024.png"
+SVG="$DIR/asenacad.svg"
 ID="io.github.kaanalper.asenacad"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-command -v sips >/dev/null || { echo "error: sips not found (macOS only)" >&2; exit 1; }
+for t in resvg magick python3; do command -v "$t" >/dev/null || { echo "error: $t not found" >&2; exit 1; }; done
 
-resize() { sips -s format png -z "$2" "$2" "$1" --out "$3" >/dev/null; }
+png() { resvg -w "$1" -h "$1" "$SVG" "$2"; }
 
+png 1024 "$DIR/asenacad-1024.png"
+png 256 "$DIR/asenacad-256.png"
+png 64 "$DIR/asenacad-64.png"
 for s in 16 24 32 48 64 128 256 512; do
   mkdir -p "$DIR/hicolor/${s}x${s}/apps"
-  resize "$SRC" "$s" "$DIR/hicolor/${s}x${s}/apps/$ID.png"
+  png "$s" "$DIR/hicolor/${s}x${s}/apps/$ID.png"
 done
-resize "$SRC" 64 "$DIR/cadcraft-64.png"
-resize "$SRC" 256 "$DIR/cadcraft-256.png"
+
+# macOS grid: the artwork at 80 % on a transparent 1024 canvas.
+png 824 "$TMP/inner.png"
+magick "$TMP/inner.png" -background none -gravity center -extent 1024x1024 "$TMP/macos-1024.png"
+magick "$TMP/macos-1024.png" -resize 512x512 "$DIR/asenacad-macos-512.png"
 
 ICO_PNGS=()
 for s in 16 20 24 32 40 48 64 128 256; do
-  resize "$SRC" "$s" "$TMP/ico-$s.png"
+  png "$s" "$TMP/ico-$s.png"
   ICO_PNGS+=("$TMP/ico-$s.png")
 done
-(cd "$ROOT" && cargo run -q -p xtask -- ico "$DIR/cadcraft.ico" "${ICO_PNGS[@]}")
+(cd "$ROOT" && cargo run -q -p xtask -- ico "$DIR/asenacad.ico" "${ICO_PNGS[@]}")
 
-# macOS icons sit on Apple's grid: the macOS-margin master is cadcraft-macos-512.png.
-SET="$TMP/asenacad.iconset"
-mkdir -p "$SET"
-for s in 16 32 128 256; do
-  resize "$DIR/cadcraft-macos-512.png" "$s" "$SET/icon_${s}x${s}.png"
-  resize "$DIR/cadcraft-macos-512.png" $((s * 2)) "$SET/icon_${s}x${s}@2x.png"
-done
-resize "$DIR/cadcraft-macos-512.png" 512 "$SET/icon_512x512.png"
-iconutil -c icns -o "$DIR/cadcraft.icns" "$SET"
+python3 - "$TMP/macos-1024.png" "$DIR/asenacad.icns" <<'PY'
+import sys
+from PIL import Image
+Image.open(sys.argv[1]).save(sys.argv[2], format="ICNS")
+PY
 echo "icons written to $DIR"
