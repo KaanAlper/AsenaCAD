@@ -27,8 +27,10 @@ const SMALL_W: f32 = 24.0;
 const LARGE_SPLIT_ARROW_H: f32 = 35.0;
 /// The ▾ part of a small split button.
 const SMALL_SPLIT_ARROW_W: f32 = 13.0;
-/// Large labels wrap at this width, to at most two lines ("Layer / Properties").
-const LARGE_WRAP: f32 = 58.0;
+/// A large label's lines are at most this wide where a word break allows it: AutoCAD's large
+/// buttons are 58–70 px, and "Detect and" (59 px) fits on one line while "Layer Properties"
+/// doesn't.
+const LARGE_WRAP: f32 = 60.0;
 const MENU_W: f32 = 220.0;
 const FONT: f32 = 12.0;
 
@@ -110,10 +112,23 @@ fn text_color(enabled: bool) -> egui::Color32 {
 }
 
 fn large_label(ui: &Ui, text: &str, enabled: bool) -> std::sync::Arc<egui::Galley> {
-    let mut job = LayoutJob::simple(text.to_string(), FontId::proportional(FONT), text_color(enabled), LARGE_WRAP);
-    job.wrap.max_rows = 2;
+    let mut job = LayoutJob::simple(large_lines(ui, text), FontId::proportional(FONT), text_color(enabled), f32::INFINITY);
     job.halign = egui::Align::Center;
     ui.painter().layout_job(job)
+}
+
+/// `text` as AutoCAD lays a large label out: one line when it fits [`LARGE_WRAP`], else two,
+/// broken at the last space that keeps the first line within it ("Detect and / Convert",
+/// "Layer / Properties"), or after the first word when even that is wider.
+fn large_lines(ui: &Ui, text: &str) -> String {
+    let width = |s: &str| ui.painter().layout_no_wrap(s.to_string(), FontId::proportional(FONT), text_color(true)).size().x;
+    let spaces = text.match_indices(' ').map(|(i, _)| i);
+    let Some(first) = spaces.clone().next() else { return text.to_string() };
+    if width(text) <= LARGE_WRAP {
+        return text.to_string();
+    }
+    let at = spaces.take_while(|&i| width(&text[..i]) <= LARGE_WRAP).last().unwrap_or(first);
+    format!("{}\n{}", &text[..at], text[at..].trim_start())
 }
 
 fn small_label(ui: &Ui, text: &str, enabled: bool) -> std::sync::Arc<egui::Galley> {
@@ -136,15 +151,26 @@ fn paint_large(ui: &Ui, rect: Rect, icon: Icon, label: &str, enabled: bool, chev
     let galley = large_label(ui, label, enabled);
     let top = rect.top() + 4.0 + LARGE_ICON + 3.0;
     let bottom = top + galley.size().y;
-    // Centre-aligned rows are laid out around x = 0.
+    // Centre-aligned rows are laid out around x = 0. Under a one-line label the ▾ goes below
+    // it; a two-line label ("Detect and / Convert") has it right of its last line.
+    let chevron_at = match galley.rows.as_slice() {
+        [_, .., last] => {
+            let row = last.rect();
+            pos2((rect.center().x + row.right() + 7.0).min(rect.right() - 5.0), top + row.center().y)
+        }
+        _ => pos2(rect.center().x, (bottom + 5.0).min(rect.bottom() - 5.0)),
+    };
     ui.painter().galley(pos2(rect.center().x, top), galley, text_color(enabled));
     if chevron {
-        paint_chevron(ui, pos2(rect.center().x, (bottom + 5.0).min(rect.bottom() - 5.0)), enabled);
+        paint_chevron(ui, chevron_at, enabled);
     }
 }
 
+/// A large button's width: its widest label line with 3 px either side (AutoCAD's "Layer /
+/// Properties" is its "Properties" line plus about that), and never narrower than the icon
+/// with 5 px either side.
 fn large_width(ui: &Ui, label: &str) -> f32 {
-    (large_label(ui, label, true).size().x + 10.0).max(LARGE_ICON + 10.0)
+    (large_label(ui, label, true).size().x + 6.0).max(LARGE_ICON + 10.0)
 }
 
 /// Paint a small face (16 px icon, optionally the label right of it) into `rect`.

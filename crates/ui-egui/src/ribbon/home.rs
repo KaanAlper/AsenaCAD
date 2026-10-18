@@ -357,7 +357,9 @@ const PASTE: &[Entry] = &[
 
 const CLIPBOARD: Panel = Panel {
     label: "Clipboard",
-    items: &[large_split(None, PASTE), labeled(Icon::Cut, "Cut", "cutclip", 1), labeled(Icon::CopyClip, "Copy Clip", "copyclip", 2)],
+    // AutoCAD shows Cut and Copy Clip as icons only, even in a full-width ribbon; their labels
+    // are their accessible names and tooltips.
+    items: &[large_split(None, PASTE), icon(Icon::Cut, "Cut", "cutclip", 1), icon(Icon::CopyClip, "Copy Clip", "copyclip", 2)],
     slideout: &[],
     launcher: None,
 };
