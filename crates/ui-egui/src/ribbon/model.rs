@@ -282,6 +282,20 @@ mod tests {
         assert!(unused.is_empty(), "no ribbon item uses these, remove them from UNBUILT: {unused:?}");
     }
 
+    /// docs/ui-parity.md's "Ribbon items without a command" names exactly the `UNBUILT` ids, so
+    /// the doc and the list can't drift apart.
+    #[test]
+    fn ui_parity_doc_lists_exactly_the_unbuilt_ribbon_commands() {
+        const DOC: &str = include_str!("../../../../docs/ui-parity.md");
+        let section = DOC.split("### Ribbon items without a command").nth(1).expect("docs/ui-parity.md has the section");
+        let section = section.split("\n#").next().unwrap_or(section);
+        let mut listed: Vec<&str> = section.lines().filter(|l| l.starts_with("| `")).filter_map(|l| l.split('`').nth(1)).collect();
+        let mut unbuilt = UNBUILT.to_vec();
+        listed.sort_unstable();
+        unbuilt.sort_unstable();
+        assert_eq!(listed, unbuilt, "update docs/ui-parity.md's \"Ribbon items without a command\" table to match UNBUILT");
+    }
+
     #[test]
     fn the_tab_row_has_autocads_nine_tabs_in_order() {
         let labels: Vec<_> = tabs().iter().map(|t| t.label).collect();
