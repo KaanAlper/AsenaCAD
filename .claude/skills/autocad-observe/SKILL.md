@@ -5,16 +5,22 @@ description: Observe the reference Windows AutoCAD for one behaviour — run an 
 
 # Observe AutoCAD
 
-Reference: Autodesk AutoCAD 2026 (Windows) on the PC named by `$ASENACAD_REF` (its AsenaScale
-device name; the local value lives in `plan/STATUS.md`, together with the AutoCAD exe path).
-Clean-room rules apply: everything you capture stays in `plan/autocad/` and is never committed.
+Reference: Autodesk AutoCAD 2026 (Windows) on the PC named by `ASENACAD_REF`. Clean-room rules
+apply: everything you capture stays in `plan/autocad/` and is never committed. AutoCAD's title
+bar and InfoCenter may show the owner's Autodesk ID or file paths: notes never copy them.
 
-`asenascale exec|windows|shot` need an AsenaScale release with the PC-to-PC commands
-(KaanAlper/AsenaScale#2). If the `asenascale` on `PATH` is older, set `AS=/path/to/newer/asenascale`.
+Every block below runs from the repo root in a **fresh shell**, so each one starts by sourcing
+`plan/autocad/env.sh` (local, gitignored: `ASENACAD_REF`, `ACAD`, optionally `AS`; fields in
+AGENTS.md "Start every session here") and sets `NAME` itself. `asenascale exec` needs an
+AsenaScale release with the PC-to-PC commands (KaanAlper/AsenaScale#2); set `AS` in `env.sh` if
+the `asenascale` on `PATH` is older. `exec` runs Windows PowerShell 5.1 in the owner's desktop
+session; never sign in to AutoCAD and never change its settings persistently (no `LOGFILEPATH`,
+no options dialogs).
 
 ## 1. Write the script locally
 `plan/autocad/scripts/<area>-<what>.scr`, one behaviour only, starting with `LOGFILEON` and
-ending with `LOGFILEOFF` (see `.claude/rules/parity-method.md`). Example `draw-line-basic.scr`:
+ending with `LOGFILEOFF` (see `.claude/rules/parity-method.md`). A blank line is Enter; keep a
+newline at the end. Example `draw-line-basic.scr`:
 
 ```
 LOGFILEON
@@ -24,65 +30,127 @@ ZOOM E
 LOGFILEOFF
 ```
 
+```bash
+. plan/autocad/env.sh; AS=${AS:-asenascale}
+mkdir -p plan/autocad/{scripts,screenshots,logs,notes,uia}
+```
+
 ## 2. Copy it to Windows
+The file is sent as base64 with CRLF line ends, so trailing blank lines survive exactly.
 
 ```bash
-AS=${AS:-asenascale}
-REF=${ASENACAD_REF:?set ASENACAD_REF to the reference PC\'s AsenaScale device name (see plan/STATUS.md)}
+. plan/autocad/env.sh; AS=${AS:-asenascale}
 NAME=draw-line-basic
-"$AS" exec "$REF" -- "New-Item -ItemType Directory -Force C:\\AsenaCAD-obs | Out-Null; Set-Content -Encoding ASCII -Path C:\\AsenaCAD-obs\\$NAME.scr -Value @'
-$(cat plan/autocad/scripts/$NAME.scr)
-'@"
+B64=$(sed 's/\r$//; s/$/\r/' "plan/autocad/scripts/$NAME.scr" | base64 -w0)
+"$AS" exec "$ASENACAD_REF" -- "New-Item -ItemType Directory -Force C:\\AsenaCAD-obs | Out-Null; [IO.File]::WriteAllBytes('C:\\AsenaCAD-obs\\$NAME.scr', [Convert]::FromBase64String('$B64')); 'bytes on PC: ' + (Get-Item 'C:\\AsenaCAD-obs\\$NAME.scr').Length"
+echo "bytes local: $(sed 's/\r$//; s/$/\r/' "plan/autocad/scripts/$NAME.scr" | wc -c)"
 ```
+The two byte counts must be equal.
 
-## 3. Run AutoCAD on it
-Close any running AutoCAD first so the script starts clean, then start it with the script
-(`/b`) and set the log folder:
+## 3. Close AutoCAD
+The script must start in a fresh AutoCAD. Force-closing is allowed **only** when `plan/STATUS.md`
+has the exact line `Reference PC: disposable`. Otherwise AutoCAD is closed gracefully; if it is
+still running after 20 s (usually its unsaved-changes dialog), the block fails: stop and ask the
+owner, never click the dialog away yourself.
 
 ```bash
-ACAD='C:\Program Files\Autodesk\AutoCAD 2026\acad.exe'   # as in plan/STATUS.md
-"$AS" exec "$REF" -- "Get-Process acad -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Process -FilePath '$ACAD' -ArgumentList '/nologo','/b','C:\\AsenaCAD-obs\\$NAME.scr'"
+. plan/autocad/env.sh; AS=${AS:-asenascale}
+FORCE=0; grep -qx 'Reference PC: disposable' plan/STATUS.md && FORCE=1
+"$AS" exec "$ASENACAD_REF" -- "\$p = Get-Process acad -ErrorAction SilentlyContinue
+if (-not \$p) { 'AutoCAD not running'; exit 0 }
+if ($FORCE) { \$p | Stop-Process -Force; Start-Sleep 3; 'AutoCAD force-closed'; exit 0 }
+\$p | ForEach-Object { [void]\$_.CloseMainWindow() }
+for (\$i = 0; \$i -lt 20; \$i++) { Start-Sleep 1; if (-not (Get-Process acad -ErrorAction SilentlyContinue)) { 'AutoCAD closed'; exit 0 } }
+[Console]::Error.WriteLine('AutoCAD is still running after 20 s (unsaved-changes dialog?): ask the owner'); exit 4"
 ```
-`Start-Process` through `asenascale exec` opens AutoCAD in the user's desktop session. If a GUI
-program doesn't appear, check the session id of the process
-(`Get-Process acad | Select-Object Id,SessionId`): it must be the desktop session, not 0.
 
-Wait until the window exists (AutoCAD starts in 20–60 s):
+## 4. Start AutoCAD on the script and wait for it
+`Start-Process` through `exec` opens AutoCAD in the owner's desktop session (`/b` runs the
+script after start-up). The block waits up to 120 s for AutoCAD's main window, then lists
+AutoCAD's own visible top-level windows (never the owner's other windows).
 
 ```bash
-for i in $(seq 1 30); do "$AS" windows "$REF" | grep -qi 'autocad' && break; sleep 3; done
-"$AS" windows "$REF" | grep -i autocad
+. plan/autocad/env.sh; AS=${AS:-asenascale}
+NAME=draw-line-basic
+"$AS" exec "$ASENACAD_REF" -- "Start-Process -FilePath '$ACAD' -ArgumentList '/nologo','/b','C:\\AsenaCAD-obs\\$NAME.scr'
+for (\$i = 0; \$i -lt 60; \$i++) { \$p = Get-Process acad -ErrorAction SilentlyContinue | Where-Object { \$_.MainWindowHandle -ne 0 } | Select-Object -First 1; if (\$p) { break }; Start-Sleep 2 }
+if (-not \$p) { [Console]::Error.WriteLine('AutoCAD has no main window after 120 s'); exit 5 }
+'AutoCAD up: session ' + \$p.SessionId
+Add-Type @'
+using System; using System.Text; using System.Collections.Generic; using System.Runtime.InteropServices;
+public static class AcadWins {
+  delegate bool Cb(IntPtr h, IntPtr l);
+  [DllImport(\"user32.dll\")] static extern bool EnumWindows(Cb cb, IntPtr l);
+  [DllImport(\"user32.dll\")] static extern bool IsWindowVisible(IntPtr h);
+  [DllImport(\"user32.dll\")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+  [DllImport(\"user32.dll\", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr h, StringBuilder s, int n);
+  public static List<string> Of(uint pid) {
+    var r = new List<string>();
+    EnumWindows((h, l) => { uint p; GetWindowThreadProcessId(h, out p); if (p == pid && IsWindowVisible(h)) { var s = new StringBuilder(256); GetWindowText(h, s, 256); r.Add(s.ToString()); } return true; }, IntPtr.Zero);
+    return r;
+  }
+}
+'@
+Start-Sleep 5
+'AutoCAD windows:'; [AcadWins]::Of([uint32]\$p.Id) | Where-Object { \$_ } | ForEach-Object { '  ' + \$_ }"
 ```
+If the session is 0 instead of the desktop session, the GUI is not visible: stop and tell the
+owner. Expect the main window ("Autodesk AutoCAD 2026 - [Drawing1.dwg]") and possibly the
+floating command line. A force-close can bring up **Drawing Recovery** (a recovery palette or
+dialog) at the next start: if any other AutoCAD window is listed, take a screenshot (step 6),
+look at it, and if a dialog blocks the script, close AutoCAD again (step 3) and restart; tell the
+owner if it keeps coming back.
 
-## 4. Capture
-Screenshots of AutoCAD are taken **only** with `tools/autocad/shot-acad.sh`: it finds AutoCAD's
-window on whichever monitor it is, shoots that monitor, crops to AutoCAD's window (keeping its
-floating command line) and deletes the uncropped image. Never call `asenascale shot` directly:
-the owner's private windows are on the other monitors.
+## 5. Command log
+With `LOGFILEPATH` unset (as on the reference PC), `LOGFILEON` writes to
+`%LOCALAPPDATA%\Autodesk\AutoCAD 2026\R25.1\enu\<Drawing>_<n><hash>.log` (e.g.
+`Drawing1_1_xxxxxxxx.log`). The block takes the newest `Drawing*.log` in **that folder only**
+written after AutoCAD started, and waits (up to 120 s) until it contains `LOGFILEOFF`, i.e. the
+script has finished. Never set `LOGFILEPATH` (it is a persistent profile setting); for another
+AutoCAD release adjust the `R25.1\enu` folder.
 
 ```bash
-tools/autocad/shot-acad.sh plan/autocad/screenshots/$NAME-1.png
+. plan/autocad/env.sh; AS=${AS:-asenascale}
+NAME=draw-line-basic
+"$AS" exec "$ASENACAD_REF" -- "\$dir = Join-Path \$env:LOCALAPPDATA 'Autodesk\\AutoCAD 2026\\R25.1\\enu'
+\$p = Get-Process acad -ErrorAction SilentlyContinue | Where-Object { \$_.MainWindowHandle -ne 0 } | Select-Object -First 1
+if (-not \$p) { [Console]::Error.WriteLine('AutoCAD is not running'); exit 5 }
+for (\$i = 0; \$i -lt 60; \$i++) {
+  \$log = Get-ChildItem -Path \$dir -Filter 'Drawing*.log' -File -ErrorAction SilentlyContinue | Where-Object { \$_.LastWriteTime -gt \$p.StartTime } | Sort-Object LastWriteTime | Select-Object -Last 1
+  if (\$log -and (Select-String -Path \$log.FullName -Pattern 'LOGFILEOFF' -SimpleMatch -Quiet)) { Get-Content -Path \$log.FullName; exit 0 }
+  Start-Sleep 2 }
+[Console]::Error.WriteLine('no finished command log after 120 s (script still running, or no LOGFILEON/LOGFILEOFF?)'); exit 6" | tr -d '\r' > "plan/autocad/logs/$NAME.log"
+cat "plan/autocad/logs/$NAME.log"
 ```
-Read the PNG to confirm it shows the end state (AutoCAD may still be running the script; if so,
-wait and shoot again as `-2`, `-3`).
 
-Command log: AutoCAD writes it to the folder in its `LOGFILEPATH` system variable.
+## 6. Screenshot
+Screenshots of AutoCAD are taken **only** with `tools/autocad/shot-acad.sh`: it crops to
+AutoCAD's main window on the PC, so no other pixel of the owner's screens leaves it. Never call
+`asenascale shot` yourself.
 
 ```bash
-"$AS" exec "$REF" -- "\$p = (Get-ItemProperty 'HKCU:\\Software\\Autodesk\\AutoCAD\\*\\*\\Profiles\\*\\General' -ErrorAction SilentlyContinue | Select-Object -First 1 -Expand LogFilePath); if (-not \$p) { \$p = \"\$env:LOCALAPPDATA\\Autodesk\" }; Get-ChildItem -Recurse -Filter *.log \$p | Sort-Object LastWriteTime | Select-Object -Last 1 | Get-Content" > plan/autocad/logs/$NAME.log
+. plan/autocad/env.sh; AS=${AS:-asenascale}
+NAME=draw-line-basic
+AS=$AS tools/autocad/shot-acad.sh "plan/autocad/screenshots/$NAME-1.png"
 ```
-If the log is empty, add `LOGFILEPATH` + `C:\AsenaCAD-obs\` as the script's first two lines and
-rerun step 3, then read `C:\AsenaCAD-obs\*.log` instead.
+Read the PNG. If anything that isn't AutoCAD's is visible (a notification or another window on
+top), delete it and reshoot. If AutoCAD hasn't reached the end state yet, shoot again as `-2`,
+`-3`.
 
-## 5. UI structure (optional)
+## 7. UI structure (optional)
 For UI work, dump the UI Automation tree of AutoCAD's main window (control type, name,
-AutomationId, class, rectangle; default depth 12, add `-MaxDepth N` after the `}` to change it):
+AutomationId, class, rectangle). The default depth is 12, which walks the whole ribbon and takes
+a minute or more; add `-MaxDepth N` after the `}` for a quicker, shallower dump.
 
 ```bash
-"$AS" exec "$REF" -- "& { $(cat tools/autocad/uia-dump.ps1) }" > plan/autocad/uia/$NAME.tsv
+. plan/autocad/env.sh; AS=${AS:-asenascale}
+NAME=draw-line-basic
+"$AS" exec "$ASENACAD_REF" -- "& { $(cat tools/autocad/uia-dump.ps1) } -MaxDepth 6" | tr -d '\r' > "plan/autocad/uia/$NAME.tsv"
+wc -l "plan/autocad/uia/$NAME.tsv"
 ```
 
-## 6. Write the note
+## 8. Write the note
 Append to `plan/autocad/notes/<area>.md`: the command, every prompt line in order, option
 keywords (with their capitalised abbreviations), defaults shown in `<…>`, what the screenshot
-shows. This note — not the screenshot — is what you build from.
+shows. This note — not the screenshot — is what you build from. Never copy the owner's Autodesk
+ID, user name or file paths into it.

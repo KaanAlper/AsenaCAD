@@ -8,7 +8,7 @@ description: Rebuild one Windows AutoCAD UI element (ribbon tab/panel, Applicati
 Target: Autodesk AutoCAD 2026 (Windows).
 
 1. **Observe** (`autocad-observe`): screenshots of the element in its default state and in each
-   state you will build (hover/open/disabled), plus a UI Automation dump (its step 5) for the
+   state you will build (hover/open/disabled), plus a UI Automation dump (its step 7) for the
    element's structure. Write in `plan/autocad/notes/ui-<element>.md`:
    the element's children in order, each child's label, control type (button, split button,
    drop-down, toggle, text field), which command it runs, size class (large/small button),
