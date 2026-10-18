@@ -90,8 +90,8 @@ const PALETTES: Panel = Panel {
         large_toggle(Icon::ToolPalettes, "Tool Palettes", "toolpalettes", Toggle::NotBuilt),
         large_toggle(Icon::Properties, "Properties", "properties", Toggle::PropertiesPalette),
         large_toggle(Icon::Blocks, "Blocks", "ui.dialog.blocks", Toggle::BlocksPalette),
-        // COUNTLIST reports the counts on the command line; there is no Count palette yet.
-        large_toggle(Icon::CountPalette, "Count", "countlist", Toggle::NotBuilt),
+        // COUNT asks for an object and counts its kind; there is no Count palette yet.
+        large_toggle(Icon::CountPalette, "Count", "count", Toggle::NotBuilt),
         large_toggle(Icon::CommandMacros, "Command Macros", "commandmacros", Toggle::NotBuilt),
         large_toggle(Icon::SheetSet, "Sheet Set Manager", "sheetset", Toggle::NotBuilt),
         toggle(Icon::CommandLine, "Command Line", "ui.toggle.cmdline", SMALL, 1, Toggle::CommandLine),

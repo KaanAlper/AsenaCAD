@@ -42,6 +42,12 @@ pub const UI_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
     // AutoCAD's COMMANDLINE and COMMANDLINEHIDE (the command line's ×).
     ("commandline", "Command Line", &[], None),
     ("commandlinehide", "Hide Command Line", &[], None),
+    // AutoCAD's commands that close a palette (a pressed palette toggle on the ribbon runs them).
+    ("propertiesclose", "Close Properties", &[], None),
+    ("layerclose", "Close Layer Properties Manager", &[], None),
+    ("qcclose", "Close QuickCalc", &[], None),
+    ("externalreferencesclose", "Close External References", &[], None),
+    ("blockspaletteclose", "Close Blocks Palette", &[], None),
     // NAVBAR: the navigation bar on or off (`{on?: bool}`; its ⊗ turns it off).
     ("navbar", "Navigation Bar", &[], None),
     // The status bar's Customization menu: `{item, on?}` shows or hides one item.
@@ -404,6 +410,21 @@ fn run_ui_command_inner(app: &mut CadApp, id: &str, params: &Value) -> Option<Re
         }
         "parameters" | "par" if params.is_null() => {
             app.ui.dialog = Some("parameters".into());
+            Ok(Value::Null)
+        }
+        "propertiesclose" | "qcclose" | "externalreferencesclose" => {
+            let panel = match id {
+                "propertiesclose" => "properties",
+                "qcclose" => "quickCalc",
+                _ => "externalReferences",
+            };
+            crate::docking::command(app, false, &json!({ "operation": "close", "panel": panel }))
+        }
+        "layerclose" | "blockspaletteclose" => {
+            let dialog = if id == "layerclose" { "layers" } else { "blocks" };
+            if app.ui.dialog.as_deref() == Some(dialog) {
+                app.ui.dialog = None;
+            }
             Ok(Value::Null)
         }
         "parametersclose" if params.is_null() => {

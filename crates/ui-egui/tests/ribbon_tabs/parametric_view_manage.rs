@@ -133,7 +133,7 @@ fn view_matches_autocad() {
                     tg("Tool Palettes", "large", 0, "toolpalettes"),
                     tg("Properties", "large", 0, "properties"),
                     tg("Blocks", "large", 0, "ui.dialog.blocks"),
-                    tg("Count", "large", 0, "countlist"),
+                    tg("Count", "large", 0, "count"),
                     tg("Command Macros", "large", 0, "commandmacros"),
                     tg("Sheet Set Manager", "large", 0, "sheetset"),
                     tg("Command Line", "small", 1, "ui.toggle.cmdline"),

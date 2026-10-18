@@ -170,6 +170,35 @@ pub enum Toggle {
     NotBuilt,
 }
 
+impl Toggle {
+    /// The command a pressed toggle runs instead of its own: AutoCAD's command that closes the
+    /// palette (a palette toggle closes its palette when clicked again). `None`: the toggle's
+    /// command flips the state itself.
+    pub const fn close_command(self) -> Option<&'static str> {
+        match self {
+            Self::LayerPalette => Some("layerclose"),
+            Self::QuickCalcPalette => Some("qcclose"),
+            Self::ParametersPalette => Some("parametersclose"),
+            Self::PropertiesPalette => Some("propertiesclose"),
+            Self::BlocksPalette => Some("blockspaletteclose"),
+            Self::XrefPalette => Some("externalreferencesclose"),
+            Self::LockedLayerFade
+            | Self::GroupSelection
+            | Self::GroupBox
+            | Self::XrefFade
+            | Self::DynamicConstraints
+            | Self::AnnotationalConstraints
+            | Self::UcsIcon
+            | Self::ViewCube
+            | Self::NavBar
+            | Self::CommandLine
+            | Self::FileTabs
+            | Self::LayoutTabs
+            | Self::NotBuilt => None,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum Item {
     Button {

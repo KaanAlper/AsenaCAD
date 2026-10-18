@@ -231,12 +231,31 @@ pub fn small_button(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd:
 }
 
 /// A button that shows pressed while `state` is on. Clicking runs `cmd` without parameters,
-/// which flips the state (opens the palette, toggles PICKSTYLE, …).
+/// which flips the state (opens the palette, toggles PICKSTYLE, …); a toggle with no state yet
+/// starts its command like a button (COUNT). Clicking a pressed palette toggle runs the palette's
+/// close command instead.
 pub fn toggle(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd: &str, size: Size, state: Toggle) -> Response {
     let on = is_on(app, state);
-    plain_button(ui, app, icon, label, cmd, size, Some(on))
+    let resp = plain_button(ui, app, icon, label, cmd, size, Some(on));
+    if resp.clicked() {
+        app.cmd.buffer.clear();
+        match state.close_command().filter(|_| on) {
+            // Errors are echoed to the command history by `run`.
+            Some(close) => {
+                let _ = app.run(close, serde_json::Value::Null);
+            }
+            // No state to flip (COUNT, with no Count palette yet): start it like a button.
+            None if state == Toggle::NotBuilt => start(app, cmd),
+            None => {
+                let _ = app.run(cmd, serde_json::Value::Null);
+            }
+        }
+    }
+    resp
 }
 
+/// Draws a button; a plain one (`on: None`) starts `cmd` when clicked, a toggle's click is
+/// handled by [`toggle`].
 fn plain_button(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd: &str, size: Size, on: Option<bool>) -> Response {
     let why = availability(ui, app, cmd);
     let enabled = why.is_ready();
@@ -254,15 +273,8 @@ fn plain_button(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd: &st
     }
     icons::describe_control(ui, &resp, label, on, false);
     let resp = tooltips(resp, shown, &why);
-    if resp.clicked() {
-        match on {
-            Some(_) => {
-                app.cmd.buffer.clear();
-                // Errors are echoed to the command history by `run`.
-                let _ = app.run(cmd, serde_json::Value::Null);
-            }
-            None => start(app, cmd),
-        }
+    if resp.clicked() && on.is_none() {
+        start(app, cmd);
     }
     resp
 }

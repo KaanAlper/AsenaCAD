@@ -69,7 +69,7 @@ fn convert_and_the_constraint_modes_are_disabled_and_dynamic_mode_is_on() {
 }
 
 #[test]
-fn the_parameters_manager_toggle_opens_the_manager_and_shows_pressed() {
+fn the_parameters_manager_toggle_opens_and_closes_the_manager() {
     let mut h = harness("Manage");
     let toggled = |h: &Harness<'_, CadApp>| h.get_by_label("Parameters Manager").accesskit_node().toggled();
     assert_eq!(toggled(&h), Some(Toggled::False));
@@ -77,6 +77,11 @@ fn the_parameters_manager_toggle_opens_the_manager_and_shows_pressed() {
     h.run_steps(3);
     assert_eq!(h.state().ui.dialog.as_deref(), Some("parameters"));
     assert_eq!(toggled(&h), Some(Toggled::True));
+    // Pressed, it closes the manager (PARAMETERSCLOSE).
+    h.get_by_label("Parameters Manager").click();
+    h.run_steps(3);
+    assert_eq!(h.state().ui.dialog, None);
+    assert_eq!(toggled(&h), Some(Toggled::False));
 }
 
 #[test]

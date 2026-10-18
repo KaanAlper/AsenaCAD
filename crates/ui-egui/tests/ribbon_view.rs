@@ -116,3 +116,28 @@ fn the_named_views_list_shows_unsaved_view_and_lists_the_drawings_views() {
     assert!(!h.get_by_label("View Manager").accesskit_node().is_disabled());
     assert!(h.get_by_label("New View").accesskit_node().is_disabled(), "NEWVIEW has no command yet");
 }
+
+#[test]
+fn a_pressed_palette_toggle_closes_its_palette() {
+    for label in ["Properties", "Blocks", "External References", "Layer Properties", "Quick Calculator"] {
+        let mut h = harness("Palettes");
+        h.get_by_label(label).click();
+        h.run_steps(3);
+        assert_eq!(toggled(&h, label), Some(Toggled::True), "{label} opens");
+        h.get_by_label(label).click();
+        h.run_steps(3);
+        assert_eq!(toggled(&h, label), Some(Toggled::False), "{label}: a second click closes it");
+        let ui = &h.state().ui;
+        let open =
+            ui.dialog.is_some() || [Palette::Properties, Palette::ExternalRefs, Palette::QuickCalc].iter().any(|p| ui.docking.layout.contains(p));
+        assert!(!open, "{label}: the palette is closed");
+    }
+}
+
+#[test]
+fn count_starts_count() {
+    let mut h = harness("Palettes");
+    h.get_by_label("Count").click();
+    h.run_steps(3);
+    assert_eq!(h.state().session.running.as_ref().map(|r| r.id.as_str()), Some("count"));
+}
