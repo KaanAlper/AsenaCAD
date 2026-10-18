@@ -44,15 +44,16 @@ yasak, `unsafe` yasak, `catch_unwind` koruması), clean-room, "her şey bir komu
 
 ## 3. Agent yapısı
 
-ArtCraft deseni: tek kaynak `AGENTS.md`, yanında ona symlink `CLAUDE.md`; konu başlıklı kurallar
-`.claude/rules/` altında. storytold'un public repolarında skill/agent yok (onların düzeneği private
+ArtCraft deseni: tek kaynak `AGENTS.md`, yanında yalnızca `@AGENTS.md` içeren `CLAUDE.md` (Claude
+Code bu satırla AGENTS.md'yi içe aktarır; symlink Windows checkout'larında çalışmadığı için düz
+dosya); konu başlıklı kurallar `.claude/rules/` altında. storytold'un public repolarında skill/agent yok (onların düzeneği private
 `craftrules` ve gitignore'daki `plan/` içinde), bu yüzden bunları biz yazarız.
 
 ```
 AsenaCAD/
 ├── AGENTS.md                  CADCraft'ınkinden uyarlanır: never-crash, clean-room, komut, katman, gözlem
-├── CLAUDE.md → AGENTS.md      symlink
-├── crates/<crate>/AGENTS.md   varsa, yanına CLAUDE.md symlink'i
+├── CLAUDE.md                  tek satır: @AGENTS.md
+├── crates/<crate>/AGENTS.md   varsa, yanına @AGENTS.md içeren CLAUDE.md
 ├── .claude/
 │   ├── rules/
 │   │   ├── parity-method.md   AutoCAD gözlem ve karşılaştırma kuralları
@@ -89,7 +90,8 @@ Her iş aynı döngüyle yapılır ve sonucu ölçülür:
 
 ### Windows'a erişim: AsenaScale
 
-Referans makine: `asenascale-desktop-ut7ksaf-1` (tailnet 100.81.202.50). AsenaScale host'unda SSH
+Referans makine: sahibin Windows PC'si (AsenaScale cihaz adı yerel `plan/autocad/env.sh` içinde,
+repoya yazılmaz). AsenaScale host'unda SSH
 `exec` ve `mc shot` (ekran görüntüsü) zaten var, ama sadece telefon istemcisi kullanıyor. M0'da
 AsenaScale'in Linux CLI'ına iki komut eklenir:
 
