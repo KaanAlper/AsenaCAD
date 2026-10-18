@@ -1,0 +1,73 @@
+//! The Express Tools ribbon's controls: the Express Tools commands AsenaCAD has (NCOPY, FLATTEN,
+//! ALIASEDIT) are enabled and start, the others are disabled, and the Modify Text, Annotation
+//! Attachment and URL Options splits keep their face's label and are disabled.
+
+use cadcraft_engine::Session;
+use cadcraft_ui_egui::ribbon::express::EXPRESS;
+use cadcraft_ui_egui::ribbon::model::Panel;
+use cadcraft_ui_egui::ribbon::render_panel_for_test;
+use cadcraft_ui_egui::{CadApp, Services};
+use egui::accesskit::Role;
+use egui::vec2;
+use egui_kittest::Harness;
+use egui_kittest::kittest::{NodeT, Queryable};
+
+fn harness(label: &str) -> Harness<'static, CadApp> {
+    let panel: &'static Panel = EXPRESS.panels.iter().find(|p| p.label == label).expect("an Express Tools panel");
+    let app = CadApp::new(Session::default(), Services::default());
+    let mut harness = Harness::builder()
+        .with_size(vec2(900.0, 420.0))
+        .build_ui_state(move |ui, app: &mut CadApp| render_panel_for_test(ui, app, &EXPRESS, panel), app);
+    harness.run_steps(3);
+    harness
+}
+
+fn disabled(h: &Harness<'_, CadApp>, label: &str) -> bool {
+    h.get_by_label(label).accesskit_node().is_disabled()
+}
+
+fn running(h: &Harness<'_, CadApp>) -> Option<String> {
+    h.state().session.running.as_ref().map(|r| r.id.clone())
+}
+
+#[test]
+fn copy_nested_objects_and_flatten_start_their_commands() {
+    for (panel, label, cmd) in [("Blocks", "Copy Nested Objects", "ncopy"), ("Modify", "Flatten objects", "flatten")] {
+        let mut h = harness(panel);
+        h.get_by_label(label).click();
+        h.run_steps(3);
+        assert_eq!(running(&h).as_deref(), Some(cmd), "{label}");
+    }
+    assert!(!disabled(&harness("Tools"), "Command Aliases"), "ALIASEDIT exists");
+}
+
+#[test]
+fn express_tools_without_a_command_are_disabled() {
+    for (panel, labels) in [
+        (
+            "Blocks",
+            &["Explode Attributes", "Replace Block", "List Properties", "Import Attributes", "Export Attributes", "Convert block to xref"][..],
+        ),
+        ("Text", &["Arc Aligned", "Convert to Mtext", "Auto Number", "Enclose in Object", "Remote Text", "Text Mask", "Unmask Text"][..]),
+        ("Modify", &["Move/Copy/Rotate", "Stretch Multiple", "Extended Clip", "Extended Offset", "Convert Shape to Block"][..]),
+        ("Layout", &["Align Space", "Synchronize Viewports", "Merge Layout", "List Viewport Scale"][..]),
+        ("Draw", &["Break-line Symbol", "Super Hatch"][..]),
+        ("Dimension", &["Reset Text", "Import Style", "Export Style"][..]),
+        ("Tools", &["Attach Xdata", "List Xdata", "System Variables", "Extended Plan", "Make Linetype", "Make Shape"][..]),
+    ] {
+        let h = harness(panel);
+        for label in labels {
+            assert!(disabled(&h, label), "{panel} ▸ {label} has no command yet");
+        }
+    }
+}
+
+#[test]
+fn the_splits_keep_a_fixed_face_and_are_disabled_while_no_entry_has_a_command() {
+    // Their entries (in AutoCAD's order) are checked by the ribbon_tabs spec test.
+    for (panel, face) in [("Text", "Modify Text"), ("Dimension", "Annotation Attachment"), ("Web", "URL Options")] {
+        let h = harness(panel);
+        assert!(h.get_by_role_and_label(Role::Button, face).accesskit_node().is_disabled(), "{face}: its first entry has no command");
+        assert!(disabled(&h, &format!("{face} options")), "{face}: no entry of its list has a command yet");
+    }
+}

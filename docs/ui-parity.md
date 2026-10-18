@@ -15,7 +15,7 @@ ignored; there are no context menus. Remaining: **≈ 110–170 Opus 5.5 hours**
 
 ## Windows AutoCAD 2026 baseline
 
-> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** minor (the Insert, Annotate, Parametric, View, Manage, Output and Collaborate tabs) · **Target:** Autodesk AutoCAD 2026 (Windows)
+> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** minor (the Insert, Annotate, Parametric, View, Manage, Output, Collaborate and Express Tools tabs) · **Target:** Autodesk AutoCAD 2026 (Windows)
 
 The rest of this doc still measures against AutoCAD 2027 for Mac; this section is the first part
 re-measured against the Windows target (milestone M1a: title row, ribbon, document tabs and the
@@ -41,7 +41,7 @@ panels and a screenshot of each tab at 1906 px (layout and labels only).
 | Title row: Quick Access Toolbar | ✅ | New, Open, Save, Save As, two Web & Mobile buttons, Plot, Undo and Redo split buttons, Customize ▾, Share; the Customize list has 17 commands, More Commands, Show Menu Bar, Show Below the Ribbon | Same buttons in the same order without the Autodesk online ones ([below](#intentionally-absent-autodesk-online-services)); same Customize list and options |
 | Title row: title | ✅ | Product and drawing name, centred | "AsenaCAD  <drawing>.dwg", centred; it slides or is cut short to stay between the toolbar and the InfoCenter |
 | Title row: InfoCenter | ✅ | Hide-search ▸, search box, Search, Sign In ▾, App Store, Stay Connected ▾, Help split | Hide-search ▸, search box with the same placeholder, Search, Help split; the online items are left out on purpose. Search starts a command whose name or alias is typed, else opens our Command Reference (AutoCAD searches its online help) |
-| Ribbon tab row | ◐ | Home, Insert, Annotate, Parametric, View, Manage, Output, Collaborate, Express Tools; then the minimize button (cycles Full, Panel Buttons, Panel Titles, Tabs) and its ▾ menu | Same nine tabs in order and the same minimize button and menu. Home, Insert, Annotate, Parametric, View and Manage have their panels; the other tabs show a "not built yet" note until M1b fills them |
+| Ribbon tab row | ◐ | Home, Insert, Annotate, Parametric, View, Manage, Output, Collaborate, Express Tools; then the minimize button (cycles Full, Panel Buttons, Panel Titles, Tabs) and its ▾ menu | Same nine tabs in order and the same minimize button and menu. Every tab has its panels |
 | Home ▸ Draw | ✅ | Line, Polyline, Circle ▾, Arc ▾ (large); Rectangle ▾, Ellipse ▾ (its face reads "Center"), Hatch ▾ (small, icons only); 13-item slide-out ending with Revision Cloud ▾ | Same items, sizes, rows, list entries and separators; every item runs its command |
 | Home ▸ Modify | ◐ | Move/Copy/Stretch, Rotate/Mirror/Scale, Trim ▾/Fillet ▾/Array ▾ with labels, Erase/Explode/Offset as icons; 15-item slide-out ending with the draw-order split | Same layout and lists; Set to ByLayer has no command yet, so it is disabled |
 | Home ▸ Annotation | ◐ | Text ▾ and Dimension (large); Linear ▾, Leader ▾, Table (small, labelled); slide-out of four style buttons, each with its style list | Same items, lists and four-row slide-out; the style lists set the current style. Dimension starts our DIM, which makes only linear dimensions (AutoCAD's DIM picks the kind from the object under the cursor) |
@@ -88,6 +88,14 @@ panels and a screenshot of each tab at 1906 px (layout and labels only).
 | Collaborate ▸ Autodesk Docs | ◐ | Push to Autodesk Docs (large toggle) | Same toggle, disabled: it needs Autodesk Docs |
 | Collaborate ▸ Traces | ◐ | Traces Palette (large toggle), Markup Import (large) | Same items, disabled: both need Autodesk's online services |
 | Collaborate ▸ Compare | ✅ | DWG Compare (large) | Same button; it runs COMPARE |
+| Express Tools ▸ Blocks | ◐ | Explode Attributes, Replace Block (large); List Properties, Import Attributes, Export Attributes; slide-out with Convert block to xref, Copy Nested Objects, Extend to Nested Objects, Trim to Nested Objects | Same layout and slide-out; Copy Nested Objects runs NCOPY, the other eight have no command yet |
+| Express Tools ▸ Text | ◐ | Arc Aligned, Modify Text ▾ (Explode, Change Case, Rotate, Fit, Justify) (large); Convert to Mtext, Auto Number, Enclose in Object; slide-out with Remote Text, Text Mask, Unmask Text | Same layout, list and slide-out; none of the tools has a command yet, so Modify Text and its ▾ are disabled |
+| Express Tools ▸ Modify | ◐ | Move/Copy/Rotate, Stretch Multiple, centred in the panel's height; slide-out with Flatten objects, Extended Clip, Extended Offset, Convert Shape to Block | Same items and slide-out, but the two tools sit in the first two rows instead of centred; Flatten objects runs FLATTEN, the other five have no command yet |
+| Express Tools ▸ Layout | ◐ | Align Space, Synchronize Viewports, Merge Layout; slide-out with List Viewport Scale | Same layout and slide-out; none of the four has a command yet |
+| Express Tools ▸ Draw | ◐ | Break-line Symbol, Super Hatch (large) | Same buttons, disabled: neither has a command yet |
+| Express Tools ▸ Dimension | ◐ | Annotation Attachment ▾ (Attach Leader to Annotation, Global Attach Leader to Annotation, Detach Leaders from Annotation) (large); Reset Text, Import Style, Export Style | Same layout and list; none of the tools has a command yet |
+| Express Tools ▸ Tools | ◐ | Command Aliases (large); Attach Xdata, List Xdata, System Variables; slide-out with Extended Plan, Make Linetype, Make Shape | Same layout and slide-out; Command Aliases runs ALIASEDIT, the other six have no command yet |
+| Express Tools ▸ Web | ◐ | URL Options ▾ (large) | Same split; its list wasn't captured, so it lists the Express Tools' Show URLs, Change URLs and Find and Replace URLs, none of which has a command yet |
 | Ribbon collapse | ✅ | At 1906 px every Home panel is full. At 1280 px Modify, Annotation, Layers and Block drop their small items' labels, and Properties, Groups, Utilities, Clipboard and View become panel buttons (icon, name on one line, ▾) that open the panel below them | Same panels shrink and collapse at both widths, at any display scale. Narrower windows collapse more panels from the right. A panel button never breaks a word of its name: it gets wider when a word doesn't fit (Annotation in a 900-point window) |
 | Document tab bar | ✅ | File-tabs menu ≡, Start (no close button), drawing tabs with × and a * while unsaved, + | Same controls in the same order |
 | Viewport controls | ✅ | [−][Top][2D Wireframe] menus at the top left; minimize, restore and close at the top right | Same controls and places |
@@ -159,7 +167,7 @@ differ.
 | `dgnimport` | Insert ▸ Import ▸ PDF Import ▸ DGN Import |
 | `pdfshxtext` | Insert ▸ Import ▸ Recognize SHX Text |
 | `pdfshxtext.settings` | Insert ▸ Import ▸ Recognition Settings |
-| `txt2mtxt` | Insert ▸ Import ▸ Combine Text |
+| `txt2mtxt` | Insert ▸ Import ▸ Combine Text; Express Tools ▸ Text ▸ Convert to Mtext |
 | `field` | Insert ▸ Data ▸ Field |
 | `updatefield` | Insert ▸ Data ▸ Update Fields |
 | `insertobj` | Insert ▸ Data ▸ OLE Object |
@@ -170,7 +178,7 @@ differ.
 | `geographiclocation.bing` | Insert ▸ Location ▸ Set Location ▸ From Bing Maps (an online map service) |
 | `spell` | Annotate ▸ Text ▸ Check Spelling |
 | `textalign` | Annotate ▸ Text ▸ Text Align |
-| `justifytext` | Annotate ▸ Text ▸ Justify |
+| `justifytext` | Annotate ▸ Text ▸ Justify; Express Tools ▸ Text ▸ Modify Text ▸ Justify |
 | `scaletext` | Annotate ▸ Text ▸ Scale (slide-out) |
 | `dcconvert` | Parametric ▸ Dimensional ▸ Convert |
 | `cconstraintform.dynamic` | Parametric ▸ Dimensional ▸ Dynamic Constraint Mode (toggle, slide-out; sets CCONSTRAINTFORM to 0) |
@@ -239,6 +247,50 @@ differ.
 | `pushtodocsopen` | Collaborate ▸ Autodesk Docs ▸ Push to Autodesk Docs (Autodesk online service) |
 | `tracepaletteopen` | Collaborate ▸ Traces ▸ Traces Palette (Autodesk online service) |
 | `markupimport` | Collaborate ▸ Traces ▸ Markup Import (Autodesk online service) |
+| `burst` | Express Tools ▸ Blocks ▸ Explode Attributes (explodes blocks, keeping attribute values as text) |
+| `blockreplace` | Express Tools ▸ Blocks ▸ Replace Block |
+| `xlist` | Express Tools ▸ Blocks ▸ List Properties (of a nested object) |
+| `attin` | Express Tools ▸ Blocks ▸ Import Attributes |
+| `attout` | Express Tools ▸ Blocks ▸ Export Attributes |
+| `blocktoxref` | Express Tools ▸ Blocks ▸ Convert block to xref (slide-out) |
+| `bextend` | Express Tools ▸ Blocks ▸ Extend to Nested Objects (slide-out) |
+| `btrim` | Express Tools ▸ Blocks ▸ Trim to Nested Objects (slide-out) |
+| `arctext` | Express Tools ▸ Text ▸ Arc Aligned |
+| `txtexp` | Express Tools ▸ Text ▸ Modify Text ▸ Explode |
+| `tcase` | Express Tools ▸ Text ▸ Modify Text ▸ Change Case |
+| `torient` | Express Tools ▸ Text ▸ Modify Text ▸ Rotate |
+| `textfit` | Express Tools ▸ Text ▸ Modify Text ▸ Fit |
+| `tcount` | Express Tools ▸ Text ▸ Auto Number |
+| `tcircle` | Express Tools ▸ Text ▸ Enclose in Object |
+| `rtext` | Express Tools ▸ Text ▸ Remote Text (slide-out) |
+| `textmask` | Express Tools ▸ Text ▸ Text Mask (slide-out) |
+| `textunmask` | Express Tools ▸ Text ▸ Unmask Text (slide-out) |
+| `mocoro` | Express Tools ▸ Modify ▸ Move/Copy/Rotate |
+| `mstretch` | Express Tools ▸ Modify ▸ Stretch Multiple |
+| `clipit` | Express Tools ▸ Modify ▸ Extended Clip (slide-out) |
+| `exoffset` | Express Tools ▸ Modify ▸ Extended Offset (slide-out) |
+| `shp2blk` | Express Tools ▸ Modify ▸ Convert Shape to Block (slide-out) |
+| `alignspace` | Express Tools ▸ Layout ▸ Align Space |
+| `vpsync` | Express Tools ▸ Layout ▸ Synchronize Viewports |
+| `layoutmerge` | Express Tools ▸ Layout ▸ Merge Layout |
+| `vpscale` | Express Tools ▸ Layout ▸ List Viewport Scale (slide-out) |
+| `breakline` | Express Tools ▸ Draw ▸ Break-line Symbol |
+| `superhatch` | Express Tools ▸ Draw ▸ Super Hatch |
+| `qlattach` | Express Tools ▸ Dimension ▸ Annotation Attachment ▸ Attach Leader to Annotation |
+| `qlattachset` | Express Tools ▸ Dimension ▸ Annotation Attachment ▸ Global Attach Leader to Annotation |
+| `qldetachset` | Express Tools ▸ Dimension ▸ Annotation Attachment ▸ Detach Leaders from Annotation |
+| `dimreassoc` | Express Tools ▸ Dimension ▸ Reset Text (puts back the measured value of overridden dimension text) |
+| `dimim` | Express Tools ▸ Dimension ▸ Import Style |
+| `dimex` | Express Tools ▸ Dimension ▸ Export Style |
+| `xdata` | Express Tools ▸ Tools ▸ Attach Xdata |
+| `xdlist` | Express Tools ▸ Tools ▸ List Xdata |
+| `sysvdlg` | Express Tools ▸ Tools ▸ System Variables (the system variable editor) |
+| `explan` | Express Tools ▸ Tools ▸ Extended Plan (slide-out) |
+| `mkltype` | Express Tools ▸ Tools ▸ Make Linetype (slide-out) |
+| `mkshape` | Express Tools ▸ Tools ▸ Make Shape (slide-out) |
+| `showurls` | Express Tools ▸ Web ▸ URL Options ▸ Show URLs |
+| `churls` | Express Tools ▸ Web ▸ URL Options ▸ Change URLs |
+| `repurls` | Express Tools ▸ Web ▸ URL Options ▸ Find and Replace URLs |
 
 ## How this was measured
 
@@ -429,6 +481,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | Windows baseline: the Express Tools tab's eight panels (8 rows, all ◐); every ribbon tab is built; 44 more ribbon items without a command |
 | 2026-10-19 | minor | Windows baseline: the Output tab's two panels and the Collaborate tab's four (6 rows: 2 ✅, 4 ◐); Collaborate's online tools listed as intentionally absent but shown disabled; 12 more ribbon items without a command; adjacent large buttons stand with no gap between them, as in AutoCAD |
 | 2026-10-19 | minor | Windows baseline: the Manage tab's six panels (6 rows, all ◐); 22 more ribbon items without a command |
 | 2026-10-19 | minor | Windows baseline: the View tab's seven panels (7 rows: 1 ✅, 6 ◐); Layout Tabs shows and hides the layout tabs; TEXTSCR is a known command; large buttons are at least 38 px wide and panels can draw AutoCAD's thin separators between groups (Parametric's Geometric and Dimensional panels) |

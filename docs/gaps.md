@@ -1,6 +1,6 @@
 # Where AsenaCAD falls short of AutoCAD
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-19 · **Change:** minor (U14 narrowed by the Insert, Annotate, Parametric, View, Manage, Output and Collaborate tabs; U15: the ribbon's Dimension button; U16: GRIDDISPLAY) · **Target:** Autodesk AutoCAD 2027
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-19 · **Change:** minor (U14 narrowed by the Insert, Annotate, Parametric, View, Manage, Output, Collaborate and Express Tools tabs; E3 restated; U15: the ribbon's Dimension button; U16: GRIDDISPLAY) · **Target:** Autodesk AutoCAD 2027
 
 Every known shortfall, one row each, ranked within each section by user impact. This is the work
 list: agents pick from here (top of a section first), and remove or update a row in the same PR
@@ -61,7 +61,7 @@ Detail and evidence: [ui-parity.md](ui-parity.md).
 | U11 | MVIEW Restore (a saved viewport configuration into a layout); VIEW Orthographic, UCS and background settings; view twist is kept but not shown (Zoom Realtime and Dynamic, ZOOMFACTOR, named views (VIEW) and tiled model viewports with saved configurations (VPORTS) landed in #463) | Low | 1–2 |
 | U12 | Workspaces (the status bar's Workspace Switching), SteeringWheels and ShowMotion (the navigation bar's disabled tools), Annotation Monitor, Clean Screen, CUI customisation, alias editor, ViewCube drag (#7) | Low-medium | 15–25 |
 | U13 | `.dxf` from Finder fails to open on macOS (#158) (window controls fixed, #161) | Medium | 1–2 |
-| U14 | Windows shell leftovers found by the first side-by-side pass against AutoCAD 2026 for Windows ([baseline](ui-parity.md#windows-autocad-2026-baseline)): the Application menu (M1c; the button lists the File menu); the Express Tools tab (M1b); on Windows and Linux the title row sits under the system title bar instead of being the window caption with the window buttons at its right end; the layer list and the Object Color, Lineweight and Linetype lists show no state icons, swatches or line previews; Insert's drop-down lists no blocks yet (only More Options...); what AutoCAD's ▾ marks beside Cut and Copy Clip open is not observed yet; the command history shows "Command: LINE" but not each prompt with the value typed; 106 ribbon items have no command yet ([list](ui-parity.md#ribbon-items-without-a-command)); the ribbon's palette toggles open their palettes but don't close them; View ▸ Interface ▸ Switch Windows lists no drawings; Manage ▸ Action Recorder has no Action Tree slide-out | Medium | 30–50 |
+| U14 | Windows shell leftovers found by the first side-by-side pass against AutoCAD 2026 for Windows ([baseline](ui-parity.md#windows-autocad-2026-baseline)): the Application menu (M1c; the button lists the File menu); on Windows and Linux the title row sits under the system title bar instead of being the window caption with the window buttons at its right end; the layer list and the Object Color, Lineweight and Linetype lists show no state icons, swatches or line previews; Insert's drop-down lists no blocks yet (only More Options...); what AutoCAD's ▾ marks beside Cut and Copy Clip open is not observed yet; the command history shows "Command: LINE" but not each prompt with the value typed; 150 ribbon items have no command yet ([list](ui-parity.md#ribbon-items-without-a-command)); the ribbon's palette toggles open their palettes but don't close them; View ▸ Interface ▸ Switch Windows lists no drawings; Manage ▸ Action Recorder has no Action Tree slide-out; Express Tools ▸ Modify's two tools sit in the first two rows, where AutoCAD centres them in the panel's height | Medium | 30–50 |
 | U15 | The ribbon's Dimension button (Home ▸ Annotation, Annotate ▸ Dimensions) starts DIM, which makes only linear dimensions; AutoCAD's DIM picks the kind (linear, aligned, angular, radius, diameter, arc length, ordinate) from the object under the cursor (the engine side is F7's smart DIM) | Medium | 3–5 |
 | U16 | No GRIDDISPLAY system variable: the grid always adapts when zoomed out, never subdivides below the grid spacing and is always drawn beyond the limits, and SETVAR doesn't know the variable. AutoCAD 2026's default drawing has GRIDDISPLAY 3 (observed): bit 1 draws the grid beyond the limits, 2 adapts it to the zoom, 4 lets it subdivide below the grid spacing (off by default), 8 makes it follow the dynamic UCS; the Drafting Settings dialog's Snap and Grid tab has a checkbox for each. Ours behaves as GRIDDISPLAY 3 with no way to change it | Low | 1–2 |
 
@@ -132,7 +132,7 @@ Detail: [localization-parity.md](localization-parity.md).
 | # | Gap | Est. |
 |---|---|---|
 | E1 | AutoLISP beyond the core (#758 landed the language, `command`, entity lists, selection sets, `get…` input, APPLOAD, `(load)`, `c:` commands and `acad.lsp`/`acaddoc.lsp` at startup): Visual LISP ActiveX (`vlax-`, `vla-`), DCL dialogs, reactors, an APPLOAD dialog with a Startup Suite, UCS-aware `trans` | 30–50 |
-| E3 | Express Tools equivalents (TXT2MTXT, BREAKLINE, BURST, NCOPY exists, SUPERHATCH, Move/Copy/Rotate) | 30–50 |
+| E3 | Express Tools equivalents: 46 of the Express Tools tab's 49 commands don't exist yet (TXT2MTXT, BREAKLINE, BURST, SUPERHATCH, MOCORO …; [list](ui-parity.md#ribbon-items-without-a-command)); NCOPY, FLATTEN and ALIASEDIT exist | 30–50 |
 | E4 | Plug-in API (owner decision: Rust/WASM plug-ins rather than ObjectARX/.NET) | 30–50 |
 | E5 | CUI customisation and alias (`.pgp`) editor | 15–25 |
 
@@ -148,6 +148,7 @@ Detail: [localization-parity.md](localization-parity.md).
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | U14 narrowed: the Express Tools tab is built (M1b), its Modify panel's two rows aren't centred; E3 counts the Express Tools commands still missing |
 | 2026-10-19 | minor | U14 narrowed: the Output and Collaborate tabs are built (M1b) |
 | 2026-10-19 | minor | U16 added: no GRIDDISPLAY (AutoCAD 2026's default drawing has 3: beyond the limits and adaptive; subdivision and dynamic UCS bits off) |
 | 2026-10-19 | minor | U14 narrowed: the Manage tab is built (M1b) |

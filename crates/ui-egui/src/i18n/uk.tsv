@@ -1628,3 +1628,51 @@
 	Traces Palette	Палітра накладок
 	Markup Import	Імпорт поміток
 	Compare	Порівняння
+	Explode Attributes	Розчленити з атрибутами
+	Replace Block	Замінити блок
+	List Properties	Список властивостей
+	Import Attributes	Імпортувати атрибути
+	Export Attributes	Експортувати атрибути
+	Convert block to xref	Перетворити блок на зовнішнє посилання
+	Extend to Nested Objects	Подовжити до вкладених об'єктів
+	Trim to Nested Objects	Обрізати по вкладених об'єктах
+	Arc Aligned	Текст по дузі
+	Modify Text	Змінити текст
+	Change Case	Змінити регістр
+	Fit	Вписати
+	Convert to Mtext	Перетворити на багаторядковий текст
+	Auto Number	Автонумерація
+	Enclose in Object	Обвести об'єктом
+	Remote Text	Віддалений текст
+	Text Mask	Маска тексту
+	Unmask Text	Зняти маску тексту
+	Move/Copy/Rotate	Перемістити/копіювати/повернути
+	Stretch Multiple	Розтягнути кілька
+	Flatten objects	Сплющити об'єкти
+	Extended Clip	Розширене підрізання
+	Extended Offset	Розширена подібність
+	Convert Shape to Block	Перетворити форму на блок
+	Align Space	Вирівняти простір
+	Synchronize Viewports	Синхронізувати видові екрани
+	Merge Layout	Об'єднати аркуші
+	List Viewport Scale	Масштаб видового екрана
+	Break-line Symbol	Символ лінії розриву
+	Super Hatch	Суперштрихування
+	Annotation Attachment	Прикріплення виносок
+	Attach Leader to Annotation	Прикріпити виноску до примітки
+	Global Attach Leader to Annotation	Прикріпити всі виноски до приміток
+	Detach Leaders from Annotation	Відкріпити виноски від приміток
+	Reset Text	Відновити текст
+	Import Style	Імпортувати стиль
+	Export Style	Експортувати стиль
+	Attach Xdata	Додати розширені дані
+	List Xdata	Список розширених даних
+	System Variables	Системні змінні
+	Extended Plan	Розширений план
+	Make Linetype	Створити тип лінії
+	Make Shape	Створити форму
+	Web	Веб
+	URL Options	Параметри URL
+	Show URLs	Показати URL
+	Change URLs	Змінити URL
+	Find and Replace URLs	Знайти та замінити URL

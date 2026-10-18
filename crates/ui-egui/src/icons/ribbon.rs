@@ -9,6 +9,7 @@
 
 mod annotate;
 mod draw;
+mod express;
 mod insert;
 mod manage;
 mod output;
@@ -35,7 +36,8 @@ pub(super) fn paint(pen: &Pen, icon: Icon) {
         || parametric::paint(pen, icon)
         || view::paint(pen, icon)
         || manage::paint(pen, icon)
-        || output::paint(pen, icon))
+        || output::paint(pen, icon)
+        || express::paint(pen, icon))
     {
         panels::paint(pen, icon);
     }

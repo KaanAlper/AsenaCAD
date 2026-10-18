@@ -251,12 +251,7 @@ pub struct Tab {
     pub panels: &'static [Panel],
 }
 
-/// A tab whose panels are not built yet: it shows a note instead (M1b fills them).
-const fn unbuilt(label: &'static str) -> Tab {
-    Tab { label, panels: &[] }
-}
-
-/// Ribbon tabs in AutoCAD's order. M1a built Home; M1b fills the others tab by tab.
+/// Ribbon tabs in AutoCAD's order.
 pub fn tabs() -> &'static [Tab] {
     TABS
 }
@@ -270,7 +265,7 @@ const TABS: &[Tab] = &[
     crate::ribbon::manage::MANAGE,
     crate::ribbon::output::OUTPUT,
     crate::ribbon::output::COLLABORATE,
-    unbuilt("Express Tools"),
+    crate::ribbon::express::EXPRESS,
 ];
 
 /// Whether `name` is one of the ribbon's tabs (a saved `ribbonTab` must be).
@@ -462,6 +457,51 @@ mod tests {
         "pushtodocsopen",   // Autodesk Docs ▸ Push to Autodesk Docs (toggle)
         "tracepaletteopen", // Traces ▸ Traces Palette (toggle)
         "markupimport",     // Traces ▸ Markup Import
+        // ---- Express Tools ----
+        "burst",        // Blocks ▸ Explode Attributes
+        "blockreplace", // Blocks ▸ Replace Block
+        "xlist",        // Blocks ▸ List Properties
+        "attin",        // Blocks ▸ Import Attributes
+        "attout",       // Blocks ▸ Export Attributes
+        "blocktoxref",  // Blocks ▸ Convert block to xref (slide-out)
+        "bextend",      // Blocks ▸ Extend to Nested Objects (slide-out)
+        "btrim",        // Blocks ▸ Trim to Nested Objects (slide-out)
+        "arctext",      // Text ▸ Arc Aligned
+        "txtexp",       // Text ▸ Modify Text ▸ Explode
+        "tcase",        // Text ▸ Modify Text ▸ Change Case
+        "torient",      // Text ▸ Modify Text ▸ Rotate
+        "textfit",      // Text ▸ Modify Text ▸ Fit
+        "tcount",       // Text ▸ Auto Number
+        "tcircle",      // Text ▸ Enclose in Object
+        "rtext",        // Text ▸ Remote Text (slide-out)
+        "textmask",     // Text ▸ Text Mask (slide-out)
+        "textunmask",   // Text ▸ Unmask Text (slide-out)
+        "mocoro",       // Modify ▸ Move/Copy/Rotate
+        "mstretch",     // Modify ▸ Stretch Multiple
+        "clipit",       // Modify ▸ Extended Clip (slide-out)
+        "exoffset",     // Modify ▸ Extended Offset (slide-out)
+        "shp2blk",      // Modify ▸ Convert Shape to Block (slide-out)
+        "alignspace",   // Layout ▸ Align Space
+        "vpsync",       // Layout ▸ Synchronize Viewports
+        "layoutmerge",  // Layout ▸ Merge Layout
+        "vpscale",      // Layout ▸ List Viewport Scale (slide-out)
+        "breakline",    // Draw ▸ Break-line Symbol
+        "superhatch",   // Draw ▸ Super Hatch
+        "qlattach",     // Dimension ▸ Annotation Attachment ▸ Attach Leader to Annotation
+        "qlattachset",  // Dimension ▸ Annotation Attachment ▸ Global Attach Leader to Annotation
+        "qldetachset",  // Dimension ▸ Annotation Attachment ▸ Detach Leaders from Annotation
+        "dimreassoc",   // Dimension ▸ Reset Text
+        "dimim",        // Dimension ▸ Import Style
+        "dimex",        // Dimension ▸ Export Style
+        "xdata",        // Tools ▸ Attach Xdata
+        "xdlist",       // Tools ▸ List Xdata
+        "sysvdlg",      // Tools ▸ System Variables
+        "explan",       // Tools ▸ Extended Plan (slide-out)
+        "mkltype",      // Tools ▸ Make Linetype (slide-out)
+        "mkshape",      // Tools ▸ Make Shape (slide-out)
+        "showurls",     // Web ▸ URL Options ▸ Show URLs
+        "churls",       // Web ▸ URL Options ▸ Change URLs
+        "repurls",      // Web ▸ URL Options ▸ Find and Replace URLs
     ];
 
     #[test]
@@ -497,7 +537,7 @@ mod tests {
     fn the_tab_row_has_autocads_nine_tabs_in_order() {
         let labels: Vec<_> = tabs().iter().map(|t| t.label).collect();
         assert_eq!(labels, ["Home", "Insert", "Annotate", "Parametric", "View", "Manage", "Output", "Collaborate", "Express Tools"]);
-        assert!(tabs()[..8].iter().all(|t| !t.panels.is_empty()), "every tab up to Collaborate is built");
+        assert!(tabs().iter().all(|t| !t.panels.is_empty()), "every tab is built");
         assert!(is_tab("Express Tools") && !is_tab("Tool Sets") && !is_tab(""));
     }
 

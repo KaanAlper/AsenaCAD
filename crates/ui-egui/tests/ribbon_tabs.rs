@@ -868,6 +868,149 @@ fn collaborate_is_as_wide_as_autocads() {
     check_widths("Collaborate", &[("Share", 97.0), ("Autodesk Docs", 90.0), ("Traces", 94.0), ("Compare", 60.0)]);
 }
 
+#[test]
+fn express_tools_matches_autocad() {
+    check_tab(
+        "Express Tools",
+        &[
+            WantPanel {
+                label: "Blocks",
+                items: &[
+                    b("Explode Attributes", "large", 0, "burst"),
+                    b("Replace Block", "large", 0, "blockreplace"),
+                    b("List Properties", "small+label", 1, "xlist"),
+                    b("Import Attributes", "small+label", 2, "attin"),
+                    b("Export Attributes", "small+label", 3, "attout"),
+                ],
+                slideout: &[
+                    b("Convert block to xref", "small+label", 1, "blocktoxref"),
+                    b("Copy Nested Objects", "small+label", 2, "ncopy"),
+                    b("Extend to Nested Objects", "small+label", 3, "bextend"),
+                    b("Trim to Nested Objects", "small+label", 4, "btrim"),
+                ],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Text",
+                items: &[
+                    b("Arc Aligned", "large", 0, "arctext"),
+                    sp(
+                        "Modify Text",
+                        "large",
+                        0,
+                        &[("Explode", "txtexp"), ("Change Case", "tcase"), ("Rotate", "torient"), ("Fit", "textfit"), ("Justify", "justifytext")],
+                        0,
+                    ),
+                    b("Convert to Mtext", "small+label", 1, "txt2mtxt"),
+                    b("Auto Number", "small+label", 2, "tcount"),
+                    b("Enclose in Object", "small+label", 3, "tcircle"),
+                ],
+                slideout: &[
+                    b("Remote Text", "small+label", 1, "rtext"),
+                    b("Text Mask", "small+label", 2, "textmask"),
+                    b("Unmask Text", "small+label", 3, "textunmask"),
+                ],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Modify",
+                // AutoCAD centres these two rows in the panel's height.
+                items: &[b("Move/Copy/Rotate", "small+label", 1, "mocoro"), b("Stretch Multiple", "small+label", 2, "mstretch")],
+                slideout: &[
+                    b("Flatten objects", "small+label", 1, "flatten"),
+                    b("Extended Clip", "small+label", 2, "clipit"),
+                    b("Extended Offset", "small+label", 3, "exoffset"),
+                    b("Convert Shape to Block", "small+label", 4, "shp2blk"),
+                ],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Layout",
+                items: &[
+                    b("Align Space", "small+label", 1, "alignspace"),
+                    b("Synchronize Viewports", "small+label", 2, "vpsync"),
+                    b("Merge Layout", "small+label", 3, "layoutmerge"),
+                ],
+                slideout: &[b("List Viewport Scale", "small+label", 1, "vpscale")],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Draw",
+                items: &[b("Break-line Symbol", "large", 0, "breakline"), b("Super Hatch", "large", 0, "superhatch")],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Dimension",
+                items: &[
+                    sp(
+                        "Annotation Attachment",
+                        "large",
+                        0,
+                        &[
+                            ("Attach Leader to Annotation", "qlattach"),
+                            ("Global Attach Leader to Annotation", "qlattachset"),
+                            ("Detach Leaders from Annotation", "qldetachset"),
+                        ],
+                        0,
+                    ),
+                    b("Reset Text", "small+label", 1, "dimreassoc"),
+                    b("Import Style", "small+label", 2, "dimim"),
+                    b("Export Style", "small+label", 3, "dimex"),
+                ],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Tools",
+                items: &[
+                    b("Command Aliases", "large", 0, "aliasedit"),
+                    b("Attach Xdata", "small+label", 1, "xdata"),
+                    b("List Xdata", "small+label", 2, "xdlist"),
+                    b("System Variables", "small+label", 3, "sysvdlg"),
+                ],
+                slideout: &[
+                    b("Extended Plan", "small+label", 1, "explan"),
+                    b("Make Linetype", "small+label", 2, "mkltype"),
+                    b("Make Shape", "small+label", 3, "mkshape"),
+                ],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Web",
+                // A split in AutoCAD's screenshot (▾ right of the label); its list wasn't
+                // captured: these are the Express Tools' URL commands.
+                items: &[sp(
+                    "URL Options",
+                    "large",
+                    0,
+                    &[("Show URLs", "showurls"), ("Change URLs", "churls"), ("Find and Replace URLs", "repurls")],
+                    0,
+                )],
+                slideout: &[],
+                launcher: None,
+            },
+        ],
+    );
+}
+
+#[test]
+fn express_tools_is_as_wide_as_autocads() {
+    check_widths(
+        "Express Tools",
+        &[
+            ("Blocks", 232.0),
+            ("Text", 234.0),
+            ("Modify", 137.0),
+            ("Layout", 154.0),
+            ("Draw", 102.0),
+            ("Dimension", 185.0),
+            ("Tools", 186.0),
+            ("Web", 65.0),
+        ],
+    );
+}
+
 // ---- Large labels ----
 
 /// The texts the ribbon paints with `tab` open at 1906 px, as laid out ("\n" = line break).
@@ -981,6 +1124,20 @@ fn large_labels_wrap_as_in_autocads_screenshots() {
         ),
         ("Output", &["Plot", "Batch\nPlot", "Preview", "Export"][..]),
         ("Collaborate", &["Share\nDrawing", "Shared\nViews", "Push to\nAutodesk Docs", "Traces\nPalette", "Markup\nImport", "DWG\nCompare"][..]),
+        (
+            "Express Tools",
+            &[
+                "Explode\nAttributes",
+                "Replace\nBlock",
+                "Arc\nAligned",
+                "Modify\nText",
+                "Break-line\nSymbol",
+                "Super\nHatch",
+                "Annotation\nAttachment",
+                "Command\nAliases",
+                "URL\nOptions",
+            ][..],
+        ),
     ] {
         let painted = painted_labels(tab);
         let missing: Vec<_> = labels.iter().filter(|l| !painted.iter().any(|p| p == *l)).collect();
