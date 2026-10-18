@@ -13,8 +13,17 @@ fn harness(state: Option<UiState>, width: f32, scale: f32) -> Harness<'static, C
     app.run("circle", json!({"center":[100,70],"radius":26})).unwrap();
     app.run("line", json!({"points":[[30,30],[170,110]]})).unwrap();
     app.run("view.set", json!({"center":[100,70],"height":220})).unwrap();
-    if let Some(state) = state {
-        app.ui = state;
+    match state {
+        Some(state) => app.ui = state,
+        // These tests move CADCraft's palettes around: start with all of them open (AutoCAD's
+        // default workspace has none).
+        None => {
+            app.ui.docking = cadcraft_ui_egui::docking::Workspace::with_palettes();
+            app.ui.show_toolsets = true;
+            app.ui.show_palettes = true;
+            // The Home ribbon would repeat the palette's labels (Line).
+            app.ui.ribbon_min = cadcraft_ui_egui::ribbon::RibbonMin::Tabs;
+        }
     }
     app.ui.in_window_menu = false;
     app.integrated_titlebar = true;
@@ -173,7 +182,7 @@ fn stack_boundary_resizes_by_pointer_and_keyboard_without_changing_the_drawing()
 fn grouped_restore_preserves_order_and_rectangle_in_both_close_orders_after_reload() {
     use craft_ui::docking::{Action, Placement};
     for order in [[Panel::Layers, Panel::Properties], [Panel::Properties, Panel::Layers]] {
-        let mut workspace = cadcraft_ui_egui::docking::Workspace::default();
+        let mut workspace = cadcraft_ui_egui::docking::Workspace::with_palettes();
         let rect = [50.0, 60.0, 320.0, 400.0];
         workspace.apply(Action::Float { panel: Panel::Layers, rect }).unwrap();
         workspace

@@ -8,11 +8,16 @@ use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 
 fn harness(width: f32, height: f32, scale: f32, message: bool) -> Harness<'static, CadApp> {
+    harness_with(width, height, scale, message, |_| {})
+}
+
+fn harness_with(width: f32, height: f32, scale: f32, message: bool, setup: impl FnOnce(&mut CadApp)) -> Harness<'static, CadApp> {
     let mut app = CadApp::new(Session::default(), Services::default());
     app.run("new", serde_json::json!({})).unwrap();
     app.ui.start_tab = false;
     app.ui.in_window_menu = false;
     app.integrated_titlebar = true;
+    setup(&mut app);
     if message {
         app.set_status("Drawing saved successfully with a long status message");
     }
@@ -79,19 +84,25 @@ fn status_labels_never_overlap_at_standard_and_compact_sizes() {
     assert!(overlaps.is_empty(), "{}", overlaps.join("\n"));
 }
 
+/// CADCraft's Tool Bar, which is off by default (AutoCAD has none).
+fn with_toolbar(app: &mut CadApp) {
+    app.ui.show_toolbar = true;
+}
+
 #[test]
 fn compact_toolbar_overflow_keeps_help_reachable() {
-    let mut h = harness(900.0, 560.0, 1.0, false);
+    let mut h = harness_with(900.0, 560.0, 1.0, false, with_toolbar);
     h.get_by_label("More toolbar commands").click();
     h.run_steps(3);
-    h.get_by_label("Help").click();
+    // The overflow menu's Help, not the title row's Help button above it.
+    h.query_all_by_label("Help").max_by(|a, b| a.rect().top().total_cmp(&b.rect().top())).unwrap().click();
     h.run_steps(3);
     assert_eq!(h.state().ui.dialog.as_deref(), Some("about"));
 }
 
 #[test]
 fn toolbar_plot_preview_opens_dialog() {
-    let mut h = harness(1200.0, 760.0, 1.0, false);
+    let mut h = harness_with(1200.0, 760.0, 1.0, false, with_toolbar);
     h.get_by_label("Plot Preview").click();
     h.run_steps(3);
     assert_eq!(h.state().ui.dialog.as_deref(), Some("preview"));

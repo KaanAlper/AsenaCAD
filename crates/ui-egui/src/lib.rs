@@ -92,7 +92,8 @@ pub struct UiState {
     /// menu puts them back.
     pub hidden_tools: Vec<String>,
     pub properties_all: bool,
-    /// Show an in-window menu bar (platforms without a native menu bar, or on request).
+    /// Show the in-window menu bar between the title row and the ribbon (AutoCAD's Show Menu
+    /// Bar; off by default).
     pub in_window_menu: bool,
     pub start_tab: bool,
     pub dialog: Option<String>,
@@ -166,9 +167,12 @@ impl Default for UiState {
             docking: docking::Workspace::default(),
 
             interface_language: i18n::Preference::default(),
-            show_toolsets: true,
-            show_palettes: true,
-            show_toolbar: true,
+            // AutoCAD opens with no palettes: Properties opens with PROPERTIES (Ctrl+1, the
+            // Properties panel's launcher), the layers with Layer Properties. CADCraft's Tool Sets
+            // palette and Tool Bar are not part of AutoCAD's default workspace.
+            show_toolsets: false,
+            show_palettes: false,
+            show_toolbar: false,
             show_file_tabs: true,
             show_status_bar: true,
             show_command_line: true,
@@ -180,7 +184,9 @@ impl Default for UiState {
             collapsed_groups: Vec::new(),
             hidden_tools: Vec::new(),
             properties_all: true,
-            in_window_menu: !cfg!(target_os = "macos"),
+            // AutoCAD hides its menu bar (Quick Access Toolbar ▾ ▸ Show Menu Bar shows it); macOS
+            // keeps its native menu bar.
+            in_window_menu: false,
             start_tab: false,
             dialog: None,
             history_lines: 3,
@@ -632,10 +638,15 @@ impl CadApp {
         let t0 = now_ms();
         control::begin_frame(ui.ctx());
         let t = theme::Tokens::get();
-        chrome::title_and_toolbar(self, ui);
+        // AutoCAD's order, top to bottom: title row, (menu bar), ribbon, (Quick Access Toolbar
+        // below the ribbon), document tabs; the status bar at the bottom.
+        chrome::titlerow::show(self, ui);
         if self.ui.in_window_menu {
             menus::menu_bar(self, ui);
         }
+        ribbon::show(self, ui);
+        chrome::titlerow::qat_strip(self, ui);
+        chrome::toolbar(self, ui);
         if self.ui.show_status_bar {
             chrome::status_bar(self, ui);
         }

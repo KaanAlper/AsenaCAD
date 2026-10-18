@@ -177,8 +177,7 @@ fn the_lineweight_list_selects_the_current_lineweight() {
 #[test]
 fn the_properties_launcher_opens_the_properties_palette() {
     let mut h = harness("Properties");
-    h.state_mut().run("ui.dock", json!({ "operation": "close", "panel": "properties" })).unwrap();
-    h.run_steps(2);
+    // AutoCAD opens with no palettes.
     assert!(!h.state().ui.docking.layout.contains(&Palette::Properties));
     let launcher = h
         .query_all_by_role_and_label(Role::Button, "Properties")

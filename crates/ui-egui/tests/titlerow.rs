@@ -88,7 +88,7 @@ fn customize_lists_autocads_items_with_check_marks_and_disables_missing_commands
         "Sheet Set Manager",
         "Workspace",
         "More Commands...",
-        "Hide Menu Bar",
+        "Show Menu Bar",
         "Show Below the Ribbon",
     ];
     let tops: Vec<f32> = items.iter().map(|l| menu_row(&h, l).rect().min.y).collect();
@@ -119,8 +119,9 @@ fn checking_plot_preview_adds_it_after_redo_and_unchecking_removes_it() {
 
 #[test]
 fn show_menu_bar_flips_the_in_window_menu_bar() {
-    let mut app = CadApp::new(Session::default(), Services::default());
-    app.ui.in_window_menu = false;
+    // AutoCAD hides its menu bar by default, on every platform.
+    let app = CadApp::new(Session::default(), Services::default());
+    assert!(!app.ui.in_window_menu);
     let mut h = harness_with(app);
     open_customize(&mut h);
     h.get_by_label("Show Menu Bar").click();
