@@ -17,12 +17,16 @@ const W: f32 = 1906.0;
 const H: f32 = 1026.0;
 
 fn harness_with(setup: impl FnOnce(&mut CadApp)) -> Harness<'static, CadApp> {
+    sized(W, setup)
+}
+
+fn sized(width: f32, setup: impl FnOnce(&mut CadApp)) -> Harness<'static, CadApp> {
     let mut app = CadApp::new(Session::default(), Services::default());
     app.run("new", json!({})).unwrap();
     app.ui.start_tab = false;
     app.integrated_titlebar = true;
     setup(&mut app);
-    let mut h = Harness::builder().with_size(vec2(W, H)).build_ui_state(
+    let mut h = Harness::builder().with_size(vec2(width, H)).build_ui_state(
         |ui, app: &mut CadApp| {
             app.logic(&ui.ctx().clone());
             app.canvas.cursor = Some(Vec2::new(12.5, -3.25));
@@ -254,4 +258,81 @@ fn a_separator_band_spans_the_window_between_the_drawing_and_the_bar() {
     });
     let band = band.expect("the band is painted");
     assert!((band.top() - c.bottom()).abs() <= 1.0 && band.width() >= c.width(), "{band:?} under {c:?}");
+}
+
+/// The status bar row's controls (buttons and tabs below the drawing area): label and rect.
+fn bar_controls(h: &Harness<'_, CadApp>) -> Vec<(String, Rect)> {
+    let bottom = canvas(h).bottom();
+    let mut out = Vec::new();
+    for role in [Role::Button, Role::Tab, Role::TextInput] {
+        for n in h.query_all_by_role(role) {
+            let r = n.rect();
+            if r.min.y >= bottom - 0.5 {
+                out.push((n.accesskit_node().label().unwrap_or_default().to_string(), r));
+            }
+        }
+    }
+    out
+}
+
+#[test]
+fn a_narrow_window_drops_items_from_the_left_and_never_overlaps_the_layout_bar() {
+    for width in [700.0, 900.0] {
+        for paper in [false, true] {
+            let mut h = sized(width, |app| {
+                app.ui.status_shown.insert(0, "coordinates".into());
+                app.ui.status_shown.push("dynmode".into());
+                if paper {
+                    app.run("layout.set", json!({"name": "Layout2"})).unwrap();
+                }
+            });
+            h.run_steps(2);
+            let at = format!("{width} pt, paper {paper}");
+            let controls = bar_controls(&h);
+            for (i, (a, ra)) in controls.iter().enumerate() {
+                assert!(ra.left() >= 0.0 && ra.right() <= width, "{at}: {a} {ra:?} leaves the window");
+                for (b, rb) in controls.iter().skip(i + 1) {
+                    assert!(!ra.shrink(0.5).intersects(rb.shrink(0.5)), "{at}: {a} {ra:?} overlaps {b} {rb:?}");
+                }
+            }
+            // The layout bar's minimum and Customization always stay.
+            for label in ["Layout list", "Model", "New layout", "Customization"] {
+                assert!(controls.iter().any(|(l, _)| l == label), "{at}: {label} shows: {controls:?}");
+            }
+            if paper {
+                assert!(controls.iter().any(|(l, _)| l == "Layout2"), "{at}: the current layout shows");
+            }
+            // What doesn't fit goes from the group's left end: Coordinates first.
+            let shown: Vec<&str> = statusbar::ITEMS.iter().filter(|it| controls.iter().any(|(l, _)| l == it.label)).map(|it| it.label).collect();
+            assert!(!shown.contains(&"Coordinates"), "{at}: {shown:?}");
+            // The controls left work: 2D Object Snap still toggles running snaps.
+            if controls.iter().any(|(l, _)| l == "2D Object Snap") {
+                let before = h.state().session.settings.osmode;
+                bar_node(&h, "2D Object Snap").click();
+                h.run_steps(3);
+                assert_ne!(h.state().session.settings.osmode, before, "{at}: 2D Object Snap is clickable");
+            }
+            bar_node(&h, "Model").click();
+            h.run_steps(3);
+            assert_eq!(h.state().session.layout_space(), cadcraft_doc::Space::Model, "{at}: Model is clickable");
+        }
+    }
+}
+
+#[test]
+fn object_snap_with_no_modes_set_opens_the_object_snap_settings() {
+    let mut h = harness_with(|app| app.session.settings.osmode = 0);
+    assert_eq!(bar_node(&h, "2D Object Snap").accesskit_node().toggled(), Some(Toggled::False));
+    bar_node(&h, "2D Object Snap").click();
+    h.run_steps(3);
+    assert_eq!(h.state().ui.dialog.as_deref(), Some("dsettings"), "Drafting Settings opens");
+    assert_eq!(h.state().session.settings.osmode, 0, "OSMODE is left alone");
+    // With modes set the button toggles them again.
+    h.state_mut().ui.dialog = None;
+    h.state_mut().session.settings.osmode = mode::END;
+    h.run_steps(2);
+    bar_node(&h, "2D Object Snap").click();
+    h.run_steps(3);
+    assert_eq!(h.state().session.settings.osmode, mode::END | mode::OFF);
+    assert!(h.state().ui.dialog.is_none());
 }

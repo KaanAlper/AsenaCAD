@@ -38,7 +38,6 @@ pub enum Menu {
     Polar,
     Isodraft,
     Osnap,
-    Workspace,
     Isolate,
 }
 
@@ -74,7 +73,6 @@ pub fn popup(app: &mut CadApp, resp: &Response, menu: Menu) {
             Menu::Isodraft => isodraft(app, ui, &mut chosen),
             Menu::Osnap => osnap(app, ui, &mut chosen),
             Menu::Isolate => isolate(app, ui, &mut chosen),
-            Menu::Workspace => {}
         }
     });
     if let Some((cmd, params)) = chosen {

@@ -8,19 +8,32 @@ use serde_json::json;
 use crate::CadApp;
 use crate::theme::Tokens;
 
+/// The current annotation scale's name, in model space.
+fn current(app: &CadApp) -> Option<String> {
+    if !matches!(app.session.layout_space(), cadcraft_doc::Space::Model) {
+        return None;
+    }
+    app.session.doc().ok().map(|d| d.current_anno_scale().name)
+}
+
+fn list_width(g: &egui::Galley) -> f32 {
+    g.size().x.min(160.0) + 22.0
+}
+
+/// How wide [`status`] draws the list (0 when it draws nothing).
+pub fn width(app: &CadApp, ui: &egui::Ui) -> f32 {
+    current(app).map_or(0.0, |c| list_width(&ui.painter().layout_no_wrap(c, crate::theme::small(), Tokens::get().text)))
+}
+
 /// Draw the annotation scale list ending at `right` (model space only); returns its left edge,
 /// or `right` when nothing is drawn.
 pub fn status(app: &mut CadApp, ui: &mut egui::Ui, right: f32, cy: f32) -> f32 {
-    if !matches!(app.session.layout_space(), cadcraft_doc::Space::Model) {
-        return right;
-    }
-    let Ok(d) = app.session.doc() else { return right };
-    let current = d.current_anno_scale().name;
-    let names: Vec<String> = d.scales.iter().map(|s| s.name.clone()).collect();
+    let Some(current) = current(app) else { return right };
+    let names: Vec<String> = app.session.doc().map(|d| d.scales.iter().map(|s| s.name.clone()).collect()).unwrap_or_default();
     let t = Tokens::get();
     let p = ui.painter().clone();
     let g = p.layout_no_wrap(current.clone(), crate::theme::small(), t.text);
-    let w = g.size().x.min(160.0) + 22.0;
+    let w = list_width(&g);
     let r = Rect::from_min_size(pos2(right - w, cy - 9.0), vec2(w, 18.0));
     let resp = ui.interact(r, ui.id().with("anno_scale"), Sense::click());
     p.rect_filled(r, 3.0, if resp.hovered() { t.control_hover } else { t.control.gamma_multiply(0.5) });
@@ -57,5 +70,5 @@ pub fn status(app: &mut CadApp, ui: &mut egui::Ui, right: f32, cy: f32) -> f32 {
     if edit {
         app.start("scalelistedit");
     }
-    r.left() - 6.0
+    r.left()
 }

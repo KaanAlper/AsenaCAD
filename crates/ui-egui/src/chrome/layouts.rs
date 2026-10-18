@@ -47,6 +47,27 @@ pub fn return_layout(app: &CadApp, ctx: &egui::Context) -> Option<String> {
     last.filter(|l| tabs.iter().skip(1).any(|t| t == l)).or_else(|| tabs.get(1).cloned())
 }
 
+/// The tab width of `name` (the "Model" tab: index 0).
+fn tab_width(ui: &egui::Ui, i: usize, name: &str) -> f32 {
+    let font = crate::theme::ribbon_font(ui.ctx());
+    elided(ui.painter(), &shown_name(i, name), font, Tokens::get().text, TAB_TEXT).0.size().x + FILE_TAB_SLANT + 2.0 * FILE_TAB_PAD
+}
+
+/// The narrowest the layout bar gets: ≡, Model, the current layout, the "more" button and "+".
+pub fn min_width(app: &CadApp, ui: &egui::Ui) -> f32 {
+    let tabs = tab_names(app);
+    let mut w = 4.0 + FILE_MENU_W + 4.0 + tab_width(ui, 0, "Model") + FILE_PLUS_W + FILE_TAB_SLANT;
+    if tabs.len() > 1 {
+        w += MORE_W;
+    }
+    if let cadcraft_doc::Space::Paper(name) = app.session.layout_space()
+        && let Some(i) = tabs.iter().position(|t| *t == name)
+    {
+        w += tab_width(ui, i, &name);
+    }
+    w
+}
+
 /// Draw the layout bar in `row` (the bar below its top band), keeping the tabs left of `limit`.
 /// Returns where the bar ends.
 pub fn show(app: &mut CadApp, ui: &mut egui::Ui, row: Rect, band_top: f32, limit: f32) -> f32 {

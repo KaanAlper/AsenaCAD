@@ -107,7 +107,11 @@ pub fn command(app: &mut CadApp, params: &Value) -> Result<Value, String> {
         let keys: Vec<&str> = ITEMS.iter().map(|i| i.key).collect();
         return Err(format!("unknown status bar item \"{}\" (one of {})", key.chars().take(40).collect::<String>(), keys.join(", ")));
     };
-    let on = params.get("on").and_then(Value::as_bool).unwrap_or(!is_shown(app, it.key));
+    let on = match params.get("on") {
+        None | Some(Value::Null) => !is_shown(app, it.key),
+        Some(Value::Bool(on)) => *on,
+        Some(other) => return Err(format!("`on` must be true or false, not {}", other.to_string().chars().take(40).collect::<String>())),
+    };
     let shown: Vec<String> = ITEMS.iter().filter(|i| if i.key == it.key { on } else { is_shown(app, i.key) }).map(|i| i.key.to_string()).collect();
     app.ui.status_shown = shown;
     Ok(json!({ "item": it.key, "on": on }))
@@ -129,24 +133,50 @@ pub fn show(app: &mut CadApp, ui: &mut Ui) {
         ui.painter().rect_filled(band, 0.0, t.status_band);
         let row = Rect::from_min_max(pos2(r.left(), band.bottom()), r.max);
         let cy = row.center().y;
-        // Right to left: Customization, then the items shown, last to first.
-        let mut right = customization(app, ui, row.right() - 4.0, cy) - GAP;
-        for it in ITEMS.iter().rev() {
-            if is_shown(app, it.key) {
-                right = item_ui(app, ui, it, right, cy) - GAP;
-            }
-        }
-        let message = app.status.as_ref().filter(|(_, at)| crate::now_ms() - at < 5000.0).map(|(m, _)| m.clone());
         // The layout tabs start right of a palette docked on the left, measured from the
         // drawing area's last position.
         let left_dock = app.canvas.rect.map_or(0.0, |c| c.left() - r.left());
         let tabs_row = Rect::from_min_max(pos2(r.left() + if left_dock > 60.0 { left_dock + 8.0 } else { 0.0 }, row.top()), row.max);
+        // The layout bar's minimum (≡, Model, the current layout, +) always fits; the items that
+        // don't fit beside it go from the group's left end, Customization stays.
+        let tabs_min = tabs_row.left() + super::layouts::min_width(app, ui);
+        let mut right = customization(app, ui, row.right() - 4.0, cy) - GAP;
+        for it in fitting(app, ui, right - tabs_min - GAP).iter().rev() {
+            right = item_ui(app, ui, it, right, cy) - GAP;
+        }
+        let message = app.status.as_ref().filter(|(_, at)| crate::now_ms() - at < 5000.0).map(|(m, _)| m.clone());
         let reserve = if message.is_some() { READOUT_MIN } else { 8.0 };
-        let tabs_end = super::layouts::show(app, ui, tabs_row, band.top(), right - reserve);
+        let tabs_end = super::layouts::show(app, ui, tabs_row, band.top(), (right - reserve).max(tabs_min));
         if let Some(text) = message {
             readout(ui, &text, Rect::from_min_max(pos2(tabs_end + 8.0, row.top()), pos2(right - 8.0, row.bottom())));
         }
     });
+}
+
+/// The items shown that fit in `room`: the last ones (AutoCAD drops items from the group's left
+/// end when the window is too narrow).
+fn fitting(app: &CadApp, ui: &Ui, room: f32) -> Vec<&'static Item> {
+    let mut shown: Vec<&'static Item> = ITEMS.iter().filter(|it| is_shown(app, it.key)).collect();
+    let mut need: f32 = shown.iter().map(|it| item_width(app, ui, it) + GAP).sum();
+    while need > room && !shown.is_empty() {
+        let first = shown.remove(0);
+        need -= item_width(app, ui, first) + GAP;
+    }
+    shown
+}
+
+/// How wide item `it` draws (what [`item_ui`] moves left by).
+fn item_width(app: &CadApp, ui: &Ui, it: &Item) -> f32 {
+    match it.key {
+        "coordinates" => coord_width(ui, &coord_text(app, ui.ctx())),
+        "modelspace" => text_width(ui, crate::i18n::t(space_label(app))),
+        "units" => text_width(ui, units_name(app)),
+        "annoscale" => match app.session.layout_space() {
+            cadcraft_doc::Space::Model => super::annoscale::width(app, ui),
+            cadcraft_doc::Space::Paper(_) => crate::vpscale::width(app, ui),
+        },
+        key => toggle_of(app, key).map_or(0.0, |tg| SLOT + if tg.arrow { ARROW_W } else { 0.0 }),
+    }
 }
 
 /// A transient message between the layout tabs and the items, cut to fit, in full on hover.
@@ -189,20 +219,27 @@ struct Toggle {
     menu: Option<Menu>,
     /// The whole item opens `menu` (no face of its own).
     menu_only: bool,
+    /// It shows a ▾ (its menu's, or one it will have once its command exists).
+    arrow: bool,
 }
 
 impl Toggle {
     fn new(icon: Icon, label: &'static str, cmd: Option<&'static str>, on: Option<bool>) -> Self {
         let run = cmd.map(|c| (c, json!({})));
-        Toggle { icon, label, cmd, run, on, menu: None, menu_only: false }
+        Toggle { icon, label, cmd, run, on, menu: None, menu_only: false, arrow: false }
     }
 
     fn menu(self, menu: Menu) -> Self {
-        Toggle { menu: Some(menu), ..self }
+        Toggle { menu: Some(menu), arrow: menu.has_arrow(), ..self }
     }
 
     fn menu_only(self, menu: Menu) -> Self {
-        Toggle { menu: Some(menu), menu_only: true, run: None, ..self }
+        Toggle { menu: Some(menu), menu_only: true, run: None, arrow: menu.has_arrow(), ..self }
+    }
+
+    /// A menu button whose menu doesn't exist yet: drawn with its ▾, disabled by its command.
+    fn menu_to_come(self) -> Self {
+        Toggle { menu: None, menu_only: true, run: None, arrow: true, ..self }
     }
 }
 
@@ -225,7 +262,12 @@ fn toggle_of(app: &CadApp, key: &str) -> Option<Toggle> {
         "polar" => Toggle::new(Icon::Polar, "Polar Tracking", Some("polar"), Some(s.polarmode)).menu(Menu::Polar),
         "isodraft" => Toggle::new(Icon::Isodraft, "Isometric Drafting", Some("isodraft"), Some(s.isodraft)).menu(Menu::Isodraft),
         "otrack" => Toggle::new(Icon::OTrack, "Object Snap Tracking", Some("otrack"), Some(s.otrack)),
-        "osnap" => Toggle::new(Icon::Osnap, "2D Object Snap", Some("osnap"), Some(s.osmode & mode::OFF == 0 && s.osmode != 0)).menu(Menu::Osnap),
+        "osnap" => {
+            let tg = Toggle::new(Icon::Osnap, "2D Object Snap", Some("osnap"), Some(s.osmode & mode::OFF == 0 && s.osmode & !mode::OFF != 0));
+            // With no running snap modes set AutoCAD opens the Object Snap settings instead.
+            let run = if s.osmode & !mode::OFF == 0 { Some(("ui.dialog.dsettings", Value::Null)) } else { tg.run.clone() };
+            Toggle { run, ..tg }.menu(Menu::Osnap)
+        }
         "lineweight" => Toggle::new(Icon::Lineweight, "LineWeight", Some("lwdisplay"), Some(s.lwdisplay)),
         "transparency" => Toggle::new(Icon::Transparency, "Transparency", Some("transparencydisplay"), Some(s.transparency_display)),
         "selcycling" => Toggle::new(Icon::SelCycling, "Selection Cycling", Some("selectioncycling"), Some(s.selection_cycling)),
@@ -238,7 +280,7 @@ fn toggle_of(app: &CadApp, key: &str) -> Option<Toggle> {
             run: Some(("setvar", json!({ "name": "ANNOAUTOSCALE", "value": if s.annoautoscale { -4 } else { 4 } }))),
             ..Toggle::new(Icon::AutoScale, "AutoScale", Some("setvar"), Some(s.annoautoscale))
         },
-        "workspace" => Toggle::new(Icon::Gear, "Workspace Switching", Some("wscurrent"), None).menu_only(Menu::Workspace),
+        "workspace" => Toggle::new(Icon::Gear, "Workspace Switching", Some("wscurrent"), None).menu_to_come(),
         "annomonitor" => Toggle::new(Icon::AnnoMonitor, "Annotation Monitor", Some("annomonitor"), Some(false)),
         "quickprops" => Toggle::new(Icon::QuickProps, "Quick Properties", Some("qpmode"), Some(s.qpmode)),
         "lockui" => Toggle::new(Icon::Lock, "Lock UI", Some("lockui"), Some(false)),
@@ -257,7 +299,7 @@ fn item_ui(app: &mut CadApp, ui: &mut Ui, it: &Item, right: f32, cy: f32) -> f32
         "modelspace" => space_button(app, ui, right, cy),
         "units" => units_button(app, ui, right, cy),
         "annoscale" => match app.session.layout_space() {
-            cadcraft_doc::Space::Model => super::annoscale::status(app, ui, right, cy) + 4.0,
+            cadcraft_doc::Space::Model => super::annoscale::status(app, ui, right, cy),
             cadcraft_doc::Space::Paper(_) => crate::vpscale::status(app, ui, right, cy),
         },
         key => match toggle_of(app, key) {
@@ -284,7 +326,7 @@ fn paint_fill(ui: &Ui, rect: Rect, on: bool, resp: &Response) {
 fn toggle_ui(app: &mut CadApp, ui: &mut Ui, tg: &Toggle, right: f32, cy: f32) -> f32 {
     let why = tg.cmd.map_or(Availability::Missing, |c| avail::availability(ui.ctx(), &app.session, c));
     let enabled = why.is_ready();
-    let arrow_w = if tg.menu.is_some_and(Menu::has_arrow) { ARROW_W } else { 0.0 };
+    let arrow_w = if tg.arrow { ARROW_W } else { 0.0 };
     let face = Rect::from_min_size(pos2(right - arrow_w - SLOT, cy - SLOT / 2.0), vec2(SLOT, SLOT));
     let arrow = Rect::from_min_max(pos2(face.right(), face.top()), pos2(right, face.bottom()));
     let id = ui.id().with(("status", tg.label));
@@ -294,7 +336,7 @@ fn toggle_ui(app: &mut CadApp, ui: &mut Ui, tg: &Toggle, right: f32, cy: f32) ->
         let resp = interact(ui, whole, id, enabled);
         paint_fill(ui, whole, false, &resp);
         icons::paint(ui.painter(), Rect::from_center_size(face.center(), vec2(GLYPH, GLYPH)), tg.icon, !enabled);
-        if tg.menu.is_some_and(|m| m.has_arrow()) {
+        if tg.arrow {
             icons::paint(ui.painter(), Rect::from_center_size(arrow.center(), vec2(9.0, 9.0)), Icon::ChevronDown, !enabled);
         }
         icons::describe_control(ui, &resp, tg.label, None, false);
@@ -327,11 +369,18 @@ fn toggle_ui(app: &mut CadApp, ui: &mut Ui, tg: &Toggle, right: f32, cy: f32) ->
     face.left()
 }
 
+fn text_galley(ui: &Ui, text: &str) -> std::sync::Arc<egui::Galley> {
+    ui.painter().layout_no_wrap(text.to_string(), crate::theme::ribbon_font(ui.ctx()), Tokens::get().text)
+}
+
+fn text_width(ui: &Ui, text: &str) -> f32 {
+    text_galley(ui, text).size().x + 12.0
+}
+
 /// A text item `text` ending at `right`: its rect and response.
 fn text_button(ui: &mut Ui, text: &str, label: &str, right: f32, cy: f32) -> (Rect, Response) {
     let t = Tokens::get();
-    let font = crate::theme::ribbon_font(ui.ctx());
-    let g = ui.painter().layout_no_wrap(text.to_string(), font, t.text);
+    let g = text_galley(ui, text);
     let rect = Rect::from_min_max(pos2(right - g.size().x - 12.0, cy - SLOT / 2.0), pos2(right, cy + SLOT / 2.0));
     let resp = ui.interact(rect, ui.id().with(("status", label)), Sense::click());
     paint_fill(ui, rect, false, &resp);
@@ -342,10 +391,16 @@ fn text_button(ui: &mut Ui, text: &str, label: &str, right: f32, cy: f32) -> (Re
 
 /// MODEL / PAPER. In model space MODEL goes back to the last layout; on a layout it switches
 /// between paper space and model space in a viewport (PSPACE / MSPACE).
+fn space_label(app: &CadApp) -> &'static str {
+    let paper = matches!(app.session.layout_space(), cadcraft_doc::Space::Paper(_));
+    let in_viewport = app.session.state().is_ok_and(|st| st.mspace.is_some());
+    if !paper || in_viewport { MODEL } else { PAPER }
+}
+
 fn space_button(app: &mut CadApp, ui: &mut Ui, right: f32, cy: f32) -> f32 {
     let paper = matches!(app.session.layout_space(), cadcraft_doc::Space::Paper(_));
     let in_viewport = app.session.state().is_ok_and(|st| st.mspace.is_some());
-    let label = if !paper || in_viewport { MODEL } else { PAPER };
+    let label = space_label(app);
     let (rect, resp) = text_button(ui, crate::i18n::t(label), label, right, cy);
     if resp.on_hover_text(crate::tl!("Model or Paper Space")).clicked() {
         if paper {
@@ -353,37 +408,57 @@ fn space_button(app: &mut CadApp, ui: &mut Ui, right: f32, cy: f32) -> f32 {
             app.canvas.list = None;
         } else if let Some(name) = super::layouts::return_layout(app, ui.ctx()) {
             let _ = app.run("layout.set", json!({ "name": name }));
+        } else {
+            app.session.echo(crate::tl!("The drawing has no layout to switch to."));
         }
     }
     rect.left()
 }
 
 /// The drawing's length units (LUNITS); opens the Drawing Units dialog.
-fn units_button(app: &mut CadApp, ui: &mut Ui, right: f32, cy: f32) -> f32 {
-    let lunits = app.session.doc().map(|d| d.header.i64("LUNITS", 2)).unwrap_or(2);
-    let name = match lunits {
+fn units_name(app: &CadApp) -> &'static str {
+    match app.session.doc().map(|d| d.header.i64("LUNITS", 2)).unwrap_or(2) {
         1 => crate::tl!("Scientific"),
         3 => crate::tl!("Engineering"),
         4 => crate::tl!("Architectural"),
         5 => crate::tl!("Fractional"),
         _ => crate::tl!("Decimal"),
-    };
-    let (rect, resp) = text_button(ui, name, "Units", right, cy);
+    }
+}
+
+fn units_button(app: &mut CadApp, ui: &mut Ui, right: f32, cy: f32) -> f32 {
+    let (rect, resp) = text_button(ui, units_name(app), "Units", right, cy);
     if resp.on_hover_text(crate::tl!("Units")).clicked() {
         app.start("units");
     }
     rect.left()
 }
 
-/// The cursor's coordinates in the drawing's length units.
-fn coordinates(app: &mut CadApp, ui: &mut Ui, right: f32, cy: f32) -> f32 {
-    let t = Tokens::get();
+fn last_cursor_id() -> egui::Id {
+    egui::Id::new("asenacad-status-last-cursor")
+}
+
+/// The cursor's coordinates in the drawing's length units; the last ones while the cursor is
+/// off the drawing area, as AutoCAD keeps them.
+fn coord_text(app: &CadApp, ctx: &egui::Context) -> String {
     let (lu, lp) = app.session.doc().map(|d| (d.header.i64("LUNITS", 2), d.header.i64("LUPREC", 4))).unwrap_or((2, 4));
     let f = |v: f64| cadcraft_engine::units::format_distance(v, lu, lp);
-    let text = app.canvas.cursor.map_or_else(String::new, |c| format!("{}, {}, {}", f(c.x), f(c.y), f(0.0)));
-    let font = crate::theme::ribbon_font(ui.ctx());
-    let g = ui.painter().layout_no_wrap(text, font, t.text);
-    let w = (g.size().x + 12.0).clamp(150.0, 260.0);
+    let at = app.canvas.cursor.map(|c| (c.x, c.y)).or_else(|| ctx.data(|d| d.get_temp::<(f64, f64)>(last_cursor_id())));
+    at.map_or_else(String::new, |(x, y)| format!("{}, {}, {}", f(x), f(y), f(0.0)))
+}
+
+fn coord_width(ui: &Ui, text: &str) -> f32 {
+    (text_galley(ui, text).size().x + 12.0).clamp(150.0, 260.0)
+}
+
+fn coordinates(app: &mut CadApp, ui: &mut Ui, right: f32, cy: f32) -> f32 {
+    let t = Tokens::get();
+    if let Some(c) = app.canvas.cursor {
+        ui.ctx().data_mut(|d| d.insert_temp(last_cursor_id(), (c.x, c.y)));
+    }
+    let text = coord_text(app, ui.ctx());
+    let w = coord_width(ui, &text);
+    let g = text_galley(ui, &text);
     let rect = Rect::from_min_max(pos2(right - w, cy - SLOT / 2.0), pos2(right, cy + SLOT / 2.0));
     ui.painter().with_clip_rect(rect).galley(pos2(rect.right() - 6.0 - g.size().x, cy - g.size().y / 2.0), g, t.text);
     let resp = ui.interact(rect, ui.id().with("status_coordinates"), Sense::hover());
@@ -419,4 +494,70 @@ fn customization(app: &mut CadApp, ui: &mut Ui, right: f32, cy: f32) -> f32 {
         let _ = app.run("ui.statusbar", json!({ "item": key }));
     }
     rect.left()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// One frame of `f` with an egui `Ui` (fonts loaded).
+    fn with_ui(f: impl FnOnce(&mut Ui)) {
+        let ctx = egui::Context::default();
+        let mut f = Some(f);
+        let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
+            if let Some(f) = f.take() {
+                f(ui);
+            }
+        });
+        out.textures_delta.clear();
+    }
+
+    #[test]
+    fn every_item_takes_the_width_the_layout_reserves_for_it() {
+        let mut app = CadApp::new(cadcraft_engine::Session::empty(), crate::Services::default());
+        app.start("ui.sample");
+        app.canvas.cursor = Some(cadcraft_geom::Vec2::new(1.5, -2.25));
+        for paper in [false, true] {
+            if paper {
+                let _ = app.run("layout.set", json!({ "name": "Layout1" }));
+            }
+            with_ui(|ui| {
+                for it in ITEMS {
+                    let want = item_width(&app, ui, it);
+                    let left = item_ui(&mut app, ui, it, 1000.0, 20.0);
+                    assert!((1000.0 - left - want).abs() < 0.01, "{} (paper {paper}): draws {} wide, reserved {want}", it.key, 1000.0 - left);
+                }
+            });
+        }
+    }
+
+    #[test]
+    fn items_with_a_fixed_off_state_have_no_command_yet() {
+        // These show "off" because AsenaCAD has no command (or system variable) for them; once
+        // one exists, wire its state in `toggle_of` and drop it from this list.
+        for (key, cmd) in [
+            ("osnap3d", "3dosnap"),
+            ("annomonitor", "annomonitor"),
+            ("lockui", "lockui"),
+            ("ducs", "ucsdetect"),
+            ("selfilter", "selectionfilter"),
+            ("gizmo", "gizmo"),
+        ] {
+            assert!(cadcraft_engine::find_command(cmd).is_none(), "{cmd} exists now: show its state in the {key} item");
+            assert!(
+                cadcraft_engine::sysvars::get(&cadcraft_engine::Session::empty(), &cmd.to_ascii_uppercase()).is_none(),
+                "{} exists now: show it in the {key} item",
+                cmd.to_ascii_uppercase()
+            );
+        }
+    }
+
+    #[test]
+    fn the_statusbar_command_validates_on() {
+        let mut app = CadApp::new(cadcraft_engine::Session::empty(), crate::Services::default());
+        assert!(command(&mut app, &json!({"item": "grid", "on": "yes"})).is_err());
+        assert!(command(&mut app, &json!({"item": "grid", "on": 1})).is_err());
+        assert_eq!(command(&mut app, &json!({"item": "grid", "on": false})), Ok(json!({"item": "grid", "on": false})));
+        assert_eq!(command(&mut app, &json!({"item": "grid", "on": null})), Ok(json!({"item": "grid", "on": true})));
+    }
 }
