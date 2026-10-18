@@ -58,6 +58,8 @@ fn cache_id() -> egui::Id {
 
 fn look_up(session: &Session, id: &str) -> CommandInfo {
     match cadcraft_engine::find_command(id) {
+        // A placeholder that only refuses (`CommandSpec::stub`) isn't built yet.
+        Some(spec) if spec.is_stub() => CommandInfo { label: Some(spec.label), availability: Availability::Missing },
         Some(spec) => {
             let availability = match (spec.enabled)(session) {
                 Ok(()) => Availability::Ready,
@@ -113,11 +115,12 @@ mod tests {
         assert_eq!(command(&ctx, &session, "LINE").label, Some("Line"), "ids ignore ASCII case");
         assert!(availability(&ctx, &session, "properties").is_known());
         assert_eq!(availability(&ctx, &session, "no-such-command"), Availability::Missing);
+        assert_eq!(availability(&ctx, &session, "3dorbit"), Availability::Missing, "a placeholder isn't built yet");
         // A command that needs a selection refuses with its reason.
         let clear = availability(&ctx, &session, "erase.selection");
         assert_eq!(clear, Availability::Refused("nothing selected".into()));
         assert_eq!(clear.disabled_text(), "nothing selected");
         let cached = ctx.data_mut(|d| d.get_temp::<Cache>(cache_id())).map(|c| c.entries.len());
-        assert_eq!(cached, Some(5), "one entry per distinct id ('line' and 'LINE' are looked up as given)");
+        assert_eq!(cached, Some(6), "one entry per distinct id ('line' and 'LINE' are looked up as given)");
     }
 }

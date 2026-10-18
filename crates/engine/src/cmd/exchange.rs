@@ -57,16 +57,16 @@ pub fn specs() -> Vec<CommandSpec> {
         CommandSpec::new("attach", "Attach", |_, _| {
             Err(EngineError::Other("ATTACH is not available yet: raster images and PDF/DWF/DGN underlays can't be shown yet".into()))
         })
-        .params("not available yet")
+        .stub()
         .noundo(),
         CommandSpec::new("share", "Share", |_, _| {
             Err(EngineError::Other("SHARE is not available yet: there is no online service to share through; EXPORT or PUBLISH the drawing and send the file".into()))
         })
-        .params("not available yet")
+        .stub()
         .noundo(),
         CommandSpec::new("3dorbit", "Orbit", |_, _| Err(EngineError::Other("3DORBIT is not available yet: AsenaCAD draws in 2D (plan view) only".into())))
             .alias(&["3do", "orbit"])
-            .params("not available yet")
+            .stub()
             .noundo(),
     ]
 }
@@ -768,6 +768,7 @@ mod tests {
         for c in ["attach", "share", "3dorbit", "orbit"] {
             let e = s.execute(&resolve_alias(c), &Value::Null).unwrap_err().to_string();
             assert!(e.contains("not available yet"), "{c}: {e}");
+            assert!(crate::find_command(&resolve_alias(c)).is_some_and(|spec| spec.is_stub()), "{c} is marked as a placeholder");
         }
     }
 }

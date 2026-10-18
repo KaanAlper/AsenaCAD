@@ -56,6 +56,9 @@ use crate::{EngineError, Interactive, Result, Session};
 
 pub type Run = fn(&mut Session, &Value) -> Result<Value>;
 pub type Enabled = fn(&Session) -> std::result::Result<(), String>;
+
+/// The params doc of a placeholder command ([`CommandSpec::stub`]).
+pub const NOT_AVAILABLE: &str = "not available yet";
 pub type Factory = fn(&Session) -> Result<Box<dyn Interactive>>;
 
 pub struct CommandSpec {
@@ -109,6 +112,16 @@ impl CommandSpec {
     pub const fn enabled(mut self, e: Enabled) -> Self {
         self.enabled = e;
         self
+    }
+    /// Mark a command AutoCAD has that AsenaCAD only names so far: it refuses to run, and menus,
+    /// the ribbon and toolbars show it disabled ([`CommandSpec::is_stub`]).
+    pub const fn stub(mut self) -> Self {
+        self.params = NOT_AVAILABLE;
+        self
+    }
+    /// Whether this is a placeholder made with [`CommandSpec::stub`].
+    pub fn is_stub(&self) -> bool {
+        self.params == NOT_AVAILABLE
     }
     pub const fn noundo(mut self) -> Self {
         self.undoable = false;
