@@ -1230,3 +1230,9 @@ menu	Modify	تعديل
 menu	View	عرض
 @plural	{n} commit	{n} إيداع|{n} إيداع|{n} إيداعان|{n} إيداعات|{n} إيداعاً|{n} إيداع
 @plural	{n} contributor	{n} مساهم|{n} مساهم|{n} مساهمان|{n} مساهمين|{n} مساهماً|{n} مساهم
+	Show Full Ribbon	إظهار الشريط كاملاً
+	Minimize to Panel Buttons	تصغير إلى أزرار اللوحات
+	Minimize to Panel Titles	تصغير إلى عناوين اللوحات
+	Minimize to Tabs	تصغير إلى علامات التبويب
+	Minimize Options	خيارات التصغير
+	Pin	تثبيت

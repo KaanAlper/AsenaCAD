@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use egui::text::LayoutJob;
 use egui::{FontId, Rect, Response, Sense, Stroke, Ui, Vec2, pos2, vec2};
 
-use super::model::{Entry, Size, Toggle};
+use super::model::{Entry, Item, Size, Toggle};
 use crate::CadApp;
 use crate::icons::{self, Icon};
 use crate::theme::Tokens;
@@ -208,11 +208,7 @@ fn plain_button(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd: &st
 /// keeps that label on the face (only the icon follows the entry); `None` shows the entry's.
 /// `key` names the split for the memory (panel and position).
 pub fn split_button(ui: &mut Ui, app: &mut CadApp, key: &str, label: Option<&str>, size: Size, menu: &[Entry], default: usize) -> Response {
-    let current = RibbonState::split(ui.ctx(), key, default);
-    let (icon, entry_label, cmd) = match menu.get(current).or_else(|| menu.get(default)) {
-        Some(Entry::Command { icon, label, cmd }) => (*icon, *label, *cmd),
-        _ => (Icon::Menu, "", ""),
-    };
+    let (icon, entry_label, cmd) = split_face(ui.ctx(), key, menu, default);
     let face_label = label.unwrap_or(entry_label);
     let shown = crate::i18n::t(face_label);
     let face_enabled = command_enabled(app, cmd);
@@ -276,6 +272,40 @@ pub fn split_button(ui: &mut Ui, app: &mut CadApp, key: &str, label: Option<&str
         start(app, cmd);
     }
     face
+}
+
+/// The entry a split's face shows and runs: its icon, label and command.
+pub fn split_face(ctx: &egui::Context, key: &str, menu: &[Entry], default: usize) -> (Icon, &'static str, &'static str) {
+    let current = RibbonState::split(ctx, key, default);
+    match menu.get(current).or_else(|| menu.get(default)) {
+        Some(Entry::Command { icon, label, cmd }) => (*icon, *label, *cmd),
+        _ => (Icon::Menu, "", ""),
+    }
+}
+
+/// `size` with small items' labels hidden when `compact` (a narrow ribbon).
+pub fn shown_size(size: Size, compact: bool) -> Size {
+    match size {
+        Size::Small { label } => Size::Small { label: label && !compact },
+        Size::Large => Size::Large,
+    }
+}
+
+/// The width `item` (named `key`) takes in a panel; `compact` hides small items' labels.
+pub fn item_width(ui: &Ui, key: &str, item: &Item, compact: bool) -> f32 {
+    let width = |size: Size, label: &str| match shown_size(size, compact) {
+        Size::Large => large_width(ui, crate::i18n::t(label)),
+        Size::Small { label: shown } => small_width(ui, shown.then(|| crate::i18n::t(label))),
+    };
+    match *item {
+        Item::Button { label, size, .. } | Item::Toggle { label, size, .. } => width(size, label),
+        Item::Split { label, size, menu, default, .. } => {
+            let face = label.unwrap_or(split_face(ui.ctx(), key, menu, default).1);
+            let arrow = if matches!(size, Size::Small { .. }) { SMALL_SPLIT_ARROW_W } else { 0.0 };
+            width(size, face) + arrow
+        }
+        Item::Combo { width, .. } | Item::Slider { width, .. } => width,
+    }
 }
 
 /// One row of a split button's menu: icon and label.

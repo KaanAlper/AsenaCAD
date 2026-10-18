@@ -124,6 +124,9 @@ pub enum Icon {
     ChevronRight,
     /// A ribbon panel's dialog launcher: an arrow pointing down-right into a corner.
     Launcher,
+    /// A slide-out's pin: pinned (upright pushpin) and unpinned (lying on its side).
+    Pin,
+    Unpin,
     Plus,
     Switcher,
     Close,
@@ -899,6 +902,16 @@ pub fn paint(p: &Painter, rect: Rect, icon: Icon, dim: bool) {
         Launcher => {
             pen.l(6.0, 6.0, 17.0, 17.0);
             pen.poly(&[(17.0, 10.0), (17.0, 17.0), (10.0, 17.0)], false, b);
+        }
+        Pin => {
+            pen.rect(8.0, 3.0, 8.0, 9.0, b);
+            pen.l(5.0, 12.0, 19.0, 12.0);
+            pen.l(12.0, 12.0, 12.0, 21.0);
+        }
+        Unpin => {
+            pen.rect(3.0, 8.0, 9.0, 8.0, b);
+            pen.l(12.0, 5.0, 12.0, 19.0);
+            pen.l(12.0, 12.0, 21.0, 12.0);
         }
         Plus => {
             pen.l(12.0, 4.0, 12.0, 20.0);

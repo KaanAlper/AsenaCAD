@@ -1235,3 +1235,9 @@ menu	View	보기
 menu	Draw	그리기
 menu	Dimension	치수
 menu	Modify	수정
+	Show Full Ribbon	전체 리본 표시
+	Minimize to Panel Buttons	패널 버튼으로 최소화
+	Minimize to Panel Titles	패널 제목으로 최소화
+	Minimize to Tabs	탭으로 최소화
+	Minimize Options	최소화 옵션
+	Pin	고정

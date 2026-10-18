@@ -188,7 +188,8 @@ pub fn command_ids() -> Vec<&'static str> {
     ids
 }
 
-/// Every user-visible label of the ribbon (tabs, panels, items, menu entries, control names),
+/// Every user-visible label of the ribbon (tabs, panels, items, menu entries, control names,
+/// minimize states),
 /// for the translation coverage check.
 pub fn labels() -> Vec<&'static str> {
     let mut out = Vec::new();
@@ -212,6 +213,7 @@ pub fn labels() -> Vec<&'static str> {
             }
         }
     }
+    out.extend(crate::ribbon::RibbonMin::ALL.iter().map(|s| s.label()));
     out
 }
 

@@ -113,6 +113,8 @@ fn missing_marked_ui_literals(language: &str) -> BTreeSet<String> {
         include_str!("../ribbon/home.rs"),
         include_str!("../ribbon/widgets.rs"),
         include_str!("../ribbon/bind.rs"),
+        include_str!("../ribbon/layout.rs"),
+        include_str!("../ribbon/slideout.rs"),
     ];
     let mut missing = BTreeSet::new();
     for source in sources {

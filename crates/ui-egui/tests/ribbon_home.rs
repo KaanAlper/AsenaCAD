@@ -1,14 +1,15 @@
 //! The Home ribbon's controls: buttons start their commands, split buttons list AutoCAD's
 //! variants and remember the last one, unbuilt items are disabled, combo boxes show the drawing's
-//! current values and toggles show their state.
+//! current values and toggles show their state. The whole ribbon (`ribbon::show`): tab row,
+//! minimize states, panels packed in order, slide-outs and right-to-left collapse.
 
 use cadcraft_engine::Session;
 use cadcraft_ui_egui::ribbon::home::HOME;
-use cadcraft_ui_egui::ribbon::model::Panel;
-use cadcraft_ui_egui::ribbon::{render_panel_for_test, widgets::RibbonState};
+use cadcraft_ui_egui::ribbon::model::{Entry, Item, Panel};
+use cadcraft_ui_egui::ribbon::{self, RibbonMin, layout, render_panel_for_test, widgets::RibbonState};
 use cadcraft_ui_egui::{CadApp, Services};
 use egui::accesskit::{Role, Toggled};
-use egui::vec2;
+use egui::{pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::{NodeT, Queryable};
 
@@ -19,8 +20,9 @@ fn panel(label: &str) -> &'static Panel {
 fn harness(label: &str) -> Harness<'static, CadApp> {
     let panel = panel(label);
     let app = CadApp::new(Session::default(), Services::default());
-    let mut harness =
-        Harness::builder().with_size(vec2(900.0, 420.0)).build_ui_state(move |ui, app: &mut CadApp| render_panel_for_test(ui, app, panel), app);
+    let mut harness = Harness::builder()
+        .with_size(vec2(900.0, 420.0))
+        .build_ui_state(move |ui, app: &mut CadApp| render_panel_for_test(ui, app, &HOME, panel), app);
     harness.run_steps(3);
     harness
 }
@@ -61,7 +63,7 @@ fn choosing_2_point_keeps_the_circle_label_and_starts_circle_2p() {
     assert_eq!(running(&h).as_deref(), Some("circle.2p"));
     assert!(h.query_by_label("2-Point").is_none(), "the menu closes");
     assert!(h.query_by_role_and_label(Role::Button, "Circle").is_some(), "Circle keeps its label");
-    let remembered = RibbonState::split(&h.ctx, "Draw/2", 0);
+    let remembered = RibbonState::split(&h.ctx, "Home/Draw/2", 0);
     assert_eq!(remembered, 3, "the face (its icon) now follows the 2-Point entry");
 
     // The face runs the remembered variant.
@@ -112,7 +114,11 @@ fn the_properties_combos_show_the_current_properties() {
     // No binding yet: shown disabled with its value.
     assert!(h.get_by_role_and_label(Role::ComboBox, "Transparency Mode").accesskit_node().is_disabled());
     assert!(h.get_by_role_and_label(Role::Slider, "Transparency").accesskit_node().is_disabled());
-    assert!(h.query_by_label("Properties").is_some(), "the panel's dialog launcher");
+    let launcher = h
+        .query_all_by_role_and_label(Role::Button, "Properties")
+        .map(|n| n.rect().size())
+        .find(|s| *s == cadcraft_ui_egui::ribbon::widgets::LAUNCHER);
+    assert!(launcher.is_some(), "the panel's dialog launcher");
 }
 
 #[test]
@@ -135,4 +141,297 @@ fn quick_calculator_shows_pressed_once_its_palette_is_open() {
     h.get_by_label("Quick Calculator").click();
     h.run_steps(3);
     assert_eq!(toggled(&h), Some(Toggled::True));
+}
+
+// ---- The whole ribbon ----
+
+fn ribbon(width: f32, height: f32) -> Harness<'static, CadApp> {
+    let app = CadApp::new(Session::default(), Services::default());
+    let mut h = Harness::builder().with_size(vec2(width, height)).build_ui_state(|ui, app: &mut CadApp| ribbon::show(app, ui), app);
+    h.run_steps(3);
+    h
+}
+
+/// The ribbon's top edge (the harness's panel has a margin): the tab row's top.
+fn ribbon_top(h: &Harness<'_, CadApp>) -> f32 {
+    h.get_by_role_and_label(Role::Tab, "Home").rect().top() - (layout::TAB_ROW_H - layout::TAB_H) / 2.0
+}
+
+/// The panel title bars' band: panels start 1 px below the strip, which starts below the tab row.
+fn in_title_band(h: &Harness<'_, CadApp>, r: egui::Rect) -> bool {
+    let top = ribbon_top(h) + layout::TAB_ROW_H + layout::PANEL_TOP + layout::PANEL_H - layout::TITLE_H;
+    r.top() >= top - 0.5 && r.bottom() <= top + layout::TITLE_H + 0.5
+}
+
+/// Where `panel`'s title bar is, when the panel is expanded in the strip.
+fn title_rect(h: &Harness<'_, CadApp>, panel: &str) -> Option<egui::Rect> {
+    h.query_all_by_label(panel).map(|n| n.rect()).find(|r| in_title_band(h, *r))
+}
+
+/// A collapsed panel's button: a panel-tall node labelled with the panel's name.
+fn panel_button(h: &Harness<'_, CadApp>, panel: &str) -> Option<egui::Rect> {
+    h.query_all_by_role_and_label(Role::Button, panel).map(|n| n.rect()).find(|r| (r.height() - layout::PANEL_H).abs() < 0.5)
+}
+
+fn click_panel_button(h: &Harness<'_, CadApp>, panel: &str) {
+    let node = h.query_all_by_role_and_label(Role::Button, panel).find(|n| (n.rect().height() - layout::PANEL_H).abs() < 0.5);
+    node.unwrap_or_else(|| panic!("{panel} is collapsed")).click();
+}
+
+/// The accessible labels of a panel's items (a split face shows its default entry's label).
+fn item_labels(items: &[Item]) -> Vec<&'static str> {
+    items
+        .iter()
+        .map(|it| match *it {
+            Item::Button { label, .. } | Item::Toggle { label, .. } => label,
+            Item::Split { label: Some(l), .. } => l,
+            Item::Split { label: None, menu, default, .. } => match menu.get(default) {
+                Some(Entry::Command { label, .. }) => label,
+                _ => "",
+            },
+            Item::Combo { kind, .. } => kind.label(),
+            Item::Slider { kind, .. } => kind.label(),
+        })
+        .collect()
+}
+
+#[test]
+fn the_tab_row_shows_home_selected() {
+    let h = ribbon(1906.0, 1026.0);
+    let home = h.get_by_role_and_label(Role::Tab, "Home");
+    assert_eq!(home.accesskit_node().is_selected(), Some(true));
+    assert!(home.rect().height() <= layout::TAB_H + 0.5 && home.rect().top() < layout::TAB_ROW_H);
+    assert_eq!(h.state().ui.ribbon_tab, "Home");
+    let minimize = h.get_by_label("Minimize to Panel Buttons").rect();
+    assert!(minimize.left() > home.rect().right(), "the minimize button follows the last tab");
+}
+
+#[test]
+fn at_1906_px_all_ten_home_panels_are_expanded_in_order() {
+    let h = ribbon(1906.0, 1026.0);
+    let lefts: Vec<f32> = HOME.panels.iter().map(|p| title_rect(&h, p.label).unwrap_or_else(|| panic!("{} expanded", p.label)).left()).collect();
+    assert!(lefts.windows(2).all(|w| w[0] < w[1]), "panels in AutoCAD's order: {lefts:?}");
+    for p in HOME.panels {
+        assert!(panel_button(&h, p.label).is_none(), "{} is not collapsed", p.label);
+    }
+    assert!(h.query_by_label("Match Properties").is_some() && h.query_by_label("Base").is_some());
+    // Items of a narrow ribbon hide their labels; here Modify shows them.
+    let mv = h.get_by_label("Move").rect();
+    assert!(mv.width() > 40.0, "Move shows its label: {mv:?}");
+}
+
+#[test]
+fn at_1280_px_the_rightmost_panels_collapse_into_panel_buttons() {
+    let mut h = ribbon(1280.0, 1024.0);
+    let collapsed: Vec<&Panel> = HOME.panels.iter().filter(|p| panel_button(&h, p.label).is_some()).collect();
+    for p in HOME.panels {
+        assert!(title_rect(&h, p.label).is_some() != panel_button(&h, p.label).is_some(), "{}: expanded or collapsed", p.label);
+    }
+    let names: Vec<_> = collapsed.iter().map(|p| p.label).collect();
+    assert!(!names.is_empty(), "something collapses at 1280 px");
+    let first = HOME.panels.len() - names.len();
+    assert_eq!(names, HOME.panels[first..].iter().map(|p| p.label).collect::<Vec<_>>(), "collapse goes from the right");
+    assert_eq!(names, ["Properties", "Groups", "Utilities", "Clipboard", "View"], "AutoCAD's collapsed panels at 1280 px");
+    // Each panel button opens the whole panel (items, title, launcher) as a popup.
+    for p in collapsed {
+        click_panel_button(&h, p.label);
+        h.run_steps(3);
+        let button = panel_button(&h, p.label).unwrap();
+        for label in item_labels(p.items) {
+            let found = h.query_all_by_label(label).any(|n| n.rect().top() >= button.bottom() - 0.5);
+            assert!(found, "{}'s popup shows {label}", p.label);
+        }
+        if let Some(cmd) = p.launcher {
+            let label = cadcraft_engine::find_command(cmd).map_or(p.label, |c| c.label);
+            assert!(h.query_all_by_label(label).any(|n| n.rect().width() <= 14.5), "{}: launcher", p.label);
+        }
+        assert!(h.query_all_by_label(p.label).count() >= 2, "{}: the popup has its title bar", p.label);
+        click_panel_button(&h, p.label);
+        h.run_steps(3);
+        assert!(h.query_by_label(item_labels(p.items)[0]).is_none(), "{}: the button closes its popup", p.label);
+    }
+}
+
+#[test]
+fn a_split_remembers_its_entry_in_a_collapsed_panel_and_in_the_strip() {
+    let mut h = ribbon(1280.0, 1024.0);
+    click_panel_button(&h, "Utilities");
+    h.run_steps(3);
+    h.get_by_label("Measure options").click();
+    h.run_steps(3);
+    h.get_by_label("Distance").click();
+    h.run_steps(3);
+    assert_eq!(running(&h).as_deref(), Some("dist"));
+    assert_eq!(RibbonState::split(&h.ctx, "Home/Utilities/0", 0), 1, "remembered under the panel's stable key");
+    h.state_mut().session.cancel();
+    h.set_size(vec2(1906.0, 1026.0));
+    h.run_steps(3);
+    assert!(title_rect(&h, "Utilities").is_some(), "expanded now");
+    h.get_by_role_and_label(Role::Button, "Measure").click();
+    h.run_steps(3);
+    assert_eq!(running(&h).as_deref(), Some("dist"), "the expanded panel's face runs the same entry");
+}
+
+fn open_draw_slideout(h: &mut Harness<'_, CadApp>) {
+    let title = title_rect(h, "Draw").expect("Draw's title bar");
+    h.hover_at(title.center());
+    h.run_steps(1);
+    h.query_all_by_label("Draw").find(|n| in_title_band(h, n.rect())).unwrap().click();
+    h.run_steps(3);
+}
+
+fn slideout_is_open(h: &Harness<'_, CadApp>) -> bool {
+    h.query_by_label("Spline Fit").is_some()
+}
+
+#[test]
+fn the_draw_title_opens_its_slide_out_with_autocads_items_in_order() {
+    let mut h = ribbon(1906.0, 1026.0);
+    assert!(!slideout_is_open(&h));
+    open_draw_slideout(&mut h);
+    let draw = HOME.panels.iter().find(|p| p.label == "Draw").unwrap();
+    let labels = item_labels(draw.slideout);
+    assert_eq!(labels.first(), Some(&"Spline Fit"));
+    assert_eq!(labels.last(), Some(&"Revision Cloud"));
+    let strip_bottom = ribbon_top(&h) + layout::TAB_ROW_H + layout::STRIP_H;
+    // "Measure" is also Utilities' split: take the one in the slide-out, below the strip.
+    let below = |l: &str| h.query_all_by_label(l).map(|n| n.rect()).find(|r| r.top() >= strip_bottom - 1.0);
+    let mut rects: Vec<(&str, egui::Rect)> = labels.iter().map(|l| (*l, below(l).unwrap_or_else(|| panic!("{l} in the slide-out")))).collect();
+    assert!(rects.iter().all(|(_, r)| r.top() >= strip_bottom - 1.0), "the slide-out drops below the strip");
+    rects.sort_by(|a, b| (a.1.top(), a.1.left()).partial_cmp(&(b.1.top(), b.1.left())).unwrap());
+    assert_eq!(rects.iter().map(|(l, _)| *l).collect::<Vec<_>>(), labels, "row by row, left to right");
+    let title = title_rect(&h, "Draw").unwrap();
+    let left = rects.iter().map(|(_, r)| r.left()).fold(f32::MAX, f32::min);
+    assert!(left >= title.left() && left < title.left() + 10.0, "under the Draw panel");
+    // The title toggles it closed again.
+    h.query_all_by_label("Draw").find(|n| in_title_band(&h, n.rect())).unwrap().click();
+    h.run_steps(3);
+    assert!(!slideout_is_open(&h));
+}
+
+#[test]
+fn an_unpinned_slide_out_closes_after_the_pointer_leaves_and_a_pinned_one_stays() {
+    let mut h = ribbon(1906.0, 1026.0);
+    open_draw_slideout(&mut h);
+    let away = pos2(1500.0, 800.0);
+    h.hover_at(away);
+    h.run_steps(1);
+    assert!(slideout_is_open(&h), "not at once");
+    h.run_steps(3);
+    assert!(!slideout_is_open(&h), "closed half a second after the pointer left");
+
+    open_draw_slideout(&mut h);
+    h.get_by_label("Pin").click();
+    h.run_steps(2);
+    assert_eq!(h.get_by_label("Pin").accesskit_node().toggled(), Some(Toggled::True), "the pin shows pressed");
+    h.hover_at(away);
+    h.run_steps(8);
+    assert!(slideout_is_open(&h), "a pinned slide-out stays open");
+
+    h.get_by_label("Pin").click();
+    h.run_steps(2);
+    h.hover_at(away);
+    h.run_steps(4);
+    assert!(!slideout_is_open(&h), "unpinned again, it closes");
+
+    open_draw_slideout(&mut h);
+    h.key_press(egui::Key::Escape);
+    h.run_steps(2);
+    assert!(!slideout_is_open(&h), "Escape closes it");
+}
+
+#[test]
+fn choosing_from_a_split_menu_inside_the_slide_out_keeps_the_slide_out_open() {
+    let mut h = ribbon(1906.0, 1026.0);
+    open_draw_slideout(&mut h);
+    h.get_by_label("Revision Cloud options").click();
+    h.run_steps(2);
+    let slide_bottom = h.get_by_label("Pin").rect().bottom();
+    let polygonal = h.get_by_label("Polygonal").rect();
+    h.hover_at(polygonal.center());
+    h.run_steps(6);
+    assert!(slideout_is_open(&h), "the menu counts as inside the slide-out");
+    assert!(h.query_by_label("Polygonal").is_some(), "the menu is still open");
+    let reaches_past = h.get_by_label("Freehand").rect().bottom() > slide_bottom;
+    h.get_by_label("Polygonal").click();
+    h.run_steps(2);
+    assert_eq!(running(&h).as_deref(), Some("revcloud.polygonal"));
+    assert_eq!(RibbonState::split(&h.ctx, "Home/Draw/slideout/12", 0), 1);
+    assert!(slideout_is_open(&h), "still open right after the choice");
+    assert!(reaches_past, "the menu reaches below the slide-out (what this test is about)");
+}
+
+#[test]
+fn the_minimize_button_cycles_the_four_states() {
+    let mut h = ribbon(1906.0, 1026.0);
+    assert_eq!(h.state().ui.ribbon_min, RibbonMin::Full);
+    for (button, state) in [
+        ("Minimize to Panel Buttons", RibbonMin::PanelButtons),
+        ("Minimize to Panel Titles", RibbonMin::PanelTitles),
+        ("Minimize to Tabs", RibbonMin::Tabs),
+        ("Show Full Ribbon", RibbonMin::Full),
+    ] {
+        h.get_by_label(button).click();
+        h.run_steps(3);
+        assert_eq!(h.state().ui.ribbon_min, state);
+        let expanded = h.query_by_label("Line").is_some();
+        assert_eq!(expanded, state == RibbonMin::Full, "{state:?}: panels expanded only in the full ribbon");
+        let panels = h.query_all_by_role_and_label(Role::Button, "Modify").count() + usize::from(title_rect(&h, "Modify").is_some());
+        assert_eq!(panels > 0, state != RibbonMin::Tabs, "{state:?}: panel strip hidden only when minimized to tabs");
+    }
+    // The ▾ menu picks a state directly.
+    h.get_by_label("Minimize Options").click();
+    h.run_steps(2);
+    h.get_by_label("Minimize to Tabs").click();
+    h.run_steps(3);
+    assert_eq!(h.state().ui.ribbon_min, RibbonMin::Tabs);
+    // Minimized to tabs, clicking the tab drops its panels down.
+    h.get_by_role_and_label(Role::Tab, "Home").click();
+    h.run_steps(3);
+    assert!(h.query_by_label("Line").is_some(), "the tab shows its panels");
+}
+
+#[test]
+fn panel_buttons_open_their_panel_as_a_popup() {
+    let mut h = ribbon(1906.0, 1026.0);
+    h.state_mut().ui.ribbon_min = RibbonMin::PanelButtons;
+    h.run_steps(3);
+    h.get_by_role_and_label(Role::Button, "Draw").click();
+    h.run_steps(3);
+    assert!(h.query_by_label("Line").is_some() && h.query_by_label("Circle").is_some());
+}
+
+/// `CRAFT_UI_VISUAL_DIR=/dir cargo test -p cadcraft-ui-egui --test ribbon_home ribbon_visuals`
+/// renders the ribbon at AutoCAD's two observed window widths for a visual check.
+#[test]
+fn ribbon_visuals() {
+    let Some(directory) = std::env::var_os("CRAFT_UI_VISUAL_DIR").map(std::path::PathBuf::from) else { return };
+    std::fs::create_dir_all(&directory).unwrap();
+    for width in [1906.0, 1280.0] {
+        let app = CadApp::new(Session::default(), Services::default());
+        let mut h = Harness::builder().with_size(vec2(width, 300.0)).wgpu().build_ui_state(|ui, app: &mut CadApp| ribbon::show(app, ui), app);
+        h.run_steps(3);
+        h.render().unwrap().save(directory.join(format!("ribbon-{width}.png"))).unwrap();
+        if width > 1500.0 {
+            open_draw_slideout(&mut h);
+        } else {
+            click_panel_button(&h, "Properties");
+            h.run_steps(3);
+        }
+        h.render().unwrap().save(directory.join(format!("ribbon-{width}-open.png"))).unwrap();
+    }
+    let app = CadApp::new(Session::default(), Services::default());
+    let mut h = Harness::builder().with_size(vec2(1280.0, 300.0)).wgpu().build_ui_state(|ui, app: &mut CadApp| ribbon::show(app, ui), app);
+    for state in [RibbonMin::PanelButtons, RibbonMin::PanelTitles, RibbonMin::Tabs] {
+        h.key_press(egui::Key::Escape);
+        h.state_mut().ui.ribbon_min = state;
+        h.run_steps(3);
+        if state == RibbonMin::Tabs {
+            h.get_by_role_and_label(Role::Tab, "Home").click();
+        } else {
+            h.get_by_role_and_label(Role::Button, "Modify").click();
+        }
+        h.run_steps(3);
+        h.render().unwrap().save(directory.join(format!("ribbon-{state:?}.png"))).unwrap();
+    }
 }

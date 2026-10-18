@@ -1242,3 +1242,9 @@ menu	View	Visa
 menu	Draw	Rita
 menu	Dimension	Måttsättning
 menu	Modify	Ändra
+	Show Full Ribbon	Visa hela menyfliksområdet
+	Minimize to Panel Buttons	Minimera till panelknappar
+	Minimize to Panel Titles	Minimera till panelrubriker
+	Minimize to Tabs	Minimera till flikar
+	Minimize Options	Minimeringsalternativ
+	Pin	Fäst
