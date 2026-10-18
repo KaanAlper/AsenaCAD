@@ -45,6 +45,10 @@ fn snapshot(ui: &UiState) -> Result<Value, String> {
     if ui.qat_shown.len() > 64 || ui.qat_shown.iter().any(|id| id.len() > 64) {
         return Err("qatShown exceeds the workspace size limit".into());
     }
+    let status_items = cadcraft_ui_egui::chrome::statusbar::ITEMS;
+    if ui.status_shown.len() > status_items.len() || ui.status_shown.iter().any(|key| !status_items.iter().any(|item| item.key == key)) {
+        return Err("statusShown must list status bar items".into());
+    }
     if !cadcraft_ui_egui::ribbon::model::is_tab(&ui.ribbon_tab) {
         return Err("ribbonTab must name a ribbon tab".into());
     }
@@ -68,6 +72,8 @@ fn snapshot(ui: &UiState) -> Result<Value, String> {
         "qatBelowRibbon": ui.qat_below_ribbon,
         "ribbonTab": ui.ribbon_tab,
         "ribbonMin": ui.ribbon_min,
+        "statusShown": ui.status_shown,
+        "showNavbar": ui.show_navbar,
     }))
 }
 
@@ -226,6 +232,8 @@ mod tests {
             qat_below_ribbon: true,
             ribbon_tab: "Annotate".into(),
             ribbon_min: cadcraft_ui_egui::ribbon::RibbonMin::PanelTitles,
+            status_shown: vec!["coordinates".into(), "grid".into(), "dynmode".into()],
+            show_navbar: false,
             dialog: Some("layers".into()),
             start_tab: true,
             ..Default::default()
@@ -307,6 +315,7 @@ mod tests {
             br#"{"version":1,"workspace":{"qatBelowRibbon":1}}"#.to_vec(),
             br#"{"version":1,"workspace":{"ribbonTab":"Tool Sets"}}"#.to_vec(),
             br#"{"version":1,"workspace":{"ribbonMin":"tiny"}}"#.to_vec(),
+            br#"{"version":1,"workspace":{"statusShown":["grid","no-such-item"]}}"#.to_vec(),
             format!(r#"{{"version":1,"workspace":{{"qatShown":[{}]}}}}"#, vec![r#""new""#; 65].join(",")).into_bytes(),
         ] {
             fs::write(&path, &bytes).unwrap();

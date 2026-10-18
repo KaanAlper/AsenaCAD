@@ -9,7 +9,10 @@ use crate::icons::{self, Icon};
 use crate::theme::Tokens;
 
 pub mod annoscale;
+pub mod layouts;
 pub mod qat;
+pub mod statusbar;
+pub mod statusmenus;
 pub mod titlerow;
 
 /// The Tool Bar's height.
@@ -351,6 +354,47 @@ fn file_tabs_menu(app: &mut CadApp, ui: &mut egui::Ui, rect: Rect) {
     }
 }
 
+/// A click widget over `rect`, disabled unless `enabled`. Unlike `add_enabled_ui` it takes no
+/// room in `ui`'s layout, so painted controls never grow the panel they sit in.
+pub(crate) fn interact_enabled(ui: &mut egui::Ui, rect: Rect, id: egui::Id, enabled: bool) -> egui::Response {
+    if enabled {
+        return ui.interact(rect, id, Sense::click());
+    }
+    let mut child = ui.new_child(egui::UiBuilder::new().max_rect(rect));
+    child.disable();
+    child.interact(rect, id, Sense::click())
+}
+
+/// One menu row of `size`: a check mark column (`checked: Some` for check items) and the label.
+pub(crate) fn check_row(ui: &mut egui::Ui, label: &str, checked: Option<bool>, enabled: bool, size: egui::Vec2) -> egui::Response {
+    let (resp, color) = menu_row_frame(ui, checked, enabled, size);
+    let galley = ui.painter().layout_no_wrap(crate::i18n::t(label).to_string(), crate::theme::ribbon_font(ui.ctx()), color);
+    ui.painter().galley(pos2(resp.rect.left() + MENU_TEXT_X, resp.rect.center().y - galley.size().y / 2.0), galley, color);
+    icons::describe_control(ui, &resp, label, checked, false);
+    resp
+}
+
+/// Where a menu row's label starts, right of the check mark column.
+const MENU_TEXT_X: f32 = 26.0;
+
+/// A menu row's rectangle, hover fill and check mark; the caller paints the label in the colour
+/// returned (dimmed when disabled).
+fn menu_row_frame(ui: &mut egui::Ui, checked: Option<bool>, enabled: bool, size: egui::Vec2) -> (egui::Response, egui::Color32) {
+    let t = Tokens::get();
+    let resp = ui.add_enabled_ui(enabled, |ui| ui.allocate_exact_size(size, Sense::click()).1).inner;
+    let rect = resp.rect;
+    if resp.hovered() && resp.enabled() {
+        ui.painter().rect_filled(rect, 2.0, t.ribbon_hover);
+    }
+    let color = if enabled { t.text } else { t.text_faint };
+    if checked == Some(true) {
+        let c = pos2(rect.left() + 12.0, rect.center().y);
+        let points = vec![pos2(c.x - 4.0, c.y), pos2(c.x - 1.0, c.y + 3.0), pos2(c.x + 4.5, c.y - 3.5)];
+        ui.painter().add(egui::Shape::line(points, Stroke::new(1.5, color)));
+    }
+    (resp, color)
+}
+
 /// `text` laid out on one line no wider than `max_width`, ending in "…" when it had to be cut;
 /// and whether it was.
 fn elided(p: &egui::Painter, text: &str, font: egui::FontId, color: egui::Color32, max_width: f32) -> (std::sync::Arc<egui::Galley>, bool) {
@@ -360,13 +404,6 @@ fn elided(p: &egui::Painter, text: &str, font: egui::FontId, color: egui::Color3
     let cut = galley.elided;
     (galley, cut)
 }
-
-/// Where the layout tabs start at the latest (after "+" and the layout list button).
-const STATUS_LEFT_MIN: f32 = 60.0;
-/// Widest layout tab name before it is cut with "…".
-const LAYOUT_TAB_TEXT: f32 = 150.0;
-/// Room the layout tabs leave for the coordinates and messages.
-const STATUS_READOUT_MIN: f32 = 150.0;
 
 /// Which of the tabs with these `widths` to show in `room`: all of them when they fit, else a run
 /// that holds the `active` one (shown even when it alone is too wide), starting as early as it can.
@@ -384,228 +421,9 @@ fn visible_tabs(widths: &[f32], active: Option<usize>, room: f32) -> std::ops::R
     start..active + 1
 }
 
-/// Status bar: layout tabs on the left, coordinates and drafting toggles on the right.
+/// The status bar row: the layout bar and the status bar items ([`statusbar`]).
 pub fn status_bar(app: &mut CadApp, ui: &mut egui::Ui) {
-    let t = Tokens::get();
-    egui::Panel::bottom("cc_status").exact_size(26.0).frame(egui::Frame::NONE.fill(t.chrome)).show(ui, |ui| {
-        let r = ui.max_rect();
-        let p = ui.painter().clone();
-        let mut x = r.left() + 8.0;
-        // Clear the status message on time even when no input arrives (the app only repaints on input).
-        if let Some((_, at)) = &app.status
-            && crate::now_ms() - at < 5000.0
-        {
-            let left = std::time::Duration::try_from_secs_f64((5000.0 - (crate::now_ms() - at)) / 1000.0).unwrap_or_default();
-            ui.ctx().request_repaint_after(left);
-        }
-        let mut list_button = None;
-        for (icon, tip) in [(Icon::Plus, "New layout"), (Icon::Menu, "Layout list")] {
-            let br = Rect::from_min_size(pos2(x, r.top() + 4.0), vec2(18.0, 18.0));
-            let resp = ui.interact(br, ui.id().with(("sb", tip)), Sense::click());
-            icons::paint(&p, br.shrink(2.0), icon, false);
-            icons::describe_control(ui, &resp, tip, None, false);
-            let resp = resp.on_hover_text(crate::i18n::t(tip));
-            if icon == Icon::Plus {
-                if resp.clicked() {
-                    let _ = app.run("layout.new", json!({}));
-                }
-            } else {
-                list_button = Some(resp);
-            }
-            x += 22.0;
-        }
-        // The layout tabs start right of a palette docked on the left (as the old Tool Sets
-        // palette was), measured from the drawing area's last position.
-        let left_dock = app.canvas.rect.map_or(0.0, |c| c.left() - r.left());
-        x = x.max(r.left() + if left_dock > STATUS_LEFT_MIN { left_dock + 12.0 } else { STATUS_LEFT_MIN });
-        // Right side: toggles, right-aligned.
-        let s = app.session.settings.clone();
-        let anno_all = app.session.doc().is_ok_and(|d| d.anno_all_visible());
-        use cadcraft_engine::snap::mode;
-        let toggles: Vec<(Icon, bool, &str, &str)> = vec![
-            (Icon::Grid, s.gridmode, "grid", "Grid (F7)"),
-            (Icon::Snap, s.snapmode, "snap", "Snap Mode (F9)"),
-            (Icon::Ortho, s.orthomode, "ortho", "Ortho Mode (F8)"),
-            (Icon::Polar, s.polarmode, "polar", "Polar Tracking (F10)"),
-            (Icon::Isodraft, s.isodraft, "isodraft", "Isometric Drafting"),
-            (Icon::OTrack, s.otrack, "otrack", "Object Snap Tracking (F11)"),
-            (Icon::Osnap, s.osmode & mode::OFF == 0 && s.osmode != 0, "osnap", "Object Snap (F3)"),
-            (Icon::Lineweight, s.lwdisplay, "lwdisplay", "Show/Hide Lineweight"),
-            (Icon::Transparency, s.transparency_display, "transparencydisplay", "Show/Hide Transparency"),
-            (Icon::DynInput, s.dynmode, "dynmode", "Dynamic Input (F12)"),
-            (Icon::QuickProps, s.qpmode, "qpmode", "Quick Properties"),
-            (Icon::Annotation, anno_all, "annovisible.toggle", "Annotation Visibility"),
-            (Icon::Workspace, false, "ui.noop", "Workspace Switching"),
-            (Icon::Gear, false, "ui.dialog.dsettings", "Drafting Settings"),
-        ];
-        let size = 20.0;
-        let mut rx = r.right() - 8.0 - toggles.len() as f32 * (size + 4.0);
-        // Coordinates.
-        let coord = app.canvas.cursor.map(|c| {
-            let (lu, lp) = app.session.doc().map(|d| (d.header.i64("LUNITS", 2), d.header.i64("LUPREC", 4))).unwrap_or((2, 4));
-            format!(
-                "{}, {}, {}",
-                cadcraft_engine::units::format_distance(c.x, lu, lp),
-                cadcraft_engine::units::format_distance(c.y, lu, lp),
-                cadcraft_engine::units::format_distance(0.0, lu, lp)
-            )
-        });
-        // MODEL / PAPER (layouts only): toggles MSPACE and PSPACE like AutoCAD's status button.
-        let mut coord_right = rx - 8.0;
-        // The annotation scale list (model space).
-        coord_right = annoscale::status(app, ui, coord_right, r.center().y);
-        if matches!(app.session.layout_space(), cadcraft_doc::Space::Paper(_)) {
-            let model = app.session.state().is_ok_and(|st| st.mspace.is_some());
-            let label = if model { "MODEL" } else { "PAPER" };
-            let br = Rect::from_min_max(pos2(rx - 60.0, r.center().y - 9.0), pos2(rx - 6.0, r.center().y + 9.0));
-            let resp = ui.interact(br, ui.id().with("mspace_toggle"), Sense::click());
-            p.rect_filled(br, 3.0, if resp.hovered() { t.control_hover } else { t.toggle_on.gamma_multiply(0.25) });
-            p.text(br.center(), egui::Align2::CENTER_CENTER, crate::i18n::t(label), crate::theme::small(), t.text);
-            icons::describe_control(ui, &resp, label, None, false);
-            if resp.on_hover_text(crate::tl!("Switch between model space in a viewport and paper space")).clicked() {
-                let _ = app.run(if model { "pspace" } else { "mspace" }, json!({}));
-                app.canvas.list = None;
-            }
-            coord_right = br.left() - 10.0;
-            // Scale and lock of the active or selected viewport.
-            coord_right = crate::vpscale::status(app, ui, coord_right + 4.0, r.center().y) - 10.0;
-        }
-        // Layout tabs: Model, "+", then the layouts that fit before the right-hand controls (the
-        // current one always); the layout list reaches the rest.
-        let mut tabs: Vec<String> = vec!["Model".into()];
-        let cur = app.session.state().map(|s| match &s.space {
-            cadcraft_doc::Space::Model => "Model".to_string(),
-            cadcraft_doc::Space::Paper(n) => n.clone(),
-        });
-        if let Ok(st) = app.session.state() {
-            let mut ls: Vec<_> = st.doc.layouts.iter().collect();
-            ls.sort_by_key(|l| l.tab_order);
-            tabs.extend(ls.iter().map(|l| l.name.clone()));
-        }
-        let shown_name = |i: usize, name: &str| if i == 0 { crate::tl!("Model").to_string() } else { name.to_string() };
-        let limit = (coord_right - STATUS_READOUT_MIN).max(x);
-        let labels: Vec<_> =
-            tabs.iter().enumerate().map(|(i, n)| elided(&p, &shown_name(i, n), crate::theme::body(), t.text, LAYOUT_TAB_TEXT)).collect();
-        let widths: Vec<f32> = labels.iter().map(|(g, _)| g.size().x + 26.0 + 2.0).collect();
-        let active_tab = tabs.iter().position(|n| cur.as_deref().is_ok_and(|c| c == n));
-        // Model and "+" stay; the layouts share what is left.
-        let layouts = widths.get(1..).unwrap_or_default();
-        let room = limit - x - widths.first().copied().unwrap_or(0.0) - 22.0;
-        let active_layout = active_tab.and_then(|a| a.checked_sub(1));
-        let mut shown = visible_tabs(layouts, active_layout, room);
-        let hidden = shown.len() < layouts.len();
-        if hidden {
-            shown = visible_tabs(layouts, active_layout, room - 22.0);
-        }
-        let clip = Rect::from_min_max(r.min, pos2(limit.max(r.left()), r.bottom()));
-        let tp = p.with_clip_rect(clip);
-        let mut switch = None;
-        for (i, (name, (g, cut))) in tabs.iter().zip(labels).enumerate() {
-            if i > 0 && !shown.contains(&(i - 1)) {
-                continue;
-            }
-            let w = g.size().x + 26.0;
-            let tr = Rect::from_min_size(pos2(x, r.top() + 1.0), vec2(w, r.height() - 2.0)).intersect(clip);
-            let active = active_tab == Some(i);
-            let resp = ui.interact(tr, ui.id().with(("lt", i)), Sense::click());
-            if active {
-                tp.rect_filled(tr, 2.0, t.tab_active);
-            } else if resp.hovered() {
-                tp.rect_filled(tr, 2.0, t.control.gamma_multiply(0.5));
-            }
-            tp.galley(pos2(tr.left() + 13.0, tr.center().y - g.size().y / 2.0), g, if active { t.text } else { t.text_dim });
-            icons::describe_control(ui, &resp, name, Some(active), true);
-            let resp = if cut { resp.on_hover_text(shown_name(i, name)) } else { resp };
-            if resp.clicked() {
-                switch = Some(name.clone());
-            }
-            crate::shortcut_menus::attach(app, &resp, |app| crate::shortcut_menus::layout_tab_entries(app, name));
-            x += w + 2.0;
-            if i == 0 {
-                let pr = Rect::from_min_size(pos2(x, r.top() + 5.0), vec2(16.0, 16.0));
-                let presp = ui.interact(pr, ui.id().with("layout_plus"), Sense::click());
-                icons::paint(&p, pr.shrink(2.0), Icon::Plus, false);
-                icons::describe_control(ui, &presp, "New layout", None, false);
-                if presp.on_hover_text(crate::tl!("New layout")).clicked()
-                    && let Ok(v) = app.run("layout.new", json!({}))
-                    && let Some(n) = v.get("name").and_then(serde_json::Value::as_str)
-                {
-                    switch = Some(n.to_string());
-                }
-                x += 22.0;
-            }
-        }
-        // The layouts that didn't fit, behind a button after the last tab shown.
-        let more = hidden.then(|| {
-            let mr = Rect::from_min_size(pos2(x + 2.0, r.top() + 5.0), vec2(16.0, 16.0));
-            let resp = ui.interact(mr, ui.id().with("layout_more"), Sense::click());
-            if resp.hovered() {
-                p.rect_filled(mr, 3.0, t.control_hover.gamma_multiply(0.5));
-            }
-            icons::paint(&p, mr.shrink(2.0), Icon::ChevronDown, false);
-            icons::describe_control(ui, &resp, "Layout list", None, false);
-            x += 22.0;
-            resp.on_hover_text(crate::tl!("Layout list"))
-        });
-        for resp in list_button.iter().chain(&more) {
-            egui::Popup::from_toggle_button_response(resp).width(200.0).close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside).show(|ui| {
-                egui::ScrollArea::vertical().max_height(360.0).show(ui, |ui| {
-                    for (i, name) in tabs.iter().enumerate() {
-                        if ui.add(egui::Button::selectable(active_tab == Some(i), shown_name(i, name)).truncate()).clicked() {
-                            switch = Some(name.clone());
-                            ui.close();
-                        }
-                    }
-                });
-            });
-        }
-        if let Some(n) = switch {
-            let _ = app.run("layout.set", json!({ "name": n }));
-        }
-        // A transient message occupies the same bounded readout slot as coordinates.
-        // Ellipsis and a tooltip keep either value readable without covering layout tabs.
-        let message = app.status.as_ref().filter(|(_, at)| crate::now_ms() - at < 5000.0).map(|(message, _)| message);
-        let readout = message.cloned().or(coord);
-        if let Some(text) = readout {
-            let left = x + 8.0;
-            let width = (coord_right - left).max(0.0);
-            if width > 4.0 {
-                let color = if message.is_some() { t.warn } else { t.text };
-                let mut job = egui::text::LayoutJob::simple_singleline(text.clone(), crate::theme::body(), color);
-                job.wrap.max_width = width;
-                job.wrap.max_rows = 1;
-                job.wrap.break_anywhere = true;
-                let galley = p.layout_job(job);
-                let rect = Rect::from_min_max(pos2(left, r.top()), pos2(coord_right, r.bottom()));
-                let text_x = if message.is_some() { left } else { coord_right - galley.size().x };
-                p.with_clip_rect(rect).galley(pos2(text_x, r.center().y - galley.size().y / 2.0), galley, color);
-                ui.interact(rect, ui.id().with("status_readout"), Sense::hover()).on_hover_text(text);
-            }
-        }
-        let mut toggle_cmd = None;
-        for (icon, on, cmd, tip) in toggles {
-            let br = Rect::from_min_size(pos2(rx, r.center().y - size / 2.0), vec2(size, size));
-            let resp = ui.interact(br, ui.id().with(("tg", tip)), Sense::click());
-            if on {
-                p.rect_filled(br, 3.0, t.toggle_on.gamma_multiply(0.35));
-            } else if resp.hovered() {
-                p.rect_filled(br, 3.0, t.control_hover.gamma_multiply(0.5));
-            }
-            icons::paint(&p, br.shrink(2.5), icon, false);
-            if on {
-                // Re-tint the icon blue-ish by an underline.
-                p.hline(br.x_range().shrink(4.0), br.bottom() - 1.0, Stroke::new(1.5, t.toggle_on));
-            }
-            icons::describe_control(ui, &resp, tip, Some(on), false);
-            if resp.on_hover_text(crate::i18n::t(tip)).clicked() {
-                toggle_cmd = Some(cmd);
-            }
-            rx += size + 4.0;
-        }
-        if let Some(c) = toggle_cmd {
-            app.start(c);
-        }
-    });
+    statusbar::show(app, ui);
 }
 
 /// The Start page (no drawing open, or the Start tab).

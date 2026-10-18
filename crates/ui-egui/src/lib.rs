@@ -119,6 +119,11 @@ pub struct UiState {
     pub qat_shown: Vec<String>,
     /// The Quick Access Toolbar shows in a strip under the ribbon instead of the title row.
     pub qat_below_ribbon: bool,
+    /// The status bar items shown (keys of [`chrome::statusbar::ITEMS`], AutoCAD's defaults
+    /// first); its Customization menu changes them through `ui.statusbar`.
+    pub status_shown: Vec<String>,
+    /// The navigation bar at the right edge of the drawing area (NAVBAR; its ⊗ hides it).
+    pub show_navbar: bool,
 }
 
 /// A DXF/DWG file version (2000 … 2018).
@@ -199,6 +204,8 @@ impl Default for UiState {
             ribbon_min: ribbon::RibbonMin::Full,
             qat_shown: chrome::qat::default_shown(),
             qat_below_ribbon: false,
+            status_shown: chrome::statusbar::default_shown(),
+            show_navbar: true,
         }
     }
 }

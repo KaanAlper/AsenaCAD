@@ -37,6 +37,8 @@ pub const UI_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
     ("ui.toggle.filetabs", "File Tab", &["Window", "File Tab"], None),
     ("ui.toggle.statusbar", "Status Bar", &["Window", "Status Bar"], None),
     ("ui.toggle.cmdline", "Command Line", &["Window", "Command Line"], Some("Cmd+9")),
+    // The status bar's Customization menu: `{item, on?}` shows or hides one item.
+    ("ui.statusbar", "Customize Status Bar", &[], None),
     ("ui.toggle.viewcube", "ViewCube", &["View", "ViewCube", "On"], None),
     ("ui.toggle.ucsicon", "UCS Icon", &["View", "UCS Icon", "On"], None),
     ("ui.theme.system", "Use System Setting", &["View", "Interface Theme", "Use System Setting"], None),
@@ -231,6 +233,7 @@ fn run_ui_command_inner(app: &mut CadApp, id: &str, params: &Value) -> Option<Re
             toggle(&mut app.ui.show_command_line, params);
             Ok(Value::Null)
         }
+        "ui.statusbar" => crate::chrome::statusbar::command(app, params),
         "ui.toggle.systemcursor" => {
             toggle(&mut app.ui.system_cursor, params);
             Ok(Value::Null)

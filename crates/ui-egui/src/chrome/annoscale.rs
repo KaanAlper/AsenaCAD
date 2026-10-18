@@ -28,8 +28,8 @@ pub fn status(app: &mut CadApp, ui: &mut egui::Ui, right: f32, cy: f32) -> f32 {
     let (ax, ay) = (r.right() - 9.0, r.center().y);
     p.line_segment([pos2(ax - 3.0, ay - 1.5), pos2(ax, ay + 1.5)], egui::Stroke::new(1.2, t.text_dim));
     p.line_segment([pos2(ax, ay + 1.5), pos2(ax + 3.0, ay - 1.5)], egui::Stroke::new(1.2, t.text_dim));
-    crate::icons::describe_control(ui, &resp, "Annotation scale", None, false);
-    let resp = resp.on_hover_text(crate::tl!("Annotation scale"));
+    crate::icons::describe_control(ui, &resp, "Annotation Scale", None, false);
+    let resp = resp.on_hover_text(crate::tl!("Annotation Scale"));
     let mut pick: Option<String> = None;
     let mut edit = false;
     egui::Popup::from_toggle_button_response(&resp).width(170.0).close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside).show(|ui| {

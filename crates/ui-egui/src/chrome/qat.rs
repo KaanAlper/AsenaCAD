@@ -332,24 +332,9 @@ fn customize(app: &mut CadApp, ui: &mut Ui, at: egui::Pos2) -> f32 {
     rect.right()
 }
 
-/// One menu row: a check mark column (`checked: Some` for the items) and the label.
+/// One menu row of [`MENU_W`] × [`MENU_ROW_H`].
 fn check_row(ui: &mut Ui, label: &str, checked: Option<bool>, enabled: bool) -> Response {
-    let t = Tokens::get();
-    let resp = ui.add_enabled_ui(enabled, |ui| ui.allocate_exact_size(vec2(MENU_W, MENU_ROW_H), Sense::click()).1).inner;
-    let rect = resp.rect;
-    if resp.hovered() && resp.enabled() {
-        ui.painter().rect_filled(rect, 2.0, t.ribbon_hover);
-    }
-    let color = if enabled { t.text } else { t.text_faint };
-    if checked == Some(true) {
-        let c = pos2(rect.left() + 12.0, rect.center().y);
-        let points = vec![pos2(c.x - 4.0, c.y), pos2(c.x - 1.0, c.y + 3.0), pos2(c.x + 4.5, c.y - 3.5)];
-        ui.painter().add(egui::Shape::line(points, Stroke::new(1.5, color)));
-    }
-    let galley = ui.painter().layout_no_wrap(crate::i18n::t(label).to_string(), crate::theme::ribbon_font(ui.ctx()), color);
-    ui.painter().galley(pos2(rect.left() + 26.0, rect.center().y - galley.size().y / 2.0), galley, color);
-    icons::describe_control(ui, &resp, label, checked, false);
-    resp
+    super::check_row(ui, label, checked, enabled, vec2(MENU_W, MENU_ROW_H))
 }
 
 #[cfg(test)]
