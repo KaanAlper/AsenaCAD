@@ -75,6 +75,7 @@ fn missing_commands_menus_tools_and_snap_labels(language: &str) -> Vec<String> {
         }
     }
     sources.extend(cadcraft_engine::snap::mode::ALL.iter().map(|(_, name)| *name));
+    sources.extend(crate::ribbon::model::labels());
     sources.into_iter().filter(|s| !s.is_empty() && !catalog.contains_key(&("", *s))).map(str::to_string).collect()
 }
 
@@ -107,6 +108,9 @@ fn missing_marked_ui_literals(language: &str) -> BTreeSet<String> {
         include_str!("../quick.rs"),
         include_str!("../vpscale.rs"),
         include_str!("../options/dialog.rs"),
+        include_str!("../ribbon/mod.rs"),
+        include_str!("../ribbon/model.rs"),
+        include_str!("../ribbon/home.rs"),
     ];
     let mut missing = BTreeSet::new();
     for source in sources {

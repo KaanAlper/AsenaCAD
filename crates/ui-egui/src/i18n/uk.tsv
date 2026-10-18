@@ -1327,3 +1327,54 @@
 	Justify	За шириною
 	Text color	Колір тексту
 	Click the ruler to add a tab stop, right-click to remove one	Натисніть на лінійку, щоб додати табуляцію; права кнопка видаляє її
+# Ribbon (Home tab).
+	2-Point	2 точки
+	3-Point	3 точки
+	Annotation	Анотації
+	Blend Curves	Плавне з'єднання кривих
+	Break at Point	Розірвати в точці
+	Bring All Annotations to Front	Усі анотації на передній план
+	Bring Dimensions to Front	Розміри на передній план
+	Bring Leaders to Front	Виноски на передній план
+	Bring Text to Front	Текст на передній план
+	Copy Clip	Копіювати в буфер
+	Copy Objects to New Layer	Копіювати об'єкти на новий шар
+	Create	Створити
+	Detail View Style	Стиль виносного виду
+	Detect and Convert	Виявити й перетворити
+	Dimension Style	Розмірний стиль
+	Edit Attributes	Редагувати атрибути
+	Edit Hatch	Редагувати штрихування
+	Edit Polyline	Редагувати полілінію
+	Edit Spline	Редагувати сплайн
+	Group Bounding Box	Габаритна рамка групи
+	Group Manager	Диспетчер груп
+	Group Selection On/Off	Вибір груп увімк./вимк.
+	Layer Walk	Перегляд шарів
+	Layer fading	Затінення шарів
+	Locked Layer fading	Затінення заблокованих шарів
+	Manage Attributes	Керувати атрибутами
+	Merge	Об'єднати
+	Multileader Style	Стиль мультивиносок
+	Multiple Points	Кілька точок
+	Object Color	Колір об'єкта
+	Paste Special	Спеціальна вставка
+	Paste as Hyperlink	Вставити як гіперпосилання
+	Plot Style	Стиль друку
+	Quick Calculator	Калькулятор
+	Replace	Замінити
+	Search and Convert	Знайти й перетворити
+	Section View Style	Стиль виду розрізу
+	Set Base Point	Задати базову точку
+	Set to ByLayer	Установити за шаром
+	Single	Один
+	Single Line	Однорядковий
+	Spline CV	Сплайн за керувальними вершинами
+	Spline Fit	Сплайн за точками апроксимації
+	Table Style	Стиль таблиць
+	Text Style	Текстовий стиль
+	Transparency Mode	Режим прозорості
+	Unisolate	Скасувати ізоляцію
+	Unlock	Розблокувати
+	Utilities	Утиліти
+	VP Freeze in All Viewports except Current	Заморозити у всіх ВЕ, крім поточного

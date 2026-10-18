@@ -144,6 +144,102 @@ pub enum Icon {
     PickAdd,
     SelectObjects,
     QuickSelect,
+    // Home ribbon icons still drawn as placeholders (see `paint`).
+    CircleDiameter,
+    Circle2Point,
+    Circle3Point,
+    CircleTtr,
+    CircleTtt,
+    ArcSce,
+    ArcSca,
+    ArcScl,
+    ArcSea,
+    ArcSed,
+    ArcSer,
+    ArcCse,
+    ArcCsa,
+    ArcCsl,
+    ArcContinue,
+    EllipseAxis,
+    EllipseArc,
+    SplineCv,
+    Divide,
+    MeasurePoints,
+    Polyline3d,
+    Helix,
+    RevCloudPolygonal,
+    RevCloudFreehand,
+    Blend,
+    ArrayPath,
+    SetByLayer,
+    ChangeSpace,
+    EditPolyline,
+    EditSpline,
+    EditHatch,
+    EditArray,
+    Align,
+    BreakAtPoint,
+    Reverse,
+    CopyNested,
+    Overkill,
+    DrawOrderFront,
+    DrawOrderBack,
+    DrawOrderAbove,
+    DrawOrderUnder,
+    TextToFront,
+    DimsToFront,
+    LeadersToFront,
+    AnnotationsToFront,
+    HatchToBack,
+    Dimension,
+    DimJogged,
+    CollectLeaders,
+    TextStyle,
+    DimStyle,
+    MLeaderStyle,
+    TableStyle,
+    LayerOn,
+    LayerUniso,
+    LayerThaw,
+    LayerUnlock,
+    LayerCur,
+    CopyToLayer,
+    LayerWalk,
+    LayerVpFreeze,
+    LayerMerge,
+    LayerDelete,
+    LockedLayerFade,
+    DetectBlocks,
+    ConvertBlocks,
+    AttEdit,
+    AttEditMultiple,
+    BlockReplace,
+    AttManager,
+    AttSync,
+    BasePoint,
+    Group,
+    Ungroup,
+    GroupEdit,
+    GroupSelect,
+    GroupManager,
+    GroupBox,
+    MeasureRadius,
+    MeasureAngle,
+    Volume,
+    SelectAll,
+    QuickCalc,
+    IdPoint,
+    PointStyle,
+    Paste,
+    PasteBlock,
+    PasteHyperlink,
+    PasteOrig,
+    PasteSpecial,
+    Cut,
+    CopyClip,
+    ViewBase,
+    SectionViewStyle,
+    DetailViewStyle,
 }
 
 struct Pen<'a> {
@@ -904,6 +1000,19 @@ pub fn paint(p: &Painter, rect: Rect, icon: Icon, dim: bool) {
             // A filter funnel with a spark.
             pen.poly(&[(3.0, 4.0), (19.0, 4.0), (13.0, 11.0), (13.0, 19.0), (9.0, 17.0), (9.0, 11.0)], true, b);
             pen.poly(&[(20.0, 10.0), (16.5, 15.5), (20.0, 15.5), (17.0, 21.0)], false, a);
+        }
+        CircleDiameter | Circle2Point | Circle3Point | CircleTtr | CircleTtt | ArcSce | ArcSca | ArcScl | ArcSea | ArcSed | ArcSer | ArcCse
+        | ArcCsa | ArcCsl | ArcContinue | EllipseAxis | EllipseArc | SplineCv | Divide | MeasurePoints | Polyline3d | Helix | RevCloudPolygonal
+        | RevCloudFreehand | Blend | ArrayPath | SetByLayer | ChangeSpace | EditPolyline | EditSpline | EditHatch | EditArray | Align
+        | BreakAtPoint | Reverse | CopyNested | Overkill | DrawOrderFront | DrawOrderBack | DrawOrderAbove | DrawOrderUnder | TextToFront
+        | DimsToFront | LeadersToFront | AnnotationsToFront | HatchToBack | Dimension | DimJogged | CollectLeaders | TextStyle | DimStyle
+        | MLeaderStyle | TableStyle | LayerOn | LayerUniso | LayerThaw | LayerUnlock | LayerCur | CopyToLayer | LayerWalk | LayerVpFreeze
+        | LayerMerge | LayerDelete | LockedLayerFade | DetectBlocks | ConvertBlocks | AttEdit | AttEditMultiple | BlockReplace | AttManager
+        | AttSync | BasePoint | Group | Ungroup | GroupEdit | GroupSelect | GroupManager | GroupBox | MeasureRadius | MeasureAngle | Volume
+        | SelectAll | QuickCalc | IdPoint | PointStyle | Paste | PasteBlock | PasteHyperlink | PasteOrig | PasteSpecial | Cut | CopyClip
+        | ViewBase | SectionViewStyle | DetailViewStyle => {
+            // Placeholder until the Home ribbon icons are drawn: a plain rounded square.
+            pen.p.rect_stroke(rect.shrink(rect.width() * 0.2), 3.0 * pen.sc(), pen.st(b), egui::StrokeKind::Inside);
         }
     }
 }
