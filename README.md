@@ -7,7 +7,7 @@
   </a>
 </p>
 
-<h1 align="center">CADCraft</h1>
+<h1 align="center">AsenaCAD</h1>
 
 <p align="center">
   <b>Computer-aided design and drafting; an open-source, clean-room reimplementation of Autodesk AutoCAD, rebuilt in pure Rust.</b>
@@ -33,7 +33,7 @@
 </p>
 
 <p align="center">
-  <a href="https://getartcraft.com/apps/cadcraft"><b>CADCraft on getartcraft.com</b></a> ·
+  <a href="https://getartcraft.com/apps/asenacad"><b>AsenaCAD on getartcraft.com</b></a> ·
   <a href="https://getartcraft.com/">ArtCraft</a> ·
   <a href="https://getartcraft.com/apps">All Crafting Apps</a>
 </p>
@@ -41,8 +41,8 @@
 <br>
 
 <p align="center">
-  <img src="docs/images/ui-apartment.png" alt="CADCraft with an apartment floor plan open: hatched grey walls, blue windows, green door swings, furniture outlines, yellow room names with areas, a yellow room schedule table, a multileader note and cyan dimensions with architectural ticks; Tool Sets on the left, Layers and Properties on the right, the command line at the bottom" width="100%">
-  <br><sub><b>Apartment plan</b> (<a href="examples/apartment.dxf">examples/apartment.dxf</a>): walls with pick-point hatching, TrueType MTEXT room labels, a TABLE, a multileader and architectural dimensions — built entirely from CADCraft commands.</sub>
+  <img src="docs/images/ui-apartment.png" alt="AsenaCAD with an apartment floor plan open: hatched grey walls, blue windows, green door swings, furniture outlines, yellow room names with areas, a yellow room schedule table, a multileader note and cyan dimensions with architectural ticks; Tool Sets on the left, Layers and Properties on the right, the command line at the bottom" width="100%">
+  <br><sub><b>Apartment plan</b> (<a href="examples/apartment.dxf">examples/apartment.dxf</a>): walls with pick-point hatching, TrueType MTEXT room labels, a TABLE, a multileader and architectural dimensions — built entirely from AsenaCAD commands.</sub>
 </p>
 
 > [!NOTE]
@@ -52,7 +52,7 @@
 
 <p align="center">
   <a href="#screenshots">Screenshots</a> ·
-  <a href="#why-cadcraft">Why CADCraft</a> ·
+  <a href="#why-asenacad">Why AsenaCAD</a> ·
   <a href="#what-works-today">What works today</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#drive-it-from-agents-mcp-and-the-cli">Agents, MCP and the CLI</a> ·
@@ -67,8 +67,8 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/images/ui-layout.png" alt="A paper-space layout in CADCraft: a white sheet with a dashed printable area and a viewport showing the apartment plan at scale, the status bar showing the A1 Plan layout tab and a PAPER toggle"></td>
-    <td width="50%"><img src="docs/images/ui-bracket.png" alt="CADCraft with a mounting bracket part drawing: front view with bolt holes, centre lines and dimensions, a hatched section view, notes and a title block"></td>
+    <td width="50%"><img src="docs/images/ui-layout.png" alt="A paper-space layout in AsenaCAD: a white sheet with a dashed printable area and a viewport showing the apartment plan at scale, the status bar showing the A1 Plan layout tab and a PAPER toggle"></td>
+    <td width="50%"><img src="docs/images/ui-bracket.png" alt="AsenaCAD with a mounting bracket part drawing: front view with bolt holes, centre lines and dimensions, a hatched section view, notes and a title block"></td>
   </tr>
   <tr>
     <td><sub><b>Layouts</b>: paper space with viewports, page setups and PLOT to PDF. Double-click a viewport to work in model space through it.</sub></td>
@@ -76,7 +76,7 @@
   </tr>
 </table>
 
-## Why CADCraft
+## Why AsenaCAD
 
 - **The workflow you know.** Type `L`, click two points, type `@5<45`, press Enter. The command
   line, prompts with clickable `[Keywords]`, AutoComplete, object snaps, polar tracking, ortho,
@@ -94,7 +94,7 @@
 
 ## What works today
 
-CADCraft is in early, fast development. Honest status (see [ROADMAP.md](ROADMAP.md) for parity
+AsenaCAD is in early, fast development. Honest status (see [ROADMAP.md](ROADMAP.md) for parity
 numbers):
 
 | Area | Status |
@@ -107,12 +107,12 @@ numbers):
 | Layers & properties | Layers palette and Layer Properties Manager (on/off, freeze, lock, plot, colour, linetype), layer tools (isolate, freeze, off, lock, match, previous), Properties palette with per-object editing, linetypes, lineweights, colour index and true colour |
 | Annotation | All DIM* commands with full DIMSTYLE variables, overrides and every arrowhead, associative dimensions that follow geometry, MLEADER, TABLE, TrueType fonts (`.ttf`, `.otf`, `.ttc` collections), MTEXT formatting codes (fonts, heights, colours, stacked fractions), our own single-stroke drafting font |
 | Hatch & blocks | Pick-point hatch boundaries with islands, pattern, solid and gradient fills from our own pattern library, BLOCK/INSERT, attributes and nested blocks |
-| Files | DXF read (R12–2018, ASCII and binary) and write (R2000), including dimension styles, associativity, tables and constraints; DWG read (via the acadrust library) and write (R2000); PDF plotting, SVG and PNG export. Entities CADCraft doesn't model yet are not kept on save: see [file-format parity](docs/file-format-parity.md) |
+| Files | DXF read (R12–2018, ASCII and binary) and write (R2000), including dimension styles, associativity, tables and constraints; DWG read (via the acadrust library) and write (R2000); PDF plotting, SVG and PNG export. Entities AsenaCAD doesn't model yet are not kept on save: see [file-format parity](docs/file-format-parity.md) |
 | Layouts & plotting | Paper-space layouts, viewports (scale, lock, per-viewport layer freeze), MSPACE/PSPACE through viewports, page setups, PLOT and EXPORTPDF |
 | Parametric | Geometric and dimensional constraints, AUTOCONSTRAIN, PARAMETERS with expressions, conflict detection; constraints re-solve after every edit |
 | Grips | Hot grips with Space to cycle Stretch, Move, Rotate, Scale and Mirror |
 | Interface languages | English, Ukrainian (Українська), Brazilian Portuguese (Português (Brasil)), German (Deutsch), Spanish (Español), Czech (Čeština), Russian (Русский), French (Français), Simplified Chinese (简体中文, with an installed CJK font), Italian (Italiano), Korean (한국어, with an installed Hangul font), Swedish (Svenska) and Arabic (العربية, with an installed Arabic font), live switching and a remembered Auto/system-language choice; [details](docs/localization.md) |
-| Automation | MCP server, JSON control channel, `cadcraft-cli` (info, convert, run, commands, mcp) |
+| Automation | MCP server, JSON control channel, `asenacad-cli` (info, convert, run, commands, mcp) |
 
 ## Quick start
 
@@ -120,9 +120,9 @@ Desktop and web UI builds require Rust 1.95 or later. The core workspace's decla
 remains Rust 1.90.
 
 ```sh
-git clone https://github.com/storytold/cadcraft
-cd cadcraft
-cargo run --release -p cadcraft -- --sample       # opens the sample drawing
+git clone https://github.com/KaanAlper/AsenaCAD
+cd asenacad
+cargo run --release -p asenacad -- --sample       # opens the sample drawing
 ```
 
 Then try typing at the command line:
@@ -134,11 +134,11 @@ offset 0.25                     then pick the circle and a side
 zoom e                          zoom to extents
 ```
 
-The web build: `cd apps/cadcraft-web && trunk serve` (needs [trunk](https://trunkrs.dev)).
+The web build: `cd apps/asenacad-web && trunk serve` (needs [trunk](https://trunkrs.dev)).
 
 ### Fonts
 
-CADCraft has no fonts in its repository; it uses the TrueType/OpenType fonts installed on your
+AsenaCAD has no fonts in its repository; it uses the TrueType/OpenType fonts installed on your
 system. Builds made with the optional [craft-fonts](https://github.com/storytold/craft-fonts)
 input (`CRAFT_FONTS_DIR=<absolute path to a checkout> cargo build --release`) also embed its
 fonts: BIZ UDPGothic, BIZ UDMincho and Shippori Mincho (Japanese) and Noto Sans Arabic (the web
@@ -163,7 +163,7 @@ run) an environment variable, steer this:
 Linux and the BSDs `/usr/share/fonts`, `/usr/local/share/fonts`, `~/.local/share/fonts` or
 `~/.fonts`) and name it in a text style (`STYLE`, or `style {"name":"FA","font":"Vazirmatn"}`)
 by file name (`Vazirmatn-Regular.ttf`) or family name (`Vazirmatn`), or inline in MTEXT with
-`\fVazirmatn;`. Restart CADCraft after installing a font: the font folders are scanned once.
+`\fVazirmatn;`. Restart AsenaCAD after installing a font: the font folders are scanned once.
 
 **Right-to-left text (Persian, Arabic, Urdu, Hebrew).** TEXT and MTEXT lines are laid out with the
 Unicode Bidirectional Algorithm (the paragraph direction comes from its first letter, so numbers
@@ -180,38 +180,38 @@ point.
 
 ### Logs
 
-The desktop app writes its `log` records to standard error and to `logs/cadcraft.log` in the
-settings directory (Linux and the BSDs `~/.config/cadcraft/logs/`, or
-`$XDG_CONFIG_HOME/cadcraft/logs/`; macOS `~/Library/Application Support/CADCraft/logs/`; Windows
-`%APPDATA%\CADCraft\logs\`; or under `CADCRAFT_CONFIG_DIR`). A start from a desktop menu or the
+The desktop app writes its `log` records to standard error and to `logs/asenacad.log` in the
+settings directory (Linux and the BSDs `~/.config/asenacad/logs/`, or
+`$XDG_CONFIG_HOME/asenacad/logs/`; macOS `~/Library/Application Support/AsenaCAD/logs/`; Windows
+`%APPDATA%\AsenaCAD\logs\`; or under `CADCRAFT_CONFIG_DIR`). A start from a desktop menu or the
 Dock has no terminal, so this file is what to attach to a bug report. Each launch moves the
-previous log to `cadcraft.1.log` (and that one to `cadcraft.2.log`), so the log of a run that
+previous log to `asenacad.1.log` (and that one to `asenacad.2.log`), so the log of a run that
 crashed survives the next start. The file stops growing at 16 MiB. `--version` writes no file.
 
 | Variable | Effect |
 |---|---|
 | `CADCRAFT_CONFIG_DIR` | Use this directory instead of the platform settings directory (the log goes to its `logs/`) |
-| `RUST_LOG` | Log levels for standard error and the log file. Default: `info` for CADCraft's own crates, `warn` for everything else. env_logger-style directives replace that, e.g. `RUST_LOG=debug`, `RUST_LOG=warn,cadcraft_io=trace` or `RUST_LOG=info,wgpu_core=warn`; a directive ending in `*` covers every target starting with it (`cadcraft*=debug`). `cadcraft_engine=debug` also logs every command-line message. |
+| `RUST_LOG` | Log levels for standard error and the log file. Default: `info` for AsenaCAD's own crates, `warn` for everything else. env_logger-style directives replace that, e.g. `RUST_LOG=debug`, `RUST_LOG=warn,cadcraft_io=trace` or `RUST_LOG=info,wgpu_core=warn`; a directive ending in `*` covers every target starting with it (`asenacad*=debug`). `cadcraft_engine=debug` also logs every command-line message. |
 
-The logger is `apps/cadcraft/src/logging.rs`; the web build logs to the browser console instead.
+The logger is `apps/asenacad/src/logging.rs`; the web build logs to the browser console instead.
 
 ## Drive it from agents, MCP and the CLI
 
 ```sh
 # MCP server on stdio, headless:
-cadcraft-cli mcp
+asenacad-cli mcp
 # …or bridged to the running app (start it with --control 7979):
-cadcraft-cli mcp --connect 127.0.0.1:7979
+asenacad-cli mcp --connect 127.0.0.1:7979
 
 # One-shot headless runs:
-cadcraft-cli run --sample --script 'CIRCLE 22,3 1\n' --save out.dxf --export out.png
-cadcraft-cli info drawing.dxf
-cadcraft-cli convert drawing.dxf drawing.svg
+asenacad-cli run --sample --script 'CIRCLE 22,3 1\n' --save out.dxf --export out.png
+asenacad-cli info drawing.dxf
+asenacad-cli convert drawing.dxf drawing.svg
 
 # Frame part of the drawing (model space, drawing units, lower-left corner first):
-cadcraft-cli convert drawing.dwg detail.png --window 0,0,20000,15000
-cadcraft-cli run drawing.dwg --cmd 'zoom {"mode":"window","p1":[0,0],"p2":[20000,15000]}' --export detail.png
-cadcraft-cli run drawing.dwg --cmd 'select {"window":[[0,0],[20000,15000]]}' --cmd 'zoom {"mode":"object"}' --export sel.png
+asenacad-cli convert drawing.dwg detail.png --window 0,0,20000,15000
+asenacad-cli run drawing.dwg --cmd 'zoom {"mode":"window","p1":[0,0],"p2":[20000,15000]}' --export detail.png
+asenacad-cli run drawing.dwg --cmd 'select {"window":[[0,0],[20000,15000]]}' --cmd 'zoom {"mode":"object"}' --export sel.png
 ```
 
 How image exports (PNG 2400×1600, SVG, PDF) are framed: `convert` fits the model-space extents.
@@ -236,14 +236,14 @@ fonts ┤ render               stroke font + TEXT/MTEXT layout │ display lists
 io    ┤                       DXF mapping, SVG/PNG export
 engine┤                       sessions, commands, command line + prompts, snaps, selection, undo
 ui-egui · mcp                 the swappable egui front end · MCP server
-apps: cadcraft · cadcraft-cli · cadcraft-web
+apps: asenacad · asenacad-cli · asenacad-web
 ```
 
 Nothing below `ui-egui` knows about egui, so the front end can be replaced. `cargo xtask ci`
 checks formatting, clippy, tests, asset attribution, the crate layering and the wasm build.
 
 Drafting and layer-palette icon buttons use the pinned `craft-ui` button component for interaction,
-accessible labels and keyboard focus. CADCraft keeps its multicolor icon painter, dark palette,
+accessible labels and keyboard focus. AsenaCAD keeps its multicolor icon painter, dark palette,
 disabled tint and tool commands. The native host saves workspace visibility and toolset choices
 atomically; `CADCRAFT_CONFIG_DIR` selects an isolated profile. Compact toolbar groups move into a
 More menu, and status readouts truncate with a full-value tooltip before they reach layout tabs.
@@ -254,11 +254,11 @@ have accessible labels and visible keyboard focus. Property controls remain appl
 
 ### System cursor
 
-Over the drawing area CADCraft hides the system cursor and draws its own crosshair. Tools that follow the system cursor (Windows Magnifier set to follow or centre the mouse pointer, other screen magnifiers, screen recorders, remote desktops) lose track of it there. Turn on **View ▸ Accessibility ▸ Show System Cursor** to keep a small system crosshair visible at the centre of the drawn one, or start CADCraft with the environment variable `CADCRAFT_SYSTEM_CURSOR=1` (on Windows, set it once with `setx CADCRAFT_SYSTEM_CURSOR 1` and start CADCraft again). Agents can switch it with the control channel: `ui.set {"systemCursor": true}`.
+Over the drawing area AsenaCAD hides the system cursor and draws its own crosshair. Tools that follow the system cursor (Windows Magnifier set to follow or centre the mouse pointer, other screen magnifiers, screen recorders, remote desktops) lose track of it there. Turn on **View ▸ Accessibility ▸ Show System Cursor** to keep a small system crosshair visible at the centre of the drawn one, or start AsenaCAD with the environment variable `CADCRAFT_SYSTEM_CURSOR=1` (on Windows, set it once with `setx CADCRAFT_SYSTEM_CURSOR 1` and start AsenaCAD again). Agents can switch it with the control channel: `ui.set {"systemCursor": true}`.
 
 ### Animation effects
 
-CADCraft follows the operating system's animation setting. When the system is set to show no animations, dialogs, menus and tooltips appear at once instead of fading in, collapsing sections and scroll bars change at once, and the mouse wheel scrolls lists a whole step at a time instead of gliding. Zooming the drawing with the wheel always moves a whole step; with Ctrl held (a touchpad pinch, on Windows) it glides to the new zoom only while animation effects show.
+AsenaCAD follows the operating system's animation setting. When the system is set to show no animations, dialogs, menus and tooltips appear at once instead of fading in, collapsing sections and scroll bars change at once, and the mouse wheel scrolls lists a whole step at a time instead of gliding. Zooming the drawing with the wheel always moves a whole step; with Ctrl held (a touchpad pinch, on Windows) it glides to the new zoom only while animation effects show.
 
 | System | Where the setting is |
 |---|---|
@@ -267,7 +267,7 @@ CADCraft follows the operating system's animation setting. When the system is se
 | Linux, BSD | the desktop's reduced-motion (or animations) setting, read through the XDG Desktop Portal |
 | Web | the browser's `prefers-reduced-motion` |
 
-A change to the system setting is picked up while CADCraft runs, within a few seconds. To choose for CADCraft alone, use **View ▸ Accessibility ▸ Animation Effects**: **Use System Setting** (the default), **On** or **Off**. Options ▸ Display has the same choice. Agents can set it with the control channel: `ui.set {"animations": "off"}` (`"system"`, `"on"` or `"off"`), and `ui.inspect` reports whether animations show (`animations`).
+A change to the system setting is picked up while AsenaCAD runs, within a few seconds. To choose for AsenaCAD alone, use **View ▸ Accessibility ▸ Animation Effects**: **Use System Setting** (the default), **On** or **Off**. Options ▸ Display has the same choice. Agents can set it with the control channel: `ui.set {"animations": "off"}` (`"system"`, `"on"` or `"off"`), and `ui.inspect` reports whether animations show (`animations`).
 
 Drafting feedback is not an animation effect and stays as it is: rubber bands and previews, snap markers, the pause that acquires an object snap tracking point, the text cursor's blink, the spinner shown while a drawing opens, and pan and zoom, which follow the pointer and the wheel directly.
 
@@ -277,19 +277,19 @@ See [ROADMAP.md](ROADMAP.md) for the stage, measured parity and the estimate of 
 
 ## Downloads
 
-**Download CADCraft** from GitHub: the [latest release](https://github.com/storytold/cadcraft/releases/latest) has every build listed below, and [all releases](https://github.com/storytold/cadcraft/releases) has earlier versions and their notes. `<ver>` in the file names is the version number, and `SHA256SUMS.txt` lists a checksum for every file.
+**Download AsenaCAD** from GitHub: the [latest release](https://github.com/KaanAlper/AsenaCAD/releases/latest) has every build listed below, and [all releases](https://github.com/KaanAlper/AsenaCAD/releases) has earlier versions and their notes. `<ver>` in the file names is the version number, and `SHA256SUMS.txt` lists a checksum for every file.
 
 ### Windows
 
 | Build | Installer | Portable |
 |---|---|---|
-| x64 (64-bit Intel/AMD) | `cadcraft-<ver>-windows-x64.msi` | `cadcraft-<ver>-windows-x64-portable.zip` |
-| arm64 (Snapdragon and other ARM PCs) | `cadcraft-<ver>-windows-arm64.msi` | `cadcraft-<ver>-windows-arm64-portable.zip` |
-| x86 (32-bit) | `cadcraft-<ver>-windows-x86.msi` | `cadcraft-<ver>-windows-x86-portable.zip` |
+| x64 (64-bit Intel/AMD) | `asenacad-<ver>-windows-x64.msi` | `asenacad-<ver>-windows-x64-portable.zip` |
+| arm64 (Snapdragon and other ARM PCs) | `asenacad-<ver>-windows-arm64.msi` | `asenacad-<ver>-windows-arm64-portable.zip` |
+| x86 (32-bit) | `asenacad-<ver>-windows-x86.msi` | `asenacad-<ver>-windows-x86-portable.zip` |
 
 Installers and executables are code-signed.
 
-The installer adds CADCraft to the Start menu and asks whether to add a desktop shortcut too (unticked by default). For a silent install with the desktop shortcut: `msiexec /i cadcraft-<ver>-windows-x64.msi /qn DESKTOPSHORTCUT=1`.
+The installer adds AsenaCAD to the Start menu and asks whether to add a desktop shortcut too (unticked by default). For a silent install with the desktop shortcut: `msiexec /i asenacad-<ver>-windows-x64.msi /qn DESKTOPSHORTCUT=1`.
 
 **If the app doesn't open on Windows:** the desktop app initializes only DirectX 12 by default.
 Letting wgpu also create an OpenGL instance can crash some graphics drivers (AMD's
@@ -299,7 +299,7 @@ PowerShell, from the folder containing the executable:
 
 ```powershell
 $env:WGPU_BACKEND = "vulkan"
-& .\cadcraft.exe
+& .\asenacad.exe
 Remove-Item Env:WGPU_BACKEND                     # restore the default for later launches
 ```
 
@@ -310,36 +310,36 @@ and web backend defaults are unchanged.
 
 | Build | File | Notes |
 |---|---|---|
-| App, universal (Apple silicon + Intel) | `cadcraft-<ver>-macos-universal.dmg` | Signed and notarized |
-| Command-line tool, universal | `cadcraft-cli-<ver>-macos-universal.zip` | Signed and notarized |
+| App, universal (Apple silicon + Intel) | `asenacad-<ver>-macos-universal.dmg` | Signed and notarized |
+| Command-line tool, universal | `asenacad-cli-<ver>-macos-universal.zip` | Signed and notarized |
 
 ### Linux
 
 | Format | x86_64 | aarch64 (ARM64) | Notes |
 |---|---|---|---|
-| AppImage | `cadcraft-<ver>-linux-x86_64.AppImage` | `cadcraft-<ver>-linux-aarch64.AppImage` | Runs anywhere; updates itself with [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate) (`.zsync` files) |
-| Flatpak | `cadcraft-<ver>-linux-x86_64.flatpak` | `cadcraft-<ver>-linux-aarch64.flatpak` | Sandboxed; `flatpak install --user <file>` |
-| Debian/Ubuntu | `cadcraft-<ver>-linux-x86_64.deb` | `cadcraft-<ver>-linux-aarch64.deb` | |
-| Fedora/RHEL/openSUSE | `cadcraft-<ver>-linux-x86_64.rpm` | `cadcraft-<ver>-linux-aarch64.rpm` | |
-| Tarball | `cadcraft-<ver>-linux-x86_64.tar.gz` | `cadcraft-<ver>-linux-aarch64.tar.gz` | Unpack anywhere |
+| AppImage | `asenacad-<ver>-linux-x86_64.AppImage` | `asenacad-<ver>-linux-aarch64.AppImage` | Runs anywhere; updates itself with [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate) (`.zsync` files) |
+| Flatpak | `asenacad-<ver>-linux-x86_64.flatpak` | `asenacad-<ver>-linux-aarch64.flatpak` | Sandboxed; `flatpak install --user <file>` |
+| Debian/Ubuntu | `asenacad-<ver>-linux-x86_64.deb` | `asenacad-<ver>-linux-aarch64.deb` | |
+| Fedora/RHEL/openSUSE | `asenacad-<ver>-linux-x86_64.rpm` | `asenacad-<ver>-linux-aarch64.rpm` | |
+| Tarball | `asenacad-<ver>-linux-x86_64.tar.gz` | `asenacad-<ver>-linux-aarch64.tar.gz` | Unpack anywhere |
 
-RISC-V (riscv64): `cadcraft-<ver>-linux-riscv64.tar.gz`, cross-compiled; needs glibc 2.39 or newer (Ubuntu 24.04+, Debian 13+).
+RISC-V (riscv64): `asenacad-<ver>-linux-riscv64.tar.gz`, cross-compiled; needs glibc 2.39 or newer (Ubuntu 24.04+, Debian 13+).
 
 ### FreeBSD
 
 | Build | File |
 |---|---|
-| x86_64 | `cadcraft-<ver>-freebsd-x86_64.tar.gz` |
+| x86_64 | `asenacad-<ver>-freebsd-x86_64.tar.gz` |
 
 ### Web (WebAssembly)
 
 | Build | File | Notes |
 |---|---|---|
-| Static site | `cadcraft-web-<ver>.zip` | Runs in a modern browser; host it on any static server |
+| Static site | `asenacad-web-<ver>.zip` | Runs in a modern browser; host it on any static server |
 
 ## The Crafting Apps
 
-CADCraft is one of the **Crafting Apps**: free, open-source creative tools from the
+AsenaCAD is one of the **Crafting Apps**: free, open-source creative tools from the
 [ArtCraft](https://getartcraft.com/) team, each written from scratch in Rust and each able to
 stand on its own.
 
@@ -352,7 +352,7 @@ stand on its own.
 | <img src="https://raw.githubusercontent.com/storytold/pdfcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.pdfcraft.png" alt="" width="32" height="32"> | **PdfCraft** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/storytold/pdfcraft) | [Website](https://getartcraft.com/apps/pdfcraft) |
 | <img src="https://raw.githubusercontent.com/storytold/effectcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.effectcraft.png" alt="" width="32" height="32"> | **EffectCraft** | Motion graphics and visual effects | [GitHub](https://github.com/storytold/effectcraft) | [Website](https://getartcraft.com/apps/effectcraft) |
 | <img src="https://raw.githubusercontent.com/storytold/designcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.designcraft.png" alt="" width="32" height="32"> | **DesignCraft** | Page layout and publishing | [GitHub](https://github.com/storytold/designcraft) | [Website](https://getartcraft.com/apps/designcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/cadcraft/main/assets/app-icon/cadcraft-64.png" alt="" width="32" height="32"> | **CADCraft** | **Computer-aided design and drafting · you are here** | [GitHub](https://github.com/storytold/cadcraft) | [Website](https://getartcraft.com/apps/cadcraft) |
+| <img src="https://raw.githubusercontent.com/KaanAlper/AsenaCAD/main/assets/app-icon/asenacad-64.png" alt="" width="32" height="32"> | **AsenaCAD** | **Computer-aided design and drafting · you are here** | [GitHub](https://github.com/KaanAlper/AsenaCAD) | [Website](https://getartcraft.com/apps/asenacad) |
 
 And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video studio for artists who want real control.
 
@@ -375,26 +375,26 @@ And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video stud
   <a href="https://discord.gg/artcraft"><b>discord.gg/artcraft</b></a> ·
   <a href="https://getartcraft.com/">getartcraft.com</a> ·
   <a href="https://getartcraft.com/apps">The Crafting Apps</a> ·
-  <a href="https://getartcraft.com/apps/cadcraft">CADCraft</a>
+  <a href="https://getartcraft.com/apps/asenacad">AsenaCAD</a>
 </p>
 
 ## License and credits
 
-CADCraft is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
-Copyright (c) 2026 ArtCraft Team and the CADCraft contributors. Required notices are in [NOTICE](NOTICE).
+AsenaCAD is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
+Copyright (c) 2026 ArtCraft Team and the AsenaCAD contributors. Required notices are in [NOTICE](NOTICE).
 
 Bundled fonts, icons, images and other assets keep their own open licenses; each one is listed
 with its author, source and license in [ATTRIBUTION.md](ATTRIBUTION.md).
 
-CADCraft's icons, its single-stroke drafting font, its hatch patterns and its linetypes are all
+AsenaCAD's icons, its single-stroke drafting font, its hatch patterns and its linetypes are all
 original work, drawn or defined in code. The sample drawings are generated in code too.
 
 The ArtCraft name, wordmark and logos in [`docs/brand/`](docs/brand/) are trademarks of the
 ArtCraft Team and are not covered by this license. They may be used only unmodified, and only as
-part of this repository and CADCraft, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
+part of this repository and AsenaCAD, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
 Forks and modified versions must remove them.
 
-<sub>Autodesk, AutoCAD and DWG are trademarks or registered trademarks of Autodesk, Inc. in the United States and/or other countries. CADCraft is an independent, open-source project and is not affiliated with, sponsored by or endorsed by Autodesk, Inc.; these names are used only to describe the workflows and file formats it is compatible with.</sub>
+<sub>Autodesk, AutoCAD and DWG are trademarks or registered trademarks of Autodesk, Inc. in the United States and/or other countries. AsenaCAD is an independent, open-source project and is not affiliated with, sponsored by or endorsed by Autodesk, Inc.; these names are used only to describe the workflows and file formats it is compatible with.</sub>
 
 <p align="center">
   <a href="https://getartcraft.com/"><img alt="ArtCraft" src="docs/brand/artcraft-mark.svg" width="28"></a><br>

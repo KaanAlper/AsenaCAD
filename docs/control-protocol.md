@@ -1,4 +1,4 @@
-# CADCraft control protocol
+# AsenaCAD control protocol
 
 Start the desktop app with `--control PORT` (or `CADCRAFT_CONTROL_PORT=PORT`). It listens on
 `127.0.0.1:PORT` for JSON lines: one request per line, one reply per line. A port given with
@@ -55,7 +55,7 @@ field. `engine.commands` returns a separate command catalog, not a list of addit
 | `ui.screenshot` | `{path?}` | PNG of the window (needs a presented frame). |
 | `ui.render` | `{path?, width?, height?, fit?}` | Headless render. `fit` (default true) frames the whole drawing; `false` uses the current view. Replies `{pngBase64, width, height, bytes, path?}`. |
 | `app.open` / `app.save` / `app.quit` | `{path}` | File operations. |
-| `control.methods` | | Every method this server answers: `{method, params, description}`. Headless (`cadcraft-cli mcp`) lists only the methods it serves. |
+| `control.methods` | | Every method this server answers: `{method, params, description}`. Headless (`asenacad-cli mcp`) lists only the methods it serves. |
 | `ping` | | Replies `"pong"`. A cheap health check. |
 
 To run a command listed by `engine.commands`, put its id in `params.command` and its arguments
@@ -86,8 +86,8 @@ Sending `open` or `document.bytes` as the top-level `method` returns an `unknown
 the protocol dispatches methods explicitly and does not fall through to the command registry.
 `app.open` is a top-level convenience method for opening a drawing with `{path}`.
 
-The MCP server (`cadcraft-cli mcp --connect 127.0.0.1:PORT`) wraps this protocol; headless
-(`cadcraft-cli mcp`) it serves the same methods from an in-process session.
+The MCP server (`asenacad-cli mcp --connect 127.0.0.1:PORT`) wraps this protocol; headless
+(`asenacad-cli mcp`) it serves the same methods from an in-process session.
 MCP tool names are another interface: `execute` maps to `engine.execute`, `list_commands` to
 `engine.commands`, and the MCP `open` tool to `app.open`. See [mcp.md](mcp.md).
 
@@ -100,8 +100,8 @@ acceptance. Unregistered controls still report their actual focus ID, with a nul
 The native host restores layout choices from `workspace.json` and saves changes atomically.
 It stores palette/toolset visibility, selected toolset, collapsed groups, command-line history
 height and related chrome choices. It does not store drawings, command buffers, dialogs or the
-current Start tab. The default directory is `~/Library/Application Support/CADCraft` on macOS,
-`%APPDATA%/CADCraft` on Windows, and `$XDG_CONFIG_HOME/cadcraft` or `~/.config/cadcraft` elsewhere.
+current Start tab. The default directory is `~/Library/Application Support/AsenaCAD` on macOS,
+`%APPDATA%/AsenaCAD` on Windows, and `$XDG_CONFIG_HOME/asenacad` or `~/.config/asenacad` elsewhere.
 Set `CADCRAFT_CONFIG_DIR` to a private directory for an isolated profile; an explicitly empty
 value disables workspace reads and writes. An invalid, oversized or newer-version file is
 reported and left untouched, with persistence disabled for that launch. Repair or move that

@@ -1,4 +1,4 @@
-//! The CADCraft egui front end.
+//! The AsenaCAD egui front end.
 //!
 //! A thin shell over [`cadcraft_engine::Session`]: panels read engine state and act through
 //! commands (`app.run(id, params)`) or the command line (`app.cmdline(text)`). Nothing here owns
@@ -58,7 +58,7 @@ use serde_json::{Value, json};
 pub use control::{ControlRequest, ControlResponse, PendingReply};
 
 /// The host storage key for [`CadApp::prefs_json`].
-pub const PREFS_KEY: &str = "cadcraft.prefs";
+pub const PREFS_KEY: &str = "asenacad.prefs";
 
 /// How many recently opened drawings are kept (AutoCAD's default for its file history).
 pub const RECENT_FILES: usize = 9;
@@ -118,7 +118,7 @@ pub use cadcraft_engine::cmd::file::Version as SaveVersion;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum SaveFormat {
-    /// CADCraft's native format, and the default.
+    /// AsenaCAD's native format, and the default.
     #[default]
     Dxf,
     Dwg,
@@ -464,7 +464,7 @@ impl CadApp {
     pub fn open_size_error(name: &str, len: u64) -> Option<String> {
         (len > Self::MAX_OPEN_BYTES).then(|| {
             format!(
-                "Open: {name} is {:.1} MB, larger than the {} MB CADCraft opens in the browser",
+                "Open: {name} is {:.1} MB, larger than the {} MB AsenaCAD opens in the browser",
                 len as f64 / 1048576.0,
                 Self::MAX_OPEN_BYTES >> 20
             )
@@ -821,7 +821,7 @@ mod tests {
     #[test]
     fn default_save_format_persists_and_names_new_drawings() {
         let mut a = app();
-        assert_eq!(a.ui.save_format, SaveFormat::Dxf, "default keeps DXF, CADCraft's native format");
+        assert_eq!(a.ui.save_format, SaveFormat::Dxf, "default keeps DXF, AsenaCAD's native format");
         assert!(a.run("ui.saveformat", json!({ "format": "pdf" })).is_err());
         assert_eq!(a.run("ui.saveformat", json!({ "format": "DWG" })).ok(), Some(json!({ "saveFormat": "dwg" })));
         assert_eq!(a.run("ui.saveformat", json!({})).ok(), Some(json!({ "saveFormat": "dwg" })), "no format: report it");

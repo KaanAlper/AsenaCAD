@@ -8,7 +8,7 @@ use cadcraft_ui_egui::{CadApp, Services};
 use serde_json::{Value, json};
 
 fn picked() -> std::path::PathBuf {
-    std::env::temp_dir().join(format!("cadcraft-ui-save-version-{}.dxf", std::process::id()))
+    std::env::temp_dir().join(format!("asenacad-ui-save-version-{}.dxf", std::process::id()))
 }
 
 fn with_options(_: &Drawing, _: &str, o: &SaveAs) -> Result<Vec<u8>, String> {

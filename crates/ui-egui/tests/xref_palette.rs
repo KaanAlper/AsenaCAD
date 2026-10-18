@@ -22,7 +22,7 @@ fn read(_bytes: &[u8], _name: &str) -> Result<Drawing, String> {
 }
 
 fn site_file() -> String {
-    let dir = std::env::temp_dir().join(format!("cadcraft-xref-palette-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-xref-palette-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let p = dir.join("site.dxf");
     std::fs::write(&p, "site").unwrap();

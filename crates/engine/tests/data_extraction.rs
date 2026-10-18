@@ -87,7 +87,7 @@ fn constant_attributes_come_from_the_definition() {
 #[test]
 fn writes_csv_and_tab_separated_files() {
     let mut s = drawing();
-    let dir = std::env::temp_dir().join(format!("cadcraft-dx-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-dx-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let csv = dir.join("out.csv");
     let r = s.execute("dataextraction", &json!({"blocks": "VALVE", "file": csv.to_str().unwrap()})).unwrap();
@@ -154,7 +154,7 @@ fn dataextraction_at_the_command_line_inserts_a_table() {
 #[test]
 fn eattext_at_the_command_line_writes_a_file() {
     let mut s = drawing();
-    let dir = std::env::temp_dir().join(format!("cadcraft-dx-cl-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-dx-cl-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let csv = dir.join("valves.csv");
     for l in ["eattext", "VALVE", "n", "f", csv.to_str().unwrap()] {

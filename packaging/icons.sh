@@ -7,7 +7,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIR="$ROOT/assets/app-icon"
 SRC="$DIR/cadcraft-1024.png"
-ID="ai.storyteller.cadcraft"
+ID="io.github.kaanalper.asenacad"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 command -v sips >/dev/null || { echo "error: sips not found (macOS only)" >&2; exit 1; }
@@ -29,7 +29,7 @@ done
 (cd "$ROOT" && cargo run -q -p xtask -- ico "$DIR/cadcraft.ico" "${ICO_PNGS[@]}")
 
 # macOS icons sit on Apple's grid: the macOS-margin master is cadcraft-macos-512.png.
-SET="$TMP/cadcraft.iconset"
+SET="$TMP/asenacad.iconset"
 mkdir -p "$SET"
 for s in 16 32 128 256; do
   resize "$DIR/cadcraft-macos-512.png" "$s" "$SET/icon_${s}x${s}.png"

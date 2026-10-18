@@ -209,7 +209,7 @@ fn a_file_save_writes_the_drawing_outside_the_editor() {
     });
     let mut s = Session::new();
     door(&mut s);
-    let path = std::env::temp_dir().join(format!("cadcraft-bedit-{}.dxf", std::process::id()));
+    let path = std::env::temp_dir().join(format!("asenacad-bedit-{}.dxf", std::process::id()));
     let path = path.to_string_lossy().to_string();
     s.execute("saveas", &json!({ "path": path })).unwrap();
     assert!(!s.state().unwrap().is_dirty());

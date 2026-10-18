@@ -114,7 +114,7 @@ fn compares_a_file_read_through_the_io_hooks() {
         Ok(d)
     }
     set_io(IoHooks { read, write: |_, _| Err("no writer in this test".into()), plot: None });
-    let dir = std::env::temp_dir().join(format!("cadcraft-compare-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-compare-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("other.dxf");
     std::fs::write(&path, "10").unwrap();

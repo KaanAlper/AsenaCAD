@@ -1,11 +1,11 @@
 //! Plotter configurations: PLOTTERMANAGER / -PLOTTERMANAGER, and the device and paper a page
 //! setup or a plot uses.
 //!
-//! The built-in devices (`CADCraft PDF`, `CADCraft PNG`, `CADCraft SVG`) come first. They offer
+//! The built-in devices (`AsenaCAD PDF`, `AsenaCAD PNG`, `AsenaCAD SVG`) come first. They offer
 //! the standard ISO and ANSI/ARCH paper sizes with 5 mm (ISO) or quarter-inch (inch sizes)
 //! margins. User devices are `*.plotter.json` files ([`cadcraft_doc::PlotterConfig`],
 //! `docs/plotters.md`) in a folder the host provides through [`set_plotter_store`]. Without
-//! one, native builds use the `plotters` folder of the CADCraft settings directory and the web
+//! one, native builds use the `plotters` folder of the AsenaCAD settings directory and the web
 //! keeps them for the session.
 
 use std::sync::{Mutex, OnceLock};
@@ -60,7 +60,7 @@ impl PlotterStore {
         }
     }
 
-    /// The `plotters` folder of the CADCraft settings directory (`CADCRAFT_CONFIG_DIR`, else
+    /// The `plotters` folder of the AsenaCAD settings directory (`CADCRAFT_CONFIG_DIR`, else
     /// the platform's settings directory).
     #[cfg(not(target_arch = "wasm32"))]
     pub fn settings_folder() -> PlotterStore {
@@ -71,9 +71,9 @@ impl PlotterStore {
                 Some(r) if !r.is_empty() => Some(PathBuf::from(r)),
                 Some(_) => None,
                 None => match std::env::consts::OS {
-                    "macos" => get("HOME").map(|h| h.join("Library/Application Support/CADCraft")),
-                    "windows" => get("APPDATA").map(|r| r.join("CADCraft")),
-                    _ => get("XDG_CONFIG_HOME").map(|r| r.join("cadcraft")).or_else(|| get("HOME").map(|h| h.join(".config/cadcraft"))),
+                    "macos" => get("HOME").map(|h| h.join("Library/Application Support/AsenaCAD")),
+                    "windows" => get("APPDATA").map(|r| r.join("AsenaCAD")),
+                    _ => get("XDG_CONFIG_HOME").map(|r| r.join("asenacad")).or_else(|| get("HOME").map(|h| h.join(".config/asenacad"))),
                 },
             };
             root.map(|r| r.join("plotters")).ok_or_else(|| "there is no settings folder for plotter configurations".to_string())
@@ -110,7 +110,7 @@ impl PlotterStore {
             write: |n, t| {
                 let p = file(n)?;
                 std::fs::create_dir_all(dir()?).map_err(|e| e.to_string())?;
-                let tmp = p.with_extension("json.cadcraft-tmp");
+                let tmp = p.with_extension("json.asenacad-tmp");
                 std::fs::write(&tmp, t).map_err(|e| format!("{n}: {e}"))?;
                 std::fs::rename(&tmp, &p).map_err(|e| format!("{n}: {e}"))
             },
@@ -137,9 +137,9 @@ const MAX_DEVICES: usize = 1000;
 
 /// The built-in devices: name, output, description.
 const BUILTIN: [(&str, PlotOutput, &str); 3] = [
-    ("CADCraft PDF", PlotOutput::Pdf, "Vector PDF"),
-    ("CADCraft PNG", PlotOutput::Png, "Raster PNG image"),
-    ("CADCraft SVG", PlotOutput::Svg, "Vector SVG image"),
+    ("AsenaCAD PDF", PlotOutput::Pdf, "Vector PDF"),
+    ("AsenaCAD PNG", PlotOutput::Png, "Raster PNG image"),
+    ("AsenaCAD SVG", PlotOutput::Svg, "Vector SVG image"),
 ];
 
 /// A page setup's "no device" name.
@@ -549,7 +549,7 @@ fn run_plottermanager(_s: &mut Session, p: &Value) -> Result<Value> {
                         Some(o) => o.as_str().and_then(PlotOutput::parse).ok_or_else(|| bad(cmd, "`output` must be pdf, png or svg"))?,
                         None => PlotOutput::Pdf,
                     };
-                    let (b, o, _) = BUILTIN.iter().find(|(_, o, _)| *o == output).copied().unwrap_or(("CADCraft PDF", PlotOutput::Pdf, ""));
+                    let (b, o, _) = BUILTIN.iter().find(|(_, o, _)| *o == output).copied().unwrap_or(("AsenaCAD PDF", PlotOutput::Pdf, ""));
                     builtin(b, o, "")
                 }
             };

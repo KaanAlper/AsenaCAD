@@ -806,7 +806,7 @@ fn entity(w: &mut W, d: &Drawing, e: &Entity, owner: &str, paper: bool, cx: &Ctx
                 DimKind::Radius => 4,
                 DimKind::Angular3P => 5,
                 DimKind::Ordinate { x_type } => 6 | if x_type { 64 } else { 0 },
-                // Written as aligned, marked by CADCraft xdata (see `dim_xdata`).
+                // Written as aligned, marked by AsenaCAD xdata (see `dim_xdata`).
                 DimKind::ArcLength => 1,
             };
             w.i(70, ty | 32 | if dm.user_text_pos { 128 } else { 0 });
@@ -1068,13 +1068,13 @@ fn entity(w: &mut W, d: &Drawing, e: &Entity, owner: &str, paper: bool, cx: &Ctx
                 w.s(340, h.hex());
             }
             // AutoCAD's frozen-layer list: one soft pointer per layer, to its LAYER record. Other
-            // programs read only this; CADCraft prefers its own xdata below when present.
+            // programs read only this; AsenaCAD prefers its own xdata below when present.
             for name in &v.frozen_layers {
                 if let Some(h) = w.layers.get(&name.to_ascii_uppercase()).cloned() {
                     w.s(341, h);
                 }
             }
-            // One CADCraft xdata group holds both lists: readers stop at the first group of an app.
+            // One AsenaCAD xdata group holds both lists: readers stop at the first group of an app.
             if !v.frozen_layers.is_empty() || !v.layer_colors.is_empty() {
                 w.s(1001, dxf_ext::APP);
                 if !v.frozen_layers.is_empty() {
@@ -1126,12 +1126,12 @@ fn entity(w: &mut W, d: &Drawing, e: &Entity, owner: &str, paper: bool, cx: &Ctx
             w.s(1, &t.text);
             w.p(11, t.dir);
         }
-        // Entity types CADCraft doesn't model aren't written; the save command reports them.
+        // Entity types AsenaCAD doesn't model aren't written; the save command reports them.
         EntityKind::Unknown(_) => {}
     }
 }
 
-/// `$DWGCODEPAGE`: before 2007 the code page read from the file when CADCraft knows it (the text
+/// `$DWGCODEPAGE`: before 2007 the code page read from the file when AsenaCAD knows it (the text
 /// is ASCII with `\U+XXXX` escapes, right in any code page, but the file keeps its declared one);
 /// otherwise, and from 2007 (UTF-8 text), `ANSI_1252`.
 fn code_page(d: &Drawing, version: Version) -> String {
@@ -1402,7 +1402,7 @@ fn arrow_block_entities(kind: cadcraft_render::Arrowhead) -> Vec<Entity> {
 
 /// Standard DIMASSOC point references of an associative dimension: the extension-line
 /// origins of linear/aligned dimensions and the feature point of ordinate dimensions, linked
-/// to objects that exist. CADCraft's exact links travel in xdata as well.
+/// to objects that exist. AsenaCAD's exact links travel in xdata as well.
 fn std_assoc_refs(d: &Drawing, dm: &Dimension) -> (i64, Vec<OsnapRef>) {
     let slots: &[&str] = match dm.kind {
         DimKind::Linear { .. } | DimKind::Aligned => &["p13", "p14"],
@@ -1436,7 +1436,7 @@ fn std_assoc_refs(d: &Drawing, dm: &Dimension) -> (i64, Vec<OsnapRef>) {
 /// Layouts with viewports but without the paper-space viewport (id 1, the sheet itself), keyed
 /// by their first viewport. AutoCAD and DWG take a layout's first viewport as its paper-space
 /// viewport (DWG does not store viewport ids; readers number them in order), so a layout made in
-/// CADCraft, whose paper-space viewport is implicit, gets one written ahead of its viewports.
+/// AsenaCAD, whose paper-space viewport is implicit, gets one written ahead of its viewports.
 fn paper_views(d: &Drawing) -> HashMap<Handle, usize> {
     let mut out = HashMap::new();
     'layouts: for (i, l) in d.layouts.iter().enumerate() {
@@ -1457,7 +1457,7 @@ fn paper_views(d: &Drawing) -> HashMap<Handle, usize> {
 }
 
 /// The paper-space viewport (id 1) of the layout whose first viewport is `e`, if it needs one
-/// ([`paper_views`]): the whole sheet, viewed 1:1. Marked with CADCraft xdata so that our reader
+/// ([`paper_views`]): the whole sheet, viewed 1:1. Marked with AsenaCAD xdata so that our reader
 /// leaves it implicit again.
 fn paper_view(w: &mut W, d: &Drawing, e: &Entity, owner: &str, cx: &Ctx) {
     let Some(l) = cx.paper_views.get(&e.handle).and_then(|i| d.layouts.get(*i)) else { return };
@@ -1741,7 +1741,7 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
     let group_dict = w.h();
     let layout_dict = w.h();
     let table_style_dict = w.h();
-    // CADCraft data in XRECORDs of the named object dictionary: (key, handle, text chunks).
+    // AsenaCAD data in XRECORDs of the named object dictionary: (key, handle, text chunks).
     let mut xrecords: Vec<(&str, String, Vec<String>)> = Vec::new();
     // The drawing's own next handle: table records and objects are numbered above it, so
     // reading it back (instead of $HANDSEED) keeps their handles across saves (#495).
@@ -1946,9 +1946,9 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
         w.f(50, s.oblique.to_degrees());
         w.i(71, if s.backwards { 2 } else { 0 } | if s.upside_down { 4 } else { 0 });
         w.f(42, 0.2);
-        // The built-in font goes out as `txt`, which every reader has; CADCraft's own name
+        // The built-in font goes out as `txt`, which every reader has; AsenaCAD's own name
         // travels in `CADCRAFT` xdata (`1000 FONT`, name) so the style reopens with it.
-        let file = if s.font == cadcraft_fonts_name() { "txt" } else { s.font.as_str() };
+        let file = if s.font == asenacad_fonts_name() { "txt" } else { s.font.as_str() };
         w.s(3, file);
         w.s(4, &s.big_font);
         if s.annotative {
@@ -1984,7 +1984,7 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
             *t = Tag::s(340, h.unwrap_or_else(|| fallback_style.clone()));
         }
     }
-    // VIEW: named views (DXF Reference, VIEW). A view's layer state is CADCraft xdata.
+    // VIEW: named views (DXF Reference, VIEW). A view's layer state is AsenaCAD xdata.
     let th = table_head(&mut w, "VIEW", d.views.len());
     for v in &d.views {
         record_head(&mut w, "VIEW", &th, "AcDbViewTableRecord");
@@ -2293,7 +2293,7 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
         w.group("ACAD_REACTORS", 330, &[&pstyle_dict]);
         w.s(330, pstyle_dict.clone());
     }
-    // Parametric constraints and parameters, saved layer states, plot style tables (CADCraft
+    // Parametric constraints and parameters, saved layer states, plot style tables (AsenaCAD
     // data).
     for (_, h, chunks) in &xrecords {
         w.s(0, "XRECORD");
@@ -2428,7 +2428,7 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
         w.p(17, Vec3::new(0.0, 1.0, 0.0));
         w.i(76, 0);
         w.s(330, brh);
-        // The saved paper-space view (centre, height) as CADCraft xdata.
+        // The saved paper-space view (centre, height) as AsenaCAD xdata.
         if let Some((c, height)) = view.filter(|(c, v)| c.x.is_finite() && c.y.is_finite() && v.is_finite()) {
             w.s(1001, dxf_ext::APP);
             w.s(1000, "PSVIEW");
@@ -2537,7 +2537,7 @@ fn table_style_obj(w: &mut W, d: &Drawing, s: &TableStyle, h: &str, dict: &str) 
     w.f(41, s.margin);
     w.i(280, i64::from(!s.title));
     w.i(281, i64::from(!s.header));
-    // Data, column header and title cell styles; CADCraft's complete cell styles in xdata.
+    // Data, column header and title cell styles; AsenaCAD's complete cell styles in xdata.
     for kind in crate::dxf_table::CELL_TYPES {
         let cs = s.cell_style(kind);
         let style = if d.text_style(&cs.text_style).is_some() { cs.text_style.clone() } else { "Standard".to_string() };
@@ -2655,8 +2655,8 @@ fn scale_list(w: &mut W, scales: &[(&cadcraft_doc::AnnoScale, String)], dict: &s
     }
 }
 
-fn cadcraft_fonts_name() -> &'static str {
-    "CADCraft Stroke"
+fn asenacad_fonts_name() -> &'static str {
+    "AsenaCAD Stroke"
 }
 
 /// One entity's DXF groups, as the writer stores them, without its `0` group: its type name

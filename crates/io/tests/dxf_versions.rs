@@ -99,7 +99,7 @@ fn dxf_at_every_version_reads_back_the_same() {
     }
 }
 
-/// R2000 ASCII is exactly the R2000 DXF CADCraft always wrote.
+/// R2000 ASCII is exactly the R2000 DXF AsenaCAD always wrote.
 #[test]
 fn r2000_ascii_is_unchanged() {
     let d = sample();
@@ -107,7 +107,7 @@ fn r2000_ascii_is_unchanged() {
 }
 
 /// Without a version asked for: 2018 for a new drawing, otherwise the file's own version (the
-/// nearest one CADCraft writes for older or newer files).
+/// nearest one AsenaCAD writes for older or newer files).
 #[test]
 fn default_version_is_the_drawings_own() {
     let d = sample();

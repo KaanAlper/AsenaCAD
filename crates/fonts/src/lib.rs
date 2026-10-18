@@ -1,7 +1,7 @@
-//! CADCraft text layout.
+//! AsenaCAD text layout.
 //!
 //! Turns TEXT and MTEXT into stroke polylines with the built-in single-stroke font
-//! ("CADCraft Stroke") or glyph outlines of installed TrueType fonts ([`ttf`]), with a
+//! ("AsenaCAD Stroke") or glyph outlines of installed TrueType fonts ([`ttf`]), with a
 //! per-character fallback to installed fonts for characters the chosen font lacks. Handles the
 //! `%%` control codes, alignment modes, width factor, obliquing, MTEXT inline formatting
 //! (paragraphs, stacking, height changes), word wrap and attachment points.
@@ -29,7 +29,7 @@ mod craft_fonts;
 pub use craft_fonts::{CRAFT_FONTS, CraftFont};
 
 /// Name of the built-in font.
-pub const BUILTIN_FONT: &str = "CADCraft Stroke";
+pub const BUILTIN_FONT: &str = "AsenaCAD Stroke";
 
 /// One laid-out run of text: strokes in local coordinates (baseline at y = 0, x from 0).
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -700,8 +700,8 @@ mod ttf_tests {
             assert!(crate::ttf::Face::new(arc.clone(), 3).is_none());
             assert!(!crate::ttf::Face { bytes: arc, index: u32::MAX }.has_glyph('a'));
         }
-        crate::ttf::register("cadcraft-hostile-test.ttc", ttc);
-        assert!(crate::ttf::find("cadcraft-hostile-test.ttc").is_none());
+        crate::ttf::register("asenacad-hostile-test.ttc", ttc);
+        assert!(crate::ttf::find("asenacad-hostile-test.ttc").is_none());
         let _ = crate::ttf::fallback_for('\u{4E2D}');
     }
 

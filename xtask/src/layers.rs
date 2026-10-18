@@ -31,7 +31,7 @@ impl Class {
 }
 
 /// The layering table. Names are package names without the `cadcraft-`
-/// prefix.
+/// (library crates) or `asenacad-` (apps) prefix.
 pub const TABLE: &[(&str, Class)] = &[
     ("geom", Class::Layer(0)),
     ("dxf", Class::Standalone),
@@ -47,7 +47,7 @@ pub const TABLE: &[(&str, Class)] = &[
     ("mcp", Class::Layer(5)),
     ("testkit", Class::Testkit),
     // apps and tooling
-    ("cadcraft", Class::Exempt),
+    ("asenacad", Class::Exempt),
     ("cli", Class::Exempt),
     ("web", Class::Exempt),
     ("xtask", Class::Exempt),
@@ -75,7 +75,7 @@ pub const UI_CRATES: &[&str] = &["craft-ui", "egui", "eframe", "egui-wgpu", "wgp
 pub const UI_MIN_LAYER: u8 = 5;
 
 pub fn short_name(pkg: &str) -> &str {
-    pkg.strip_prefix("cadcraft-").unwrap_or(pkg)
+    pkg.strip_prefix("cadcraft-").or_else(|| pkg.strip_prefix("asenacad-")).unwrap_or(pkg)
 }
 
 pub fn classify(pkg: &str) -> Option<Class> {
@@ -245,7 +245,7 @@ mod tests {
             c("cadcraft-doc", &[("cadcraft-geom", Normal, true)]),
             c("cadcraft-engine", &[("cadcraft-doc", Normal, true), ("cadcraft-testkit", Dev, true)]),
             c("cadcraft-ui-egui", &[("cadcraft-engine", Normal, true), ("egui", Normal, false)]),
-            c("cadcraft-cli", &[("cadcraft-ui-egui", Normal, true)]),
+            c("asenacad-cli", &[("cadcraft-ui-egui", Normal, true)]),
         ];
         assert!(check(&g).is_empty(), "{:?}", check(&g));
     }
@@ -292,8 +292,8 @@ mod tests {
 
     #[test]
     fn unregistered_crate_is_error() {
-        let v = check(&[c("cadcraft-mystery", &[])]);
-        assert!(matches!(&v[..], [Violation::Unregistered { krate }] if krate == "cadcraft-mystery"));
+        let v = check(&[c("asenacad-mystery", &[])]);
+        assert!(matches!(&v[..], [Violation::Unregistered { krate }] if krate == "asenacad-mystery"));
         assert!(v[0].to_string().contains("register"));
     }
 
@@ -307,7 +307,7 @@ mod tests {
 
     #[test]
     fn apps_and_xtask_exempt() {
-        for app in ["cadcraft", "cadcraft-cli", "cadcraft-web", "xtask"] {
+        for app in ["asenacad", "asenacad-cli", "asenacad-web", "xtask"] {
             assert!(check(&[c(app, &[("egui", Normal, false), ("cadcraft-ui-egui", Normal, true)])]).is_empty());
         }
     }

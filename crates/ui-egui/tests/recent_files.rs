@@ -12,7 +12,7 @@ use egui_kittest::Harness;
 /// Two drawing files on disk (the reader below accepts anything, so their contents don't matter).
 fn drawings(test: &str) -> (String, String) {
     set_io(IoHooks { read: |_, _| Ok(Drawing::new_metric()), write: |_, _| Ok(Vec::new()), plot: None });
-    let dir = std::env::temp_dir().join(format!("cadcraft-recent-{test}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-recent-{test}-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = |name: &str| {
         let p = dir.join(name);

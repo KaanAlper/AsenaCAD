@@ -139,7 +139,7 @@ fn tableexport_writes_csv() {
     set(&mut s, &h, 0, 1, "a, \"b\"");
     let r = s.execute("tableexport", &json!({ "handle": h })).unwrap();
     assert_eq!(r["csv"], "1,\"a, \"\"b\"\"\"\r\n2,\r\n3,\r\n6,\r\n");
-    let dir = std::env::temp_dir().join(format!("cadcraft-tableexport-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-tableexport-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("t.csv");
     s.execute("tableexport", &json!({ "handle": h, "path": path.to_str().unwrap(), "separator": "tab" })).unwrap();

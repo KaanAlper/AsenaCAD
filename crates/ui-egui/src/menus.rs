@@ -62,15 +62,15 @@ pub const UI_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
     ("ui.dialog.qselect", "Quick Select...", &[], None),
     ("ui.dialog.parameters", "Parameters Manager", &["Window", "Parameters Manager"], None),
     ("ui.dialog.dsettings", "Drafting Settings...", &[], None),
-    ("ui.dialog.about", "About CADCraft", &["Help", "About CADCraft"], None),
-    ("ui.dialog.commands", "Command Reference", &["Help", "CADCraft Help"], Some("F1")),
+    ("ui.dialog.about", "About AsenaCAD", &["Help", "About AsenaCAD"], None),
+    ("ui.dialog.commands", "Command Reference", &["Help", "AsenaCAD Help"], Some("F1")),
     ("ui.toggle.history", "Command History", &["Window", "Command History"], Some("F2")),
     ("ui.cmdline.lines", "Command Line History Lines", &[], None),
     ("ui.cmdline.clear", "Clear Command History", &[], None),
     ("ui.dialog.language", "Interface Language", &["Edit", "Interface Language"], None),
     ("ui.language", "Language", &[], None),
     ("ui.noop", "", &[], None),
-    ("ui.quit", "Quit CADCraft", &[], Some("Cmd+Q")),
+    ("ui.quit", "Quit AsenaCAD", &[], Some("Cmd+Q")),
 ];
 
 pub fn is_ui_command(id: &str) -> bool {
@@ -702,7 +702,7 @@ mod tests {
         if io().and_then(|h| h.plot).is_none() {
             return; // another test installed hooks without a plotter first
         }
-        let path = std::env::temp_dir().join(format!("cadcraft-print-test-{}.pdf", std::process::id()));
+        let path = std::env::temp_dir().join(format!("asenacad-print-test-{}.pdf", std::process::id()));
         let ps = path.to_string_lossy().to_string();
         let _ = std::fs::remove_file(&path);
         let (mut app, asked) = app_with_picker(Some(ps.clone()));

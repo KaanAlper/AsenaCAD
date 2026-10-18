@@ -10,7 +10,7 @@ const LIN: &str = "*MYDASH,My dash __ __\nA,.5,-.25\n*MYTEXT,My text --MY--\nA,.
 
 /// A user file in the test's temp folder; returns its path.
 fn file(name: &str, text: &str) -> String {
-    let dir = std::env::temp_dir().join(format!("cadcraft-lin-pat-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-lin-pat-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let p = dir.join(name);
     std::fs::write(&p, text).unwrap();

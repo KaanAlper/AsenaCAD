@@ -332,7 +332,7 @@ fn run_stylesmanager(s: &mut Session, p: &Value) -> Result<Value> {
                 Some(_path) => {
                     #[cfg(not(target_arch = "wasm32"))]
                     {
-                        let tmp = format!("{_path}.cadcraft-tmp");
+                        let tmp = format!("{_path}.asenacad-tmp");
                         std::fs::write(&tmp, text.as_bytes()).map_err(|e| bad(cmd, format!("{_path}: {e}")))?;
                         std::fs::rename(&tmp, _path).map_err(|e| bad(cmd, format!("{_path}: {e}")))?;
                         Ok(json!({ "name": name, "path": _path, "bytes": text.len() }))

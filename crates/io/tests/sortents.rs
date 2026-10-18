@@ -1,5 +1,5 @@
 //! Draw order from DXF files (#439): a SORTENTSTABLE reorders its space by sort handle, and the
-//! order CADCraft writes (the order of the entity records) reads back unchanged.
+//! order AsenaCAD writes (the order of the entity records) reads back unchanged.
 
 use cadcraft_doc::*;
 

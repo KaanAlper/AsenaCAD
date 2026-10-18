@@ -281,7 +281,7 @@ fn recover_opens_the_file_with_the_fixes_applied() {
     assert_eq!(st.doc.model.len(), 1);
 
     // By path, typed at the command line.
-    let dir = std::env::temp_dir().join(format!("cadcraft-recover-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-recover-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("site.dxf");
     std::fs::write(&path, b"0\nEOF\n").unwrap();

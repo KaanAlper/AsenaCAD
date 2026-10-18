@@ -22,7 +22,7 @@ fn hooks() {
 
 /// A fresh folder for one test.
 fn folder(tag: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("cadcraft-xref-{}-{tag}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-xref-{}-{tag}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir

@@ -55,7 +55,7 @@ fn an_alias_file_adds_and_overrides_aliases() {
 #[test]
 fn reinit_reads_the_alias_file_again() {
     let _one = ONE_AT_A_TIME.lock().unwrap_or_else(|e| e.into_inner());
-    let dir = std::env::temp_dir().join(format!("cadcraft-aliases-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-aliases-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let file = dir.join("mine.pgp").to_string_lossy().into_owned();
     std::fs::write(&file, "ZZR, *RECTANG\n").unwrap();

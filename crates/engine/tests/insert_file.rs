@@ -46,7 +46,7 @@ fn hooks() {
 
 /// Write a test drawing file with $INSBASE `base`; returns its path.
 fn file(name: &str, base: &str) -> String {
-    let dir = std::env::temp_dir().join(format!("cadcraft-insert-file-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("asenacad-insert-file-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let p = dir.join(name);
     std::fs::write(&p, base).unwrap();

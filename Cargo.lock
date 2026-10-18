@@ -246,6 +246,55 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "175571dd1d178ced59193a6fc02dde1b972eb0bc56c892cde9beeceac5bf0f6b"
 
 [[package]]
+name = "asenacad"
+version = "0.8.0"
+dependencies = [
+ "cadcraft-engine",
+ "cadcraft-io",
+ "cadcraft-ui-egui",
+ "eframe",
+ "egui",
+ "hidapi",
+ "log",
+ "muda",
+ "objc2-app-kit 0.3.2",
+ "rfd",
+ "serde_json",
+ "sys-locale",
+ "windows",
+ "winit",
+ "winresource",
+ "zbus",
+]
+
+[[package]]
+name = "asenacad-cli"
+version = "0.8.0"
+dependencies = [
+ "cadcraft-engine",
+ "cadcraft-io",
+ "cadcraft-mcp",
+ "cadcraft-render",
+ "serde_json",
+]
+
+[[package]]
+name = "asenacad-web"
+version = "0.8.0"
+dependencies = [
+ "cadcraft-engine",
+ "cadcraft-io",
+ "cadcraft-ui-egui",
+ "eframe",
+ "egui",
+ "log",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "ash"
 version = "0.38.0+1.3.281"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -546,39 +595,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
 
 [[package]]
-name = "cadcraft"
-version = "0.8.0"
-dependencies = [
- "cadcraft-engine",
- "cadcraft-io",
- "cadcraft-ui-egui",
- "eframe",
- "egui",
- "hidapi",
- "log",
- "muda",
- "objc2-app-kit 0.3.2",
- "rfd",
- "serde_json",
- "sys-locale",
- "windows",
- "winit",
- "winresource",
- "zbus",
-]
-
-[[package]]
-name = "cadcraft-cli"
-version = "0.8.0"
-dependencies = [
- "cadcraft-engine",
- "cadcraft-io",
- "cadcraft-mcp",
- "cadcraft-render",
- "serde_json",
-]
-
-[[package]]
 name = "cadcraft-color"
 version = "0.8.0"
 dependencies = [
@@ -723,22 +739,6 @@ dependencies = [
  "serde",
  "serde_json",
  "toml",
-]
-
-[[package]]
-name = "cadcraft-web"
-version = "0.8.0"
-dependencies = [
- "cadcraft-engine",
- "cadcraft-io",
- "cadcraft-ui-egui",
- "eframe",
- "egui",
- "log",
- "serde_json",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]
