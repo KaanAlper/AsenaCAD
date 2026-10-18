@@ -1833,6 +1833,11 @@ pub fn show(app: &mut CadApp, ui: &mut egui::Ui) {
     if app.ui.show_viewcube && sheet.is_none() {
         draw_viewcube(app, ui, rect);
     }
+    // The navigation bar (model and paper space) and the drawing window's buttons.
+    if app.ui.show_navbar {
+        crate::navbar::show(app, ui, rect);
+    }
+    crate::navbar::window_buttons(app, ui, full);
     viewport_label(&painter, rect);
     // Typing and Escape reach the command line even when its overlay is hidden.
     crate::cmdline::keyboard(app, ui.ctx());

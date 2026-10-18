@@ -40,6 +40,8 @@ pub const UI_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
     // AutoCAD's COMMANDLINE and COMMANDLINEHIDE (the command line's ×).
     ("commandline", "Command Line", &[], None),
     ("commandlinehide", "Hide Command Line", &[], None),
+    // NAVBAR: the navigation bar on or off (`{on?: bool}`; its ⊗ turns it off).
+    ("navbar", "Navigation Bar", &[], None),
     // The status bar's Customization menu: `{item, on?}` shows or hides one item.
     ("ui.statusbar", "Customize Status Bar", &[], None),
     ("ui.toggle.viewcube", "ViewCube", &["View", "ViewCube", "On"], None),
@@ -239,6 +241,10 @@ fn run_ui_command_inner(app: &mut CadApp, id: &str, params: &Value) -> Option<Re
         "commandline" | "commandlinehide" => {
             app.ui.show_command_line = id == "commandline";
             Ok(json!({ "on": app.ui.show_command_line }))
+        }
+        "navbar" => {
+            toggle(&mut app.ui.show_navbar, params);
+            Ok(json!({ "on": app.ui.show_navbar }))
         }
         "ui.statusbar" => crate::chrome::statusbar::command(app, params),
         "ui.toggle.systemcursor" => {

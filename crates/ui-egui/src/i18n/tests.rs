@@ -79,6 +79,7 @@ fn missing_commands_menus_tools_and_snap_labels(language: &str) -> Vec<String> {
     sources.extend(crate::chrome::qat::labels());
     sources.extend(crate::chrome::statusbar::labels());
     sources.extend(crate::cmdbar::labels());
+    sources.extend(crate::navbar::labels());
     sources.into_iter().filter(|s| !s.is_empty() && !catalog.contains_key(&("", *s))).map(str::to_string).collect()
 }
 
@@ -124,6 +125,7 @@ fn missing_marked_ui_literals(language: &str) -> BTreeSet<String> {
         include_str!("../chrome/statusbar.rs"),
         include_str!("../chrome/statusmenus.rs"),
         include_str!("../cmdbar.rs"),
+        include_str!("../navbar.rs"),
     ];
     let mut missing = BTreeSet::new();
     for source in sources {

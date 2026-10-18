@@ -1,6 +1,6 @@
 # UI parity
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-18 · **Change:** minor (command line bar laid out as AutoCAD 2026 for Windows) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0)
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-18 · **Change:** minor (navigation bar and the drawing window's buttons) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0)
 
 How AsenaCAD's interaction compares with AutoCAD's: point entry, object snaps, tracking, dynamic
 input, grips, selection, the command line, chrome and navigation. A drafter's speed in AutoCAD
@@ -163,7 +163,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 | Blocks palette, Content | yes | Blocks window (click to insert, #28) |
 | Status bar toggles | ~25 | AutoCAD 2026 for Windows' default items in its order, the ▾ menus (snap type, polar angles, isoplanes, running object snaps) and the Customization list of 29 items (saved with the workspace). Shown but disabled until their commands exist: Workspace Switching, Annotation Monitor, Clean Screen; in the Customization list also 3D Object Snap, Dynamic UCS, Selection Filtering, Gizmo, Lock UI, Graphics Performance |
 | ViewCube | interactive 3D | clickable for 2D (Top/Home → extents); dragging does nothing (#7) |
-| Navigation bar, SteeringWheels | yes | no |
+| Navigation bar, SteeringWheels | yes | navigation bar below the ViewCube (NAVBAR, ⊗ closes it): Pan, Zoom with its eleven variants (the face shows the last one), Orbit (3DORBIT refuses in the 2D view); the Full Navigation Wheel, ShowMotion, Free and Continuous Orbit and the bar's Customize are disabled (no SteeringWheels yet) |
 | Workspaces | Drafting & Annotation, 3D Modeling | no |
 | Options / Preferences dialog | many tabs | **no** (issue #23) |
 | Customisation (CUI, aliases editor, tool palettes) | yes | no |
@@ -202,6 +202,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-18 | minor | Navigation bar below the ViewCube (Pan, Zoom and its variants, Orbit; NAVBAR) and the drawing window's buttons at the top-right corner |
 | 2026-10-18 | minor | Command line bar as AutoCAD 2026 for Windows: grip, close (COMMANDLINEHIDE), Customize, recent commands, history toggle |
 | 2026-10-18 | minor | Status bar row as AutoCAD 2026 for Windows: layout bar (≡ · Model · layouts · +), separator band, default items in order, ▾ menus, Customization list |
 | 2026-10-12 | minor | Selected and hovered objects redrawn in the selection colour (text and arrowheads included); Options ▸ Selection laid out as AutoCAD's: Object grouping, Show grips, grip object limit, selection preview, Visual Effect Settings (selection area, preview filter) |

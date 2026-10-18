@@ -35,7 +35,8 @@ pub struct Layout {
 
 impl Layout {
     pub fn new(canvas: Rect) -> Self {
-        let center = pos2(canvas.right() - 92.0, canvas.top() + 82.0);
+        // Where AutoCAD draws it: 84 pt in from the right edge, 106 pt down.
+        let center = pos2(canvas.right() - 84.0, canvas.top() + 106.0);
         let ring = 58.0;
         Layout {
             center,

@@ -1421,12 +1421,18 @@
 	AutoScale	Автомасштаб
 	Clean Screen	Чистий екран
 	Close Command Line	Закрити командний рядок
+	Close Drawing	Закрити креслення
+	Close Navigation Bar	Закрити панель навігації
 	Command Line Grip	Маркер командного рядка
+	Continuous Orbit	Безперервна орбіта
 	Coordinates	Координати
 	Customization	Налаштування
 	Customize	Налаштувати
+	Customize Navigation Bar	Налаштувати панель навігації
 	Customize Status Bar	Налаштувати рядок стану
 	Dynamic UCS	Динамічна ПСК
+	Free Orbit	Вільна орбіта
+	Full Navigation Wheel	Повне колесо навігації
 	Gizmo	Гізмо
 	Graphics Performance	Продуктивність графіки
 	Grid	Сітка
@@ -1437,16 +1443,22 @@
 	Isoplane Top	Ізоплощина верхня
 	LineWeight	Товщина лінії
 	Lock UI	Заблокувати інтерфейс
+	Minimize Drawing	Згорнути креслення
 	Model Space	Простір моделі
 	Model or Paper Space	Простір моделі або аркуша
 	More layouts	Інші аркуші
+	Navigation Bar	Панель навігації
 	No recent commands	Немає нещодавніх команд
 	Object Snap Settings...	Параметри об'єктної прив'язки...
 	Polar Snap	Полярна прив'язка
+	Restore Drawing	Відновити креслення
 	Selection Filtering	Фільтрування вибору
+	ShowMotion	ShowMotion
 	Snap Settings...	Параметри прив'язки...
 	Tracking Settings...	Параметри відстеження...
 	Units	Одиниці
+	Zoom Center	Масштаб за центром
+	Zoom Scale	Масштабувати за коефіцієнтом
 	Architectural	Архітектурні
 	Decimal	Десяткові
 	Engineering	Інженерні
