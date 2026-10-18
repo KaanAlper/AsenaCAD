@@ -4,6 +4,7 @@
 //! minimize states, panels packed in order, slide-outs and right-to-left collapse.
 
 use cadcraft_engine::Session;
+use cadcraft_ui_egui::docking::Panel as Palette;
 use cadcraft_ui_egui::ribbon::home::HOME;
 use cadcraft_ui_egui::ribbon::model::{Entry, Item, Panel};
 use cadcraft_ui_egui::ribbon::{self, RibbonMin, layout, render_panel_for_test, widgets::RibbonState};
@@ -12,6 +13,7 @@ use egui::accesskit::{Role, Toggled};
 use egui::{pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::{NodeT, Queryable};
+use serde_json::json;
 
 fn panel(label: &str) -> &'static Panel {
     HOME.panels.iter().find(|p| p.label == label).expect("a Home panel")
@@ -48,9 +50,11 @@ fn the_circle_menu_lists_autocads_variants_in_order_with_separators() {
     let tops: Vec<f32> = entries.iter().map(|l| h.get_by_label(l).rect().min.y).collect();
     assert!(tops.windows(2).all(|w| w[0] < w[1]), "entries in AutoCAD's order: {tops:?}");
     let step = tops[1] - tops[0];
-    assert!(tops[2] - tops[1] > step + 2.0, "a separator before 2-Point");
+    // A separator adds at least half an item spacing to the plain step between entries.
+    let gap = step + h.ctx.global_style().spacing.item_spacing.y / 2.0;
+    assert!(tops[2] - tops[1] > gap, "a separator before 2-Point");
     assert!((tops[3] - tops[2] - step).abs() < 1.0, "no separator between 2-Point and 3-Point");
-    assert!(tops[4] - tops[3] > step + 2.0, "a separator before Tan, Tan, Radius");
+    assert!(tops[4] - tops[3] > gap, "a separator before Tan, Tan, Radius");
 }
 
 #[test]
@@ -87,6 +91,17 @@ fn choosing_extend_in_the_trim_menu_puts_extend_on_the_face() {
 }
 
 #[test]
+fn split_buttons_add_no_unlabelled_accessibility_nodes() {
+    for panel in ["Draw", "Modify", "Block", "Clipboard"] {
+        let h = harness(panel);
+        let unlabelled: Vec<_> =
+            h.query_all_by_role(Role::Button).filter(|n| n.accesskit_node().label().is_none_or(|l| l.is_empty())).map(|n| n.rect()).collect();
+        assert!(unlabelled.is_empty(), "{panel}: unlabelled buttons at {unlabelled:?}");
+        assert!(h.query_all_by_role(Role::Unknown).next().is_none(), "{panel}: no anonymous nodes");
+    }
+}
+
+#[test]
 fn an_item_without_a_command_is_disabled() {
     let mut h = harness("Modify");
     h.get_by_label("Set to ByLayer").click();
@@ -119,6 +134,95 @@ fn the_properties_combos_show_the_current_properties() {
         .map(|n| n.rect().size())
         .find(|s| *s == cadcraft_ui_egui::ribbon::widgets::LAUNCHER);
     assert!(launcher.is_some(), "the panel's dialog launcher");
+}
+
+fn current_layer(h: &Harness<'_, CadApp>) -> String {
+    h.state().session.doc().map(|d| d.header.str("CLAYER", "0")).unwrap_or_default()
+}
+
+#[test]
+fn picking_a_layer_in_the_combo_makes_it_current_and_undo_restores_0() {
+    let mut h = harness("Layers");
+    h.state_mut().run("layer.new", json!({ "name": "Walls" })).unwrap();
+    h.run_steps(2);
+    assert_eq!(current_layer(&h), "0");
+    h.get_by_role_and_label(Role::ComboBox, "Layer").click();
+    h.run_steps(3);
+    h.get_by_label("Walls").click();
+    h.run_steps(3);
+    assert_eq!(current_layer(&h), "Walls", "the entry runs layer.current");
+    assert_eq!(h.get_by_role_and_label(Role::ComboBox, "Layer").value().as_deref(), Some("Walls"));
+    h.state_mut().run("u", json!({})).unwrap();
+    h.run_steps(2);
+    assert_eq!(current_layer(&h), "0", "undo reverts the combo's change");
+    assert_eq!(h.get_by_role_and_label(Role::ComboBox, "Layer").value().as_deref(), Some("0"));
+}
+
+#[test]
+fn the_lineweight_list_selects_the_current_lineweight() {
+    let mut h = harness("Properties");
+    h.state_mut().run("lweight", json!({ "lineweight": 0.25 })).unwrap();
+    h.run_steps(2);
+    assert_eq!(h.get_by_role_and_label(Role::ComboBox, "Lineweight").value().as_deref(), Some("0.25 mm"));
+    h.get_by_role_and_label(Role::ComboBox, "Lineweight").click();
+    h.run_steps(3);
+    assert_eq!(h.get_by_label("0.25 mm").accesskit_node().toggled(), Some(Toggled::True), "the current entry is the selected one");
+    let selected: Vec<_> = ["ByLayer", "ByBlock", "Default", "0.00 mm", "0.30 mm", "2.11 mm"]
+        .into_iter()
+        .filter(|l| h.query_all_by_label(l).any(|n| n.accesskit_node().toggled() == Some(Toggled::True)))
+        .collect();
+    assert!(selected.is_empty(), "no other entry is selected: {selected:?}");
+}
+
+#[test]
+fn the_properties_launcher_opens_the_properties_palette() {
+    let mut h = harness("Properties");
+    h.state_mut().run("ui.dock", json!({ "operation": "close", "panel": "properties" })).unwrap();
+    h.run_steps(2);
+    assert!(!h.state().ui.docking.layout.contains(&Palette::Properties));
+    let launcher = h
+        .query_all_by_role_and_label(Role::Button, "Properties")
+        .find(|n| n.rect().size() == cadcraft_ui_egui::ribbon::widgets::LAUNCHER)
+        .expect("the panel's dialog launcher");
+    launcher.click();
+    h.run_steps(3);
+    assert!(h.state().ui.docking.layout.contains(&Palette::Properties), "the launcher runs PROPERTIES");
+}
+
+#[test]
+fn the_paste_face_defaults_to_paste_and_cut_and_copy_clip_show_icons_only() {
+    let h = harness("Clipboard");
+    assert!(h.query_by_role_and_label(Role::Button, "Paste").is_some(), "the face shows Paste");
+    assert!(h.query_by_label("Paste options").is_some());
+    for label in ["Cut", "Copy Clip"] {
+        let node = h.get_by_role_and_label(Role::Button, label);
+        assert!(node.rect().width() <= 24.5, "{label} is icon-only, named for accessibility: {:?}", node.rect());
+    }
+}
+
+/// The texts painted in the last frame, as laid out (a forced line break is a "\n").
+fn painted(h: &Harness<'_, CadApp>) -> Vec<String> {
+    fn collect(shape: &egui::Shape, out: &mut Vec<String>) {
+        match shape {
+            egui::Shape::Text(t) => out.push(t.galley.text().to_string()),
+            egui::Shape::Vec(shapes) => shapes.iter().for_each(|s| collect(s, out)),
+            _ => {}
+        }
+    }
+    let mut out = Vec::new();
+    h.output().shapes.iter().for_each(|s| collect(&s.shape, &mut out));
+    out
+}
+
+#[test]
+fn large_labels_break_at_words_like_autocad() {
+    let h = harness("Block");
+    assert!(painted(&h).iter().any(|t| t == "Detect and\nConvert"), "Detect and / Convert: {:?}", painted(&h));
+    assert!(painted(&h).iter().any(|t| t == "Insert"), "a short label stays on one line");
+    let h = harness("Layers");
+    assert!(painted(&h).iter().any(|t| t == "Layer\nProperties"), "Layer / Properties");
+    let h = harness("Properties");
+    assert!(painted(&h).iter().any(|t| t == "Match\nProperties"), "Match / Properties");
 }
 
 #[test]
