@@ -8,6 +8,7 @@
 
 pub(crate) mod avail;
 mod bind;
+mod build;
 pub mod home;
 pub mod layout;
 pub mod model;

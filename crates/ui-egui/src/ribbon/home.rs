@@ -1,44 +1,9 @@
 //! The Home tab: AutoCAD 2026's ten panels with their items in AutoCAD's order (column by
 //! column, top to bottom), sizes, rows, split menus, slide-outs and dialog launchers.
 
-use super::model::{Combo, Entry, Item, Panel, Size, Slider, Tab, Toggle};
+use super::build::*;
+use super::model::{Combo, Entry, Panel, Size, Slider, Tab, Toggle};
 use crate::icons::Icon;
-
-const SEP: Entry = Entry::Separator;
-
-const fn e(icon: Icon, label: &'static str, cmd: &'static str) -> Entry {
-    Entry::Command { icon, label, cmd }
-}
-
-const fn large(icon: Icon, label: &'static str, cmd: &'static str) -> Item {
-    Item::Button { icon, label, cmd, size: Size::Large, row: 0 }
-}
-
-/// Small, icon only.
-const fn icon(icon: Icon, label: &'static str, cmd: &'static str, row: u8) -> Item {
-    Item::Button { icon, label, cmd, size: Size::Small { label: false }, row }
-}
-
-/// Small, icon and label.
-const fn labeled(icon: Icon, label: &'static str, cmd: &'static str, row: u8) -> Item {
-    Item::Button { icon, label, cmd, size: Size::Small { label: true }, row }
-}
-
-const fn toggle(icon: Icon, label: &'static str, cmd: &'static str, size: Size, row: u8, state: Toggle) -> Item {
-    Item::Toggle { icon, label, cmd, size, row, state }
-}
-
-const fn large_split(label: Option<&'static str>, menu: &'static [Entry]) -> Item {
-    Item::Split { label, size: Size::Large, row: 0, menu, default: 0 }
-}
-
-const fn small_split(label: Option<&'static str>, show_label: bool, row: u8, menu: &'static [Entry]) -> Item {
-    Item::Split { label, size: Size::Small { label: show_label }, row, menu, default: 0 }
-}
-
-const fn combo(kind: Combo, width: f32, row: u8) -> Item {
-    Item::Combo { kind, width, row }
-}
 
 // ---- Draw ----
 
@@ -255,7 +220,7 @@ const LAYERS: Panel = Panel {
         icon(Icon::LayerMerge, "Merge", "laymrg", 2),
         icon(Icon::LayerDelete, "Delete", "laydel", 2),
         toggle(Icon::LockedLayerFade, "Locked Layer fading", "laylockfadectl", Size::Small { label: false }, 3, Toggle::LockedLayerFade),
-        Item::Slider { kind: Slider::LockedLayerFade, width: 200.0, row: 3 },
+        slider(Slider::LockedLayerFade, 200.0, 3),
     ],
     launcher: None,
 };
@@ -299,7 +264,7 @@ const PROPERTIES: Panel = Panel {
     slideout: &[
         combo(Combo::PlotStyle, 200.0, 1),
         combo(Combo::Transparency, 35.0, 2),
-        Item::Slider { kind: Slider::Transparency, width: 158.0, row: 2 },
+        slider(Slider::Transparency, 158.0, 2),
         labeled(Icon::List, "List", "list", 3),
     ],
     launcher: Some("properties"),
