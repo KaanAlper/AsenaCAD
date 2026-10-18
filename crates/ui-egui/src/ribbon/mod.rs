@@ -6,6 +6,7 @@
 //! wherever the panel is shown (strip, collapsed-panel popup, slide-out): split buttons remember
 //! their last entry by it, and its egui id scope keeps equally named items apart.
 
+mod avail;
 mod bind;
 pub mod home;
 pub mod layout;
@@ -261,8 +262,8 @@ fn title_bar(app: &mut CadApp, ui: &mut Ui, bar: Rect, key: &str, panel: &Panel,
     }
     ui.painter().galley(pos2(x, bar.center().y - galley.size().y / 2.0), galley, t.text_dim);
     if let Some((cmd, rect)) = launcher {
-        let label = cadcraft_engine::find_command(cmd).map_or(panel.label, |c| c.label);
-        widgets::launcher(ui, app, rect, label, cmd);
+        let label = widgets::command_label(ui, app, cmd).unwrap_or(panel.label);
+        widgets::launcher(ui, app, rect, key, label, cmd);
     }
 }
 

@@ -206,9 +206,11 @@ pub fn command_specs() -> &'static [CommandSpec] {
     })
 }
 
+/// The command `id` names, ignoring ASCII case (ids are lowercase). Allocation-free: the
+/// ribbon and menus look commands up every frame.
 pub fn find_command(id: &str) -> Option<&'static CommandSpec> {
-    let l = id.to_ascii_lowercase();
-    command_specs().iter().find(|c| c.id == l)
+    let lower_eq = |c: &str| c.len() == id.len() && c.bytes().zip(id.bytes()).all(|(a, b)| a == b.to_ascii_lowercase());
+    command_specs().iter().find(|c| lower_eq(c.id))
 }
 
 /// Resolve a typed name or alias (AutoCAD-style short names such as `L`, `C`, `PL`) to an id.
