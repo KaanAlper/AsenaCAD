@@ -1,5 +1,7 @@
-//! Design tokens. Colours were measured from the reference look (dark slate chrome, near-black
-//! navy model space) and are AsenaCAD's own values; every widget reads them from here.
+//! Design tokens: AsenaCAD's own colours (blue-slate chrome, near-black navy model space); every
+//! widget reads them from here. Never take a colour from an AutoCAD screenshot (clean-room): the
+//! chrome only follows AutoCAD's light/dark structure (dark frame, lighter panels, highlighted
+//! active items), in hues of our own.
 //!
 //! Two palettes: [`Tokens::DARK`] (the original look) and [`Tokens::LIGHT`]. The interface theme
 //! changes the chrome (title row, ribbon, menus, palettes, tabs, command line, status bar,
@@ -152,13 +154,13 @@ pub struct Tokens {
 
 impl Tokens {
     pub const DARK: Tokens = Tokens {
-        chrome: Color32::from_rgb(0x3d, 0x43, 0x4c),
-        chrome_dark: Color32::from_rgb(0x30, 0x35, 0x3d),
-        panel: Color32::from_rgb(0x3e, 0x44, 0x4d),
-        tab_active: Color32::from_rgb(0x50, 0x58, 0x65),
-        control: Color32::from_rgb(0x52, 0x5a, 0x67),
+        chrome: Color32::from_rgb(0x33, 0x3e, 0x54),
+        chrome_dark: Color32::from_rgb(0x28, 0x32, 0x45),
+        panel: Color32::from_rgb(0x33, 0x3f, 0x58),
+        tab_active: Color32::from_rgb(0x41, 0x4f, 0x6a),
+        control: Color32::from_rgb(0x4f, 0x5c, 0x76),
         control_hover: Color32::from_rgb(0x5e, 0x67, 0x74),
-        border: Color32::from_rgb(0x23, 0x27, 0x2d),
+        border: Color32::from_rgb(0x1e, 0x29, 0x3e),
         canvas: Color32::from_rgb(0x22, 0x28, 0x2f),
         grid_minor: Color32::from_rgb(0x29, 0x30, 0x3a),
         grid_major: Color32::from_rgb(0x31, 0x39, 0x45),
@@ -184,7 +186,7 @@ impl Tokens {
         crossing_stroke: Color32::from_rgb(0x7f, 0xe0, 0x7f),
         cmd_bg: Color32::from_rgba_premultiplied(0x34, 0x3c, 0x4a, 0xf0),
         toggle_on: Color32::from_rgb(0x3d, 0x8b, 0xfd),
-        field: Color32::from_rgb(0x2c, 0x31, 0x38),
+        field: Color32::from_rgb(0x22, 0x2c, 0x40),
         select_bg: Color32::from_rgb(0x3d, 0x8b, 0xfd),
         canvas_ink: Color32::from_rgb(0xa3, 0xaa, 0xb4),
         cmd_history: Color32::from_rgba_unmultiplied_const(0x2a, 0x30, 0x3a, 170),
@@ -196,19 +198,19 @@ impl Tokens {
         warn: Color32::from_rgb(0xff, 0xd0, 0x80),
         crosshair: Color32::from_rgb(0xe8, 0xe8, 0xe8),
         paper: Color32::WHITE,
-        ribbon_bg: Color32::from_rgb(0x3e, 0x44, 0x4d),
-        ribbon_tab_row: Color32::from_rgb(0x24, 0x28, 0x2e),
-        ribbon_panel_title: Color32::from_rgb(0x3a, 0x40, 0x48),
-        ribbon_hover: Color32::from_rgb(0x4e, 0x56, 0x62),
+        ribbon_bg: Color32::from_rgb(0x33, 0x3f, 0x58),
+        ribbon_tab_row: Color32::from_rgb(0x1e, 0x29, 0x3e),
+        ribbon_panel_title: Color32::from_rgb(0x33, 0x3c, 0x4f),
+        ribbon_hover: Color32::from_rgb(0x43, 0x56, 0x7d),
         ribbon_pressed: Color32::from_rgb(0x2f, 0x5a, 0x8a),
-        ribbon_collapsed_bg: Color32::from_rgb(0x50, 0x58, 0x65),
-        status_bg: Color32::from_rgb(0x2a, 0x2f, 0x36),
-        status_band: Color32::from_rgb(0x4a, 0x51, 0x5b),
-        cmd_block: Color32::from_rgb(0x48, 0x50, 0x5c),
+        ribbon_collapsed_bg: Color32::from_rgb(0x41, 0x4f, 0x6a),
+        status_bg: Color32::from_rgb(0x22, 0x2c, 0x40),
+        status_band: Color32::from_rgb(0x3d, 0x4b, 0x68),
+        cmd_block: Color32::from_rgb(0x3d, 0x4b, 0x67),
         navbar_bg: Color32::from_rgba_unmultiplied_const(0xc4, 0xc9, 0xd0, 0x90),
         navbar_border: Color32::from_rgba_unmultiplied_const(0xdc, 0xe0, 0xe6, 0xa0),
-        navbar_icon: Color32::from_rgb(0x33, 0x39, 0x42),
-        navbar_hover: Color32::from_rgba_unmultiplied_const(0xf2, 0xf4, 0xf7, 0xb0),
+        navbar_icon: Color32::from_rgb(0x28, 0x34, 0x4b),
+        navbar_hover: Color32::from_rgba_unmultiplied_const(0xeb, 0xed, 0xf2, 0xb0),
     };
 
     /// Light grey chrome with dark text. The drawing-area colours (canvas, grid, axes, selection,
@@ -239,15 +241,15 @@ impl Tokens {
         list_bg: Color32::from_rgb(0xfb, 0xfc, 0xfd),
         list_row: Color32::from_rgb(0xe3, 0xe8, 0xef),
         warn: Color32::from_rgb(0x8a, 0x53, 0x00),
-        ribbon_bg: Color32::from_rgb(0xf1, 0xf3, 0xf5),
-        ribbon_tab_row: Color32::from_rgb(0xd6, 0xda, 0xe0),
-        ribbon_panel_title: Color32::from_rgb(0xe6, 0xe9, 0xed),
+        ribbon_bg: Color32::from_rgb(0xeb, 0xed, 0xf1),
+        ribbon_tab_row: Color32::from_rgb(0xd5, 0xd9, 0xe1),
+        ribbon_panel_title: Color32::from_rgb(0xe9, 0xeb, 0xf0),
         ribbon_hover: Color32::from_rgb(0xd8, 0xe1, 0xec),
         ribbon_pressed: Color32::from_rgb(0xb6, 0xd3, 0xfb),
-        ribbon_collapsed_bg: Color32::from_rgb(0xdf, 0xe3, 0xe9),
-        status_bg: Color32::from_rgb(0xd6, 0xda, 0xe0),
-        status_band: Color32::from_rgb(0xf1, 0xf3, 0xf5),
-        cmd_block: Color32::from_rgb(0xe1, 0xe4, 0xe9),
+        ribbon_collapsed_bg: Color32::from_rgb(0xdc, 0xdf, 0xe6),
+        status_bg: Color32::from_rgb(0xd5, 0xd9, 0xe1),
+        status_band: Color32::from_rgb(0xeb, 0xed, 0xf1),
+        cmd_block: Color32::from_rgb(0xdc, 0xdf, 0xe6),
         ..Tokens::DARK
     };
 
