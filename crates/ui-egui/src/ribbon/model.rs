@@ -46,6 +46,10 @@ pub enum Combo {
     AttributeDisplay,
     SectionViewStyle,
     DetailViewStyle,
+    /// Whether xref, image and underlay frames show and plot (FRAME).
+    XrefFrames,
+    /// Whether object snaps find points on underlays (UOSNAP).
+    UnderlaySnap,
 }
 
 impl Combo {
@@ -66,6 +70,8 @@ impl Combo {
             Self::AttributeDisplay => "Attribute Display",
             Self::SectionViewStyle => "Section View Style",
             Self::DetailViewStyle => "Detail View Style",
+            Self::XrefFrames => "Frames",
+            Self::UnderlaySnap => "Snap to Underlays",
         }
     }
 }
@@ -77,6 +83,8 @@ pub enum Slider {
     LockedLayerFade,
     /// Transparency of new objects (CETRANSPARENCY, 0–90).
     Transparency,
+    /// How much xrefs fade (XDWGFADECTL, 0–90 %).
+    XrefFade,
 }
 
 impl Slider {
@@ -84,6 +92,7 @@ impl Slider {
         match self {
             Self::LockedLayerFade => "Layer fading",
             Self::Transparency => "Transparency",
+            Self::XrefFade => "Xref fading",
         }
     }
 }
@@ -101,6 +110,8 @@ pub enum Toggle {
     GroupBox,
     /// The QuickCalc palette is open.
     QuickCalcPalette,
+    /// Xrefs are faded (XDWGFADECTL > 0).
+    XrefFade,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -163,14 +174,14 @@ const fn unbuilt(label: &'static str) -> Tab {
     Tab { label, panels: &[] }
 }
 
-/// Ribbon tabs in AutoCAD's order. M1a builds Home; the other tabs' panels come in M1b.
+/// Ribbon tabs in AutoCAD's order. M1a built Home; M1b fills the others tab by tab.
 pub fn tabs() -> &'static [Tab] {
     TABS
 }
 
 const TABS: &[Tab] = &[
     crate::ribbon::home::HOME,
-    unbuilt("Insert"),
+    crate::ribbon::insert::INSERT,
     unbuilt("Annotate"),
     unbuilt("Parametric"),
     unbuilt("View"),
@@ -265,6 +276,23 @@ mod tests {
         "viewsectionstyle",   // View ▸ Section View Style
         "viewdetailstyle",    // View ▸ Detail View Style
         "viewstd",            // View ▸ Drafting Standard (dialog launcher)
+        // ---- Insert ----
+        "clip",                    // Reference ▸ Clip
+        "adjust",                  // Reference ▸ Adjust
+        "ulayers",                 // Reference ▸ Underlay Layers
+        "xdwgfadectl",             // Reference ▸ Xref Fading (toggle)
+        "pdfimport",               // Import ▸ PDF Import
+        "dgnimport",               // Import ▸ PDF Import ▸ DGN Import
+        "pdfshxtext",              // Import ▸ Recognize SHX Text
+        "pdfshxtext.settings",     // Import ▸ Recognition Settings
+        "txt2mtxt",                // Import ▸ Combine Text
+        "field",                   // Data ▸ Field
+        "updatefield",             // Data ▸ Update Fields
+        "insertobj",               // Data ▸ OLE Object
+        "hyperlink",               // Data ▸ Hyperlink
+        "datalinkupdate.write",    // Linking & Extraction ▸ Upload to Source
+        "geographiclocation",      // Location ▸ Set Location ▸ From Map
+        "geographiclocation.file", // Location ▸ Set Location ▸ From File
     ];
 
     #[test]
@@ -300,7 +328,7 @@ mod tests {
     fn the_tab_row_has_autocads_nine_tabs_in_order() {
         let labels: Vec<_> = tabs().iter().map(|t| t.label).collect();
         assert_eq!(labels, ["Home", "Insert", "Annotate", "Parametric", "View", "Manage", "Output", "Collaborate", "Express Tools"]);
-        assert!(tabs()[1..].iter().all(|t| t.panels.is_empty()), "only Home has panels in M1a");
+        assert!(tabs()[..2].iter().all(|t| !t.panels.is_empty()), "Home and Insert are built");
         assert!(is_tab("Express Tools") && !is_tab("Tool Sets") && !is_tab(""));
     }
 

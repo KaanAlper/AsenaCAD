@@ -251,6 +251,28 @@ pub enum Icon {
     ViewBase,
     SectionViewStyle,
     DetailViewStyle,
+    // Insert tab tools, drawn in `icons/ribbon/insert.rs`.
+    WriteBlock,
+    XClip,
+    UnderlayAdjust,
+    UnderlayLayers,
+    RefEdit,
+    XrefFade,
+    PdfImport,
+    DgnImport,
+    RecognizeShx,
+    ShxSettings,
+    CombineText,
+    Field,
+    UpdateFields,
+    OleObject,
+    Hyperlink,
+    DataLink,
+    DataDownload,
+    DataUpload,
+    DataExtract,
+    GeoMap,
+    GeoFile,
     AutoScale,
     AnnoMonitor,
     Isolate,
@@ -901,7 +923,9 @@ fn paint_pen(pen: &Pen, icon: Icon) {
         | LayerUnlock | LayerCur | CopyToLayer | LayerWalk | LayerVpFreeze | LayerMerge | LayerDelete | LockedLayerFade | DetectBlocks
         | ConvertBlocks | AttEdit | AttEditMultiple | BlockReplace | AttManager | AttSync | BasePoint | Group | Ungroup | GroupEdit | GroupSelect
         | GroupManager | GroupBox | MeasureRadius | MeasureAngle | Volume | SelectAll | QuickCalc | IdPoint | PointStyle | Paste | PasteBlock
-        | PasteHyperlink | PasteOrig | PasteSpecial | Cut | CopyClip | ViewBase | SectionViewStyle | DetailViewStyle => ribbon::paint(pen, icon),
+        | PasteHyperlink | PasteOrig | PasteSpecial | Cut | CopyClip | ViewBase | SectionViewStyle | DetailViewStyle | WriteBlock | XClip
+        | UnderlayAdjust | UnderlayLayers | RefEdit | XrefFade | PdfImport | DgnImport | RecognizeShx | ShxSettings | CombineText | Field
+        | UpdateFields | OleObject | Hyperlink | DataLink | DataDownload | DataUpload | DataExtract | GeoMap | GeoFile => ribbon::paint(pen, icon),
         AutoScale | AnnoMonitor | Isolate | CleanScreen | SelCycling | Osnap3d | DynUcs | SelFilter | Gizmo | GraphicsPerf | Units | Wrench
         | Prompt | NavWheel | ShowMotion | VpMinimize | VpRestore | ZoomIn | ZoomOut | ZoomAll | ZoomPrevious | ZoomRealtime => {
             shell::paint(pen, icon)

@@ -93,6 +93,9 @@ fn current(app: &CadApp, kind: Combo) -> (String, bool) {
         Combo::Transparency => (crate::i18n::t("ByLayer").to_string(), false),
         // Model documentation (VIEWBASE) and its styles don't exist yet.
         Combo::SectionViewStyle | Combo::DetailViewStyle => (String::new(), false),
+        // FRAME and UOSNAP aren't modelled yet: AutoCAD's defaults, shown disabled.
+        Combo::XrefFrames => (crate::tl!("*Frames vary*").to_string(), false),
+        Combo::UnderlaySnap => (crate::tl!("Snap to Underlays ON").to_string(), false),
     }
 }
 
@@ -129,7 +132,7 @@ fn choices(app: &CadApp, kind: Combo) -> Vec<Choice> {
             })
         }
         Combo::AttributeDisplay => ATTMODES.iter().map(|(_, l, k)| (crate::i18n::t(l).to_string(), "attdisp", json!({ "mode": k }))).collect(),
-        Combo::Transparency | Combo::SectionViewStyle | Combo::DetailViewStyle => Vec::new(),
+        Combo::Transparency | Combo::SectionViewStyle | Combo::DetailViewStyle | Combo::XrefFrames | Combo::UnderlaySnap => Vec::new(),
     }
 }
 
@@ -176,10 +179,11 @@ const fn slider_var(kind: Slider) -> (&'static str, f64) {
     match kind {
         Slider::LockedLayerFade => ("LAYLOCKFADECTL", 50.0),
         Slider::Transparency => ("CETRANSPARENCY", 0.0),
+        Slider::XrefFade => ("XDWGFADECTL", 50.0),
     }
 }
 
-/// A 0–90 slider with its value at the right. Neither variable is modelled by the engine yet,
+/// A 0–90 slider with its value at the right. None of the variables is modelled by the engine yet,
 /// so the slider shows the value (the drawing's, else AutoCAD's default) and is disabled.
 pub fn slider(ui: &mut Ui, app: &CadApp, kind: Slider, width: f32) -> Response {
     let (var, default) = slider_var(kind);

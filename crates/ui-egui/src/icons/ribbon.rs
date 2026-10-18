@@ -1,4 +1,4 @@
-//! Icons of the Home ribbon's variants and panel tools (original work, drawn in code like the
+//! Icons of the ribbon's variants and panel tools (original work, drawn in code like the
 //! rest of the set). Same 24×24 grid and colour roles as `icons.rs`: light strokes for existing
 //! geometry, blue for what the tool creates, orange for picked points.
 //!
@@ -8,6 +8,7 @@
 //! over the clipboard.
 
 mod draw;
+mod insert;
 mod panels;
 
 use egui::{Color32, Shape, Stroke};
@@ -20,9 +21,10 @@ const GOLD: Color32 = Color32::from_rgb(0xe6, 0xb4, 0x3c);
 const ICE: Color32 = Color32::from_rgb(0x9f, 0xd4, 0xff);
 const GREEN: Color32 = Color32::from_rgb(0x6f, 0xe0, 0x6f);
 
-/// Paint one of the Home ribbon icons `icons::paint` hands over.
+/// Paint one of the ribbon icons `icons::paint` hands over: each tab's module paints its own
+/// and says false for the others; the Home panel tools come last.
 pub(super) fn paint(pen: &Pen, icon: Icon) {
-    if !draw::paint(pen, icon) {
+    if !(draw::paint(pen, icon) || insert::paint(pen, icon)) {
         panels::paint(pen, icon);
     }
 }

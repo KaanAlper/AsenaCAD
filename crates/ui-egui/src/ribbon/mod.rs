@@ -10,6 +10,7 @@ pub(crate) mod avail;
 mod bind;
 mod build;
 pub mod home;
+pub mod insert;
 pub mod layout;
 pub mod model;
 pub mod slideout;

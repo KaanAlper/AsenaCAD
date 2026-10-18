@@ -546,12 +546,19 @@ fn the_tab_row_has_all_nine_tabs_and_unbuilt_ones_say_so() {
     let lefts: Vec<f32> = tabs.iter().map(|t| h.get_by_role_and_label(Role::Tab, t).rect().left()).collect();
     assert!(lefts.windows(2).all(|w| w[0] < w[1]), "AutoCAD's order: {lefts:?}");
     assert!(h.query_by_label(ribbon::UNBUILT_TAB_NOTE).is_none(), "Home is built");
+    // M1b builds the tabs one by one: check the first tab still without panels, if any.
+    if let Some(unbuilt) = ribbon::model::tabs().iter().find(|t| t.panels.is_empty()) {
+        h.get_by_role_and_label(Role::Tab, unbuilt.label).click();
+        h.run_steps(3);
+        assert_eq!(h.state().ui.ribbon_tab, unbuilt.label);
+        assert_eq!(h.get_by_role_and_label(Role::Tab, unbuilt.label).accesskit_node().is_selected(), Some(true));
+        assert!(h.query_by_label(ribbon::UNBUILT_TAB_NOTE).is_some(), "an unbuilt tab shows its note");
+        assert!(h.query_by_label("Line").is_none() && title_rect(&h, "Draw").is_none(), "and no Home panels");
+    }
     h.get_by_role_and_label(Role::Tab, "Insert").click();
     h.run_steps(3);
-    assert_eq!(h.state().ui.ribbon_tab, "Insert");
-    assert_eq!(h.get_by_role_and_label(Role::Tab, "Insert").accesskit_node().is_selected(), Some(true));
-    assert!(h.query_by_label(ribbon::UNBUILT_TAB_NOTE).is_some(), "an unbuilt tab shows its note");
-    assert!(h.query_by_label("Line").is_none() && title_rect(&h, "Draw").is_none(), "and no Home panels");
+    assert!(h.query_by_label(ribbon::UNBUILT_TAB_NOTE).is_none(), "Insert is built");
+    assert!(h.query_by_label("Line").is_none() && h.query_by_label("Field").is_some(), "Insert's panels instead of Home's");
     h.get_by_role_and_label(Role::Tab, "Home").click();
     h.run_steps(3);
     assert!(h.query_by_label("Line").is_some());

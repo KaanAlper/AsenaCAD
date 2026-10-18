@@ -24,10 +24,10 @@ pub struct Want {
     pub menu: &'static [&'static str],
 }
 
-pub struct WantPanel {
+pub struct WantPanel<'a> {
     pub label: &'static str,
-    pub items: &'static [Want],
-    pub slideout: &'static [Want],
+    pub items: &'a [Want],
+    pub slideout: &'a [Want],
     /// The command the dialog launcher runs, if the panel has one.
     pub launcher: Option<&'static str>,
 }
@@ -148,7 +148,6 @@ fn check_total_width(label: &str, autocad: &[(&str, f32)]) -> Vec<(&'static str,
     pairs
 }
 
-#[allow(dead_code)] // The tab tests from Insert on use it.
 /// [`check_total_width`], and no panel is more than 8 % off its own AutoCAD width.
 fn check_widths(label: &str, autocad: &[(&str, f32)]) {
     let pairs = check_total_width(label, autocad);
@@ -198,6 +197,111 @@ fn home_is_as_wide_as_autocads() {
             ("Utilities", 97.0),
             ("Clipboard", 91.0),
             ("View", 64.0),
+        ],
+    );
+}
+
+// ---- Insert ----
+
+#[test]
+fn insert_matches_autocad() {
+    check_tab(
+        "Insert",
+        &[
+            WantPanel {
+                label: "Block",
+                items: &[
+                    // AutoCAD's Insert is a gallery; here it is a button running INSERT.
+                    b("Insert", "large", 0),
+                    sp("Detect and Convert", "large", 0, &["Detect and Convert", "Search and Convert"]),
+                    sp("Edit Attribute", "small+label", 1, &["Single", "Multiple"]),
+                    cb("Attribute Display", 2),
+                    b("Replace", "small+label", 3),
+                ],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Block Definition",
+                items: &[
+                    sp("Create Block", "large", 0, &["Create Block", "Write Block"]),
+                    b("Define Attributes", "large", 0),
+                    b("Manage Attributes", "large", 0),
+                    b("Block Editor", "large", 0),
+                ],
+                slideout: &[b("Set Base Point", "small+label", 1), b("Synchronize", "small+label", 2)],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Reference",
+                items: &[
+                    b("Attach", "large", 0),
+                    b("Clip", "large", 0),
+                    b("Adjust", "large", 0),
+                    b("Underlay Layers", "small+label", 1),
+                    cb("Frames", 2),
+                    cb("Snap to Underlays", 3),
+                ],
+                slideout: &[b("Edit Reference", "small+label", 1), tg("Xref Fading", "small", 2), sl("Xref fading", 2)],
+                launcher: Some("xref"),
+            },
+            WantPanel {
+                label: "Import",
+                items: &[
+                    sp("PDF Import", "large", 0, &["PDF Import", "DGN Import", "Import"]),
+                    b("Recognize SHX Text", "small+label", 1),
+                    b("Recognition Settings", "small+label", 2),
+                    b("Combine Text", "large", 0),
+                ],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Data",
+                items: &[
+                    b("Field", "large", 0),
+                    b("Update Fields", "small+label", 1),
+                    b("OLE Object", "small+label", 2),
+                    b("Hyperlink", "small+label", 3),
+                ],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Linking & Extraction",
+                items: &[
+                    b("Data Link", "large", 0),
+                    b("Download from Source", "small+label", 1),
+                    b("Upload to Source", "small+label", 2),
+                    // AutoCAD's label has two spaces.
+                    b("Extract  Data", "small+label", 3),
+                ],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Location",
+                // The screenshot shows a ▾ under Set Location: a split button.
+                items: &[sp("Set Location", "large", 0, &["From Map", "From File"])],
+                slideout: &[],
+                launcher: None,
+            },
+        ],
+    );
+}
+
+#[test]
+fn insert_is_as_wide_as_autocads() {
+    check_widths(
+        "Insert",
+        &[
+            ("Block", 288.0),
+            ("Block Definition", 215.0),
+            ("Reference", 282.0),
+            ("Import", 270.0),
+            ("Data", 145.0),
+            ("Linking & Extraction", 196.0),
+            ("Location", 69.0),
         ],
     );
 }

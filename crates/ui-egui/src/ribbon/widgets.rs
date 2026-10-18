@@ -23,6 +23,8 @@ const LARGE_ICON: f32 = 32.0;
 const SMALL_ICON: f32 = 16.0;
 /// Icon-only small buttons are this wide.
 const SMALL_W: f32 = 24.0;
+/// What a large split's ▾ adds to its two-line label's last line: the gap and the ▾.
+const LARGE_SPLIT_CHEVRON: f32 = 20.0;
 /// The lower part of a large split button that opens its menu (label and ▾).
 const LARGE_SPLIT_ARROW_H: f32 = 35.0;
 /// The ▾ part of a small split button.
@@ -81,6 +83,8 @@ pub fn is_on(app: &CadApp, state: Toggle) -> bool {
         Toggle::GroupSelection => app.session.settings.pickstyle & 1 != 0,
         Toggle::GroupBox => var("GROUPDISPLAYMODE") == Some(2),
         Toggle::QuickCalcPalette => app.ui.docking.layout.contains(&crate::docking::Panel::QuickCalc),
+        // No xref fading is drawn yet: the button only reflects XDWGFADECTL as the drawing has it.
+        Toggle::XrefFade => var("XDWGFADECTL").is_some_and(|v| v > 0),
     }
 }
 
@@ -116,16 +120,14 @@ fn large_label(ui: &Ui, text: &str, enabled: bool) -> std::sync::Arc<egui::Galle
     ui.painter().layout_job(job)
 }
 
-/// `text` as AutoCAD lays a large label out: one line when it fits [`LARGE_WRAP`], else two,
-/// broken at the last space that keeps the first line within it ("Detect and / Convert",
-/// "Layer / Properties"), or after the first word when even that is wider.
+/// `text` as AutoCAD lays a large label out: a single word on one line; more words on two,
+/// broken at the last space that keeps the first line within [`LARGE_WRAP`] ("Detect and /
+/// Convert", "Layer / Properties", "Data / Link"), or after the first word when even that is
+/// wider ("Add / Current Scale").
 fn large_lines(ui: &Ui, text: &str) -> String {
     let width = |s: &str| ui.painter().layout_no_wrap(s.to_string(), crate::theme::ribbon_font(ui.ctx()), text_color(true)).size().x;
     let spaces = text.match_indices(' ').map(|(i, _)| i);
     let Some(first) = spaces.clone().next() else { return text.to_string() };
-    if width(text) <= LARGE_WRAP {
-        return text.to_string();
-    }
     let at = spaces.take_while(|&i| width(&text[..i]) <= LARGE_WRAP).last().unwrap_or(first);
     format!("{}\n{}", &text[..at], text[at..].trim_start())
 }
@@ -170,6 +172,17 @@ fn paint_large(ui: &Ui, rect: Rect, icon: Icon, label: &str, enabled: bool, chev
 /// with 5 px either side.
 fn large_width(ui: &Ui, label: &str) -> f32 {
     (large_label(ui, label, true).size().x + 6.0).max(LARGE_ICON + 10.0)
+}
+
+/// A large split button's width: a two-line label also needs room for the ▾ right of its last
+/// line ("PDF / Import ▾", "Set / Location ▾").
+fn large_split_width(ui: &Ui, label: &str) -> f32 {
+    let galley = large_label(ui, label, true);
+    let last = match galley.rows.as_slice() {
+        [_, .., last] => last.rect().width() + LARGE_SPLIT_CHEVRON,
+        _ => 0.0,
+    };
+    large_width(ui, label).max(last)
 }
 
 /// Paint a small face (16 px icon, optionally the label right of it) into `rect`.
@@ -256,7 +269,7 @@ pub fn split_button(ui: &mut Ui, app: &mut CadApp, key: &str, label: Option<&str
     let face_enabled = face_why.is_ready();
     let menu_enabled = menu.iter().any(|e| matches!(e, Entry::Command { cmd, .. } if availability(ui, app, cmd).is_known()));
     let (w, h) = match size {
-        Size::Large => (large_width(ui, shown), LARGE_H),
+        Size::Large => (large_split_width(ui, shown), LARGE_H),
         Size::Small { label } => (small_width(ui, label.then_some(shown)) + SMALL_SPLIT_ARROW_W, SMALL_H),
     };
     // Space only: the face and the ▾ part are the two interactive (and accessible) widgets.
@@ -343,8 +356,10 @@ pub fn item_width(ui: &Ui, key: &str, item: &Item, compact: bool) -> f32 {
         Item::Button { label, size, .. } | Item::Toggle { label, size, .. } => width(size, label),
         Item::Split { label, size, menu, default, .. } => {
             let face = label.unwrap_or(split_face(ui.ctx(), key, menu, default).1);
-            let arrow = if matches!(size, Size::Small { .. }) { SMALL_SPLIT_ARROW_W } else { 0.0 };
-            width(size, face) + arrow
+            match shown_size(size, compact) {
+                Size::Large => large_split_width(ui, crate::i18n::t(face)),
+                Size::Small { .. } => width(size, face) + SMALL_SPLIT_ARROW_W,
+            }
         }
         Item::Combo { width, .. } | Item::Slider { width, .. } => width,
     }
