@@ -2,14 +2,14 @@
 //! menus, and the panel's dialog launcher (combo boxes and sliders are in `bind.rs`).
 //!
 //! Every control records itself (`icons::describe_control` / `control::record_widget`) under its
-//! AutoCAD label, is disabled when its command doesn't exist yet or refuses to run now, and acts
-//! only through commands: a click clears the command-line buffer and starts the command.
-
-use std::collections::HashMap;
+//! AutoCAD label, is disabled when its command doesn't exist yet or refuses to run now (its
+//! tooltip then says which, `avail`), and acts only through commands: a click clears the
+//! command-line buffer and starts the command.
 
 use egui::text::LayoutJob;
 use egui::{FontId, Rect, Response, Sense, Stroke, Ui, Vec2, pos2, vec2};
 
+use super::avail::{self, Availability};
 use super::model::{Entry, Item, Size, Toggle};
 use crate::CadApp;
 use crate::icons::{self, Icon};
@@ -32,37 +32,42 @@ const LARGE_WRAP: f32 = 58.0;
 const MENU_W: f32 = 220.0;
 const FONT: f32 = 12.0;
 
-/// Per-split memory: which menu entry each split button's face shows and runs. Kept in egui
-/// memory (temporary data, for the life of the window), keyed by panel and item position.
-#[derive(Clone, Debug, Default)]
-pub struct RibbonState {
-    splits: HashMap<String, usize>,
-}
+/// Per-split memory: which menu entry each split button's face shows and runs. Each split's
+/// entry is kept on its own in egui memory (temporary data, for the life of the window), keyed
+/// by panel and item position.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct RibbonState;
 
 impl RibbonState {
-    fn id() -> egui::Id {
-        egui::Id::new("asenacad-ribbon-state")
-    }
-
-    pub fn get(ctx: &egui::Context) -> Self {
-        ctx.data_mut(|d| d.get_temp::<Self>(Self::id()).unwrap_or_default())
+    fn id(key: &str) -> egui::Id {
+        egui::Id::new(("ribbon-split-mem", key))
     }
 
     /// The entry the split `key` shows (its last-used one), or `default`.
     pub fn split(ctx: &egui::Context, key: &str, default: usize) -> usize {
-        Self::get(ctx).splits.get(key).copied().unwrap_or(default)
+        ctx.data_mut(|d| d.get_temp::<usize>(Self::id(key))).unwrap_or(default)
     }
 
     fn remember(ctx: &egui::Context, key: &str, entry: usize) {
-        ctx.data_mut(|d| {
-            d.get_temp_mut_or_default::<Self>(Self::id()).splits.insert(key.to_string(), entry);
-        });
+        ctx.data_mut(|d| d.insert_temp(Self::id(key), entry));
     }
 }
 
-/// Whether `cmd` exists and may run now (the same check the menu bar's `menus::tree` makes).
-pub fn command_enabled(app: &CadApp, cmd: &str) -> bool {
-    crate::palettes::command_known(cmd) && cadcraft_engine::find_command(cmd).is_none_or(|c| (c.enabled)(&app.session).is_ok())
+/// Whether `cmd` exists and may run now (the same check the menu bar's `menus::tree` makes),
+/// and why not; looked up once per pass for the whole ribbon.
+fn availability(ui: &Ui, app: &CadApp, cmd: &str) -> Availability {
+    avail::availability(ui.ctx(), &app.session, cmd)
+}
+
+/// The tooltips of an item: `shown` while enabled, why it is disabled otherwise. Both are built
+/// only when shown.
+fn tooltips(resp: Response, shown: &str, why: &Availability) -> Response {
+    resp.on_hover_ui(|ui| {
+        ui.label(shown);
+    })
+    .on_disabled_hover_ui(|ui| {
+        ui.label(why.disabled_text());
+    })
 }
 
 /// Whether a toggle button shows pressed.
@@ -70,7 +75,7 @@ pub fn is_on(app: &CadApp, state: Toggle) -> bool {
     let var = |name: &str| cadcraft_engine::sysvars::get(&app.session, name).and_then(|v| v.as_i64());
     match state {
         Toggle::LayerPalette => app.ui.dialog.as_deref() == Some("layers"),
-        // Not modelled by the engine yet (no fading is drawn), so never shown on.
+        // No fading is drawn yet: the button only reflects LAYLOCKFADECTL as the drawing has it.
         Toggle::LockedLayerFade => var("LAYLOCKFADECTL").is_some_and(|v| v > 0),
         Toggle::GroupSelection => app.session.settings.pickstyle & 1 != 0,
         Toggle::GroupBox => var("GROUPDISPLAYMODE") == Some(2),
@@ -175,7 +180,8 @@ pub fn toggle(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd: &str,
 }
 
 fn plain_button(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd: &str, size: Size, on: Option<bool>) -> Response {
-    let enabled = command_enabled(app, cmd);
+    let why = availability(ui, app, cmd);
+    let enabled = why.is_ready();
     let shown = crate::i18n::t(label);
     let (w, h) = match size {
         Size::Large => (large_width(ui, shown), LARGE_H),
@@ -189,7 +195,7 @@ fn plain_button(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd: &st
         Size::Small { label } => paint_small(ui, rect, icon, label.then_some(shown), enabled),
     }
     icons::describe_control(ui, &resp, label, on, false);
-    let resp = resp.on_hover_text(shown).on_disabled_hover_text(crate::tl!("Not available yet"));
+    let resp = tooltips(resp, shown, &why);
     if resp.clicked() {
         match on {
             Some(_) => {
@@ -203,6 +209,16 @@ fn plain_button(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd: &st
     resp
 }
 
+/// The accessibility and automation description of a split button's face: a button to
+/// AccessKit, recorded once as a "splitbutton" for the control channel.
+fn describe_face(ui: &Ui, face: &Response, shown: &str) {
+    face.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, face.enabled(), shown));
+    if face.has_focus() {
+        ui.painter().rect_stroke(face.rect.shrink(2.0), 2.0, Stroke::new(1.0, Tokens::get().accent), egui::StrokeKind::Inside);
+    }
+    crate::control::record_widget(ui, face, shown, "splitbutton", None);
+}
+
 /// A split button: the face runs the remembered entry of `menu` (initially `default`); the ▾
 /// part opens the menu, and choosing an entry runs it and makes it the face's. `label: Some`
 /// keeps that label on the face (only the icon follows the entry); `None` shows the entry's.
@@ -211,14 +227,15 @@ pub fn split_button(ui: &mut Ui, app: &mut CadApp, key: &str, label: Option<&str
     let (icon, entry_label, cmd) = split_face(ui.ctx(), key, menu, default);
     let face_label = label.unwrap_or(entry_label);
     let shown = crate::i18n::t(face_label);
-    let face_enabled = command_enabled(app, cmd);
-    let menu_enabled = menu.iter().any(|e| matches!(e, Entry::Command { cmd, .. } if crate::palettes::command_known(cmd)));
+    let face_why = availability(ui, app, cmd);
+    let face_enabled = face_why.is_ready();
+    let menu_enabled = menu.iter().any(|e| matches!(e, Entry::Command { cmd, .. } if availability(ui, app, cmd).is_known()));
     let (w, h) = match size {
         Size::Large => (large_width(ui, shown), LARGE_H),
         Size::Small { label } => (small_width(ui, label.then_some(shown)) + SMALL_SPLIT_ARROW_W, SMALL_H),
     };
-    let whole = reserve(ui, vec2(w, h), face_enabled || menu_enabled, Sense::hover());
-    let r = whole.rect;
+    // Space only: the face and the ▾ part are the two interactive (and accessible) widgets.
+    let (_, r) = ui.allocate_space(vec2(w, h));
     let (face_rect, arrow_rect) = match size {
         Size::Large => (
             Rect::from_min_max(r.min, pos2(r.right(), r.bottom() - LARGE_SPLIT_ARROW_H)),
@@ -232,8 +249,8 @@ pub fn split_button(ui: &mut Ui, app: &mut CadApp, key: &str, label: Option<&str
     let id = ui.id().with(("ribbon-split", key));
     let face = ui.add_enabled_ui(face_enabled, |ui| ui.interact(face_rect, id.with("face"), Sense::click())).inner;
     let arrow = ui.add_enabled_ui(menu_enabled, |ui| ui.interact(arrow_rect, id.with("menu"), Sense::click())).inner;
-    if face.hovered() || arrow.hovered() {
-        paint_state(ui, r, &whole, false);
+    if (face.hovered() && face.enabled()) || (arrow.hovered() && arrow.enabled()) {
+        ui.painter().rect_filled(r, 2.0, Tokens::get().control_hover);
     }
     paint_state(ui, face_rect, &face, false);
     paint_state(ui, arrow_rect, &arrow, false);
@@ -244,11 +261,11 @@ pub fn split_button(ui: &mut Ui, app: &mut CadApp, key: &str, label: Option<&str
             paint_chevron(ui, arrow_rect.center(), menu_enabled);
         }
     }
-    icons::describe_control(ui, &face, face_label, None, false);
-    crate::control::record_widget(ui, &face, shown, "splitbutton", None);
+    describe_face(ui, &face, shown);
+    let face = tooltips(face, shown, &face_why);
     let menu_label = crate::tf!("{label} options", label = shown);
     icons::describe_control(ui, &arrow, &menu_label, None, false);
-    let face = face.on_hover_text(shown).on_disabled_hover_text(crate::tl!("Not available yet"));
+    let arrow = tooltips(arrow, &menu_label, &Availability::Missing);
     let mut chosen = None;
     egui::Popup::from_toggle_button_response(&arrow).close_behavior(egui::PopupCloseBehavior::CloseOnClick).show(|ui| {
         ui.set_min_width(MENU_W);
@@ -310,7 +327,8 @@ pub fn item_width(ui: &Ui, key: &str, item: &Item, compact: bool) -> f32 {
 
 /// One row of a split button's menu: icon and label.
 fn menu_entry(ui: &mut Ui, app: &CadApp, icon: Icon, label: &str, cmd: &str) -> Response {
-    let enabled = command_enabled(app, cmd);
+    let why = availability(ui, app, cmd);
+    let enabled = why.is_ready();
     let shown = crate::i18n::t(label);
     let resp = reserve(ui, vec2(MENU_W, SMALL_H + 2.0), enabled, Sense::click());
     paint_state(ui, resp.rect, &resp, false);
@@ -320,23 +338,32 @@ fn menu_entry(ui: &mut Ui, app: &CadApp, icon: Icon, label: &str, cmd: &str) -> 
     let y = resp.rect.center().y - galley.size().y / 2.0;
     ui.painter().galley(pos2(resp.rect.left() + 30.0, y), galley, text_color(enabled));
     icons::describe_control(ui, &resp, label, None, false);
-    resp.on_disabled_hover_text(crate::tl!("Not available yet"))
+    resp.on_disabled_hover_ui(|ui| {
+        ui.label(why.disabled_text());
+    })
 }
 
 /// The 14×18 "↘" dialog launcher at the right end of a panel's title bar, placed at `rect`.
-/// `label` is the dialog it opens.
-pub fn launcher(ui: &mut Ui, app: &mut CadApp, rect: Rect, label: &str, cmd: &str) -> Response {
-    let enabled = command_enabled(app, cmd);
-    let id = ui.id().with(("ribbon-launcher", cmd));
+/// `panel` (the panel's key) keeps launchers of equal commands apart; `label` is the dialog it
+/// opens.
+pub fn launcher(ui: &mut Ui, app: &mut CadApp, rect: Rect, panel: &str, label: &str, cmd: &str) -> Response {
+    let why = availability(ui, app, cmd);
+    let enabled = why.is_ready();
+    let id = ui.id().with(("ribbon-launcher", panel, cmd));
     let resp = ui.add_enabled_ui(enabled, |ui| ui.interact(rect, id, Sense::click())).inner;
     paint_state(ui, rect, &resp, false);
     icons::paint(ui.painter(), Rect::from_center_size(rect.center(), Vec2::splat(12.0)), Icon::Launcher, !enabled);
     icons::describe_control(ui, &resp, label, None, false);
-    let resp = resp.on_hover_text(crate::i18n::t(label)).on_disabled_hover_text(crate::tl!("Not available yet"));
+    let resp = tooltips(resp, crate::i18n::t(label), &why);
     if resp.clicked() {
         start(app, cmd);
     }
     resp
+}
+
+/// A command's display label, if the engine has one (looked up once per pass).
+pub fn command_label(ui: &Ui, app: &CadApp, cmd: &str) -> Option<&'static str> {
+    avail::command(ui.ctx(), &app.session, cmd).label
 }
 
 /// The launcher's size.
