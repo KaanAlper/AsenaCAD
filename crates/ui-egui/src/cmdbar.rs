@@ -149,10 +149,11 @@ fn recent(app: &mut CadApp, ui: &mut egui::Ui, parts: &Parts) {
     icons::paint(ui.painter(), Rect::from_center_size(pos2(r.right() - 7.0, r.center().y), vec2(9.0, 9.0)), Icon::ChevronDown, false);
     icons::describe_control(ui, &resp, RECENT_COMMANDS, None, false);
     let resp = resp.on_hover_text(crate::tl!("Recent Commands"));
-    let commands = app.session.recent_commands(RECENT_MAX);
     let mut run = None;
     egui::Popup::from_toggle_button_response(&resp).align(egui::RectAlign::TOP_START).show(|ui| {
         ui.set_min_width(160.0);
+        // Read from the history only while the list is open.
+        let commands = app.session.recent_commands(RECENT_MAX);
         if commands.is_empty() {
             ui.add_enabled(false, egui::Button::new(crate::tl!("No recent commands")));
         }
