@@ -13,6 +13,7 @@ mod build;
 pub mod home;
 pub mod insert;
 pub mod layout;
+pub mod manage;
 pub mod model;
 pub mod parametric;
 pub mod slideout;

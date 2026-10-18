@@ -1,6 +1,6 @@
 # Where AsenaCAD falls short of AutoCAD
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-19 · **Change:** minor (U14 narrowed by the Insert, Annotate, Parametric and View tabs; U15: the ribbon's Dimension button) · **Target:** Autodesk AutoCAD 2027
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-19 · **Change:** minor (U14 narrowed by the Insert, Annotate, Parametric, View and Manage tabs; U15: the ribbon's Dimension button) · **Target:** Autodesk AutoCAD 2027
 
 Every known shortfall, one row each, ranked within each section by user impact. This is the work
 list: agents pick from here (top of a section first), and remove or update a row in the same PR
@@ -61,7 +61,7 @@ Detail and evidence: [ui-parity.md](ui-parity.md).
 | U11 | MVIEW Restore (a saved viewport configuration into a layout); VIEW Orthographic, UCS and background settings; view twist is kept but not shown (Zoom Realtime and Dynamic, ZOOMFACTOR, named views (VIEW) and tiled model viewports with saved configurations (VPORTS) landed in #463) | Low | 1–2 |
 | U12 | Workspaces (the status bar's Workspace Switching), SteeringWheels and ShowMotion (the navigation bar's disabled tools), Annotation Monitor, Clean Screen, CUI customisation, alias editor, ViewCube drag (#7) | Low-medium | 15–25 |
 | U13 | `.dxf` from Finder fails to open on macOS (#158) (window controls fixed, #161) | Medium | 1–2 |
-| U14 | Windows shell leftovers found by the first side-by-side pass against AutoCAD 2026 for Windows ([baseline](ui-parity.md#windows-autocad-2026-baseline)): the Application menu (M1c; the button lists the File menu); the four tabs after View (M1b); on Windows and Linux the title row sits under the system title bar instead of being the window caption with the window buttons at its right end; the layer list and the Object Color, Lineweight and Linetype lists show no state icons, swatches or line previews; Insert's drop-down lists no blocks yet (only More Options...); what AutoCAD's ▾ marks beside Cut and Copy Clip open is not observed yet; the command history shows "Command: LINE" but not each prompt with the value typed; 72 ribbon items have no command yet ([list](ui-parity.md#ribbon-items-without-a-command)) | Medium | 30–50 |
+| U14 | Windows shell leftovers found by the first side-by-side pass against AutoCAD 2026 for Windows ([baseline](ui-parity.md#windows-autocad-2026-baseline)): the Application menu (M1c; the button lists the File menu); the three tabs after Manage (M1b); on Windows and Linux the title row sits under the system title bar instead of being the window caption with the window buttons at its right end; the layer list and the Object Color, Lineweight and Linetype lists show no state icons, swatches or line previews; Insert's drop-down lists no blocks yet (only More Options...); what AutoCAD's ▾ marks beside Cut and Copy Clip open is not observed yet; the command history shows "Command: LINE" but not each prompt with the value typed; 94 ribbon items have no command yet ([list](ui-parity.md#ribbon-items-without-a-command)); the ribbon's palette toggles open their palettes but don't close them; View ▸ Interface ▸ Switch Windows lists no drawings; Manage ▸ Action Recorder has no Action Tree slide-out | Medium | 30–50 |
 | U15 | The ribbon's Dimension button (Home ▸ Annotation, Annotate ▸ Dimensions) starts DIM, which makes only linear dimensions; AutoCAD's DIM picks the kind (linear, aligned, angular, radius, diameter, arc length, ordinate) from the object under the cursor (the engine side is F7's smart DIM) | Medium | 3–5 |
 
 ## File formats
@@ -147,6 +147,7 @@ Detail: [localization-parity.md](localization-parity.md).
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | U14 narrowed: the Manage tab is built (M1b) |
 | 2026-10-19 | minor | U14 narrowed: the View tab is built (M1b) |
 | 2026-10-19 | minor | U14 narrowed: the Parametric tab is built (M1b) |
 | 2026-10-19 | minor | U14 narrowed: the Insert and Annotate tabs are built (M1b), Insert is a drop-down without a block list; U15 added: the ribbon's Dimension button makes only linear dimensions |

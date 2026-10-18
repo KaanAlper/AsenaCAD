@@ -1579,3 +1579,31 @@
 	Tile Vertically	Розташувати вертикально
 	Cascade	Каскадом
 	Options, Display Tab	Параметри, вкладка «Екран»
+	Action Recorder	Записувач дій
+	Record	Записати
+	Insert Message	Вставити повідомлення
+	Insert Base Point	Вставити базову точку
+	Pause for User Input	Пауза для введення
+	Play	Відтворити
+	Preference	Налаштування
+	Manage Action Macros	Керування макросами дій
+	Available Action Macro	Доступний макрос дій
+	User Interface	Інтерфейс користувача
+	Edit Aliases	Редагувати псевдоніми
+	Applications	Застосунки
+	Load Application	Завантажити застосунок
+	Run Script	Виконати сценарій
+	Visual Basic Editor	Редактор Visual Basic
+	Visual LISP Editor	Редактор Visual LISP
+	Run VBA Macro	Виконати макрос VBA
+	Load Project	Завантажити проєкт
+	VBA Manager	Диспетчер VBA
+	CAD Standards	Стандарти САПР
+	Layer Translator	Перетворювач шарів
+	Check	Перевірити
+	Configure	Налаштувати
+	Cleanup	Очищення
+	Find Non-Purgeable Items	Знайти неочищувані елементи
+	Overkill	Видалити дублікати
+	Performance	Продуктивність
+	Performance Analyzer	Аналізатор продуктивності

@@ -705,6 +705,96 @@ fn view_is_as_wide_as_autocads() {
     );
 }
 
+// ---- Manage ----
+
+#[test]
+fn manage_matches_autocad() {
+    check_tab(
+        "Manage",
+        &[
+            WantPanel {
+                label: "Action Recorder",
+                items: &[
+                    b("Record", "large", 0, "actrecord"),
+                    b("Insert Message", "small", 1, "actusermessage"),
+                    b("Insert Base Point", "small", 2, "actbasepoint"),
+                    b("Pause for User Input", "small", 3, "actuserinput"),
+                    BAR,
+                    b("Play", "small+label", 1, "actplay"),
+                    b("Preference", "small", 1, "actpreferences"),
+                    b("Manage Action Macros", "small", 1, "actmanager"),
+                    cb("Available Action Macro", "ActionMacro", 2, 125.0),
+                ],
+                // AutoCAD's slide-out is the Action Tree (a tree view), which has no item here.
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Customization",
+                items: &[
+                    b("User Interface", "large", 0, "cui"),
+                    b("Tool Palettes", "large", 0, "customize"),
+                    b("Import", "small+label", 1, "cuiimport"),
+                    b("Export", "small+label", 2, "cuiexport"),
+                    // A split in AutoCAD's screenshot (▾ right of the label), not a plain button.
+                    sp("Edit Aliases", "small+label", 3, &[("Edit Aliases", "editaliases")], 0),
+                ],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Applications",
+                items: &[
+                    b("Load Application", "large", 0, "appload"),
+                    b("Run Script", "large", 0, "script"),
+                    b("Visual Basic Editor", "small+label", 1, "vbaide"),
+                    b("Visual LISP Editor", "small+label", 2, "vlisp"),
+                    b("Run VBA Macro", "small+label", 3, "vbarun"),
+                ],
+                slideout: &[b("Load Project", "small+label", 1, "vbaload"), b("VBA Manager", "small+label", 2, "vbaman")],
+                launcher: None,
+            },
+            WantPanel {
+                label: "CAD Standards",
+                items: &[
+                    b("Layer Translator", "small+label", 1, "laytrans"),
+                    b("Check", "small+label", 2, "checkstandards"),
+                    b("Configure", "small+label", 3, "standards"),
+                ],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel {
+                label: "Cleanup",
+                items: &[
+                    b("Find Non-Purgeable Items", "large", 0, "purge.nonpurgeable"),
+                    b("Purge", "small+label", 1, "purge"),
+                    b("Overkill", "small+label", 2, "overkill"),
+                    b("Audit", "small+label", 3, "audit"),
+                ],
+                slideout: &[],
+                launcher: None,
+            },
+            WantPanel { label: "Performance", items: &[b("Performance Analyzer", "large", 0, "performanceanalyzer")], slideout: &[], launcher: None },
+        ],
+    );
+}
+
+#[test]
+fn manage_is_as_wide_as_autocads() {
+    check_widths(
+        "Manage",
+        &[
+            ("Action Recorder", 210.0),
+            ("Customization", 205.0),
+            ("Applications", 236.0),
+            ("CAD Standards", 117.0),
+            ("Cleanup", 195.0),
+            ("Performance", 79.0),
+        ],
+    );
+}
+
 // ---- Large labels ----
 
 /// The texts the ribbon paints with `tab` open at 1906 px, as laid out ("\n" = line break).
@@ -802,6 +892,18 @@ fn large_labels_wrap_as_in_autocads_screenshots() {
                 "Switch\nWindows",
                 "File\nTabs",
                 "Layout\nTabs",
+            ][..],
+        ),
+        (
+            "Manage",
+            &[
+                "Record",
+                "User\nInterface",
+                "Tool\nPalettes",
+                "Load\nApplication",
+                "Run\nScript",
+                "Find\nNon-Purgeable Items",
+                "Performance\nAnalyzer",
             ][..],
         ),
     ] {

@@ -103,6 +103,8 @@ fn current(app: &CadApp, kind: Combo) -> (String, bool) {
         Combo::TextLayer | Combo::DimLayer | Combo::CenterLayer | Combo::MLeaderLayer => (crate::tl!("Use Current").to_string(), false),
         // The drawing doesn't record which view was restored last.
         Combo::NamedView => (crate::tl!("Unsaved View").to_string(), space_views(app, d).next().is_some()),
+        // No action macros can be recorded yet.
+        Combo::ActionMacro => (String::new(), false),
     }
 }
 
@@ -158,7 +160,8 @@ fn choices(app: &CadApp, kind: Combo) -> Vec<Choice> {
         | Combo::TextLayer
         | Combo::DimLayer
         | Combo::CenterLayer
-        | Combo::MLeaderLayer => Vec::new(),
+        | Combo::MLeaderLayer
+        | Combo::ActionMacro => Vec::new(),
     }
 }
 

@@ -62,6 +62,8 @@ pub enum Combo {
     MLeaderLayer,
     /// The model or layout views saved in the drawing (VIEW); choosing one restores it.
     NamedView,
+    /// The recorded action macros to play (the Action Recorder isn't built: empty, disabled).
+    ActionMacro,
 }
 
 impl Combo {
@@ -93,6 +95,7 @@ impl Combo {
             Self::CenterLayer => "Center Layer Gallery",
             Self::MLeaderLayer => "Mleader Layer Gallery",
             Self::NamedView => "Named Views",
+            Self::ActionMacro => "Available Action Macro",
         }
     }
 }
@@ -258,7 +261,7 @@ const TABS: &[Tab] = &[
     crate::ribbon::annotate::ANNOTATE,
     crate::ribbon::parametric::PARAMETRIC,
     crate::ribbon::view::VIEW,
-    unbuilt("Manage"),
+    crate::ribbon::manage::MANAGE,
     unbuilt("Output"),
     unbuilt("Collaborate"),
     unbuilt("Express Tools"),
@@ -416,6 +419,29 @@ mod tests {
         "syswindows.tilehorz", // Interface ▸ Tile Horizontally
         "syswindows.tilevert", // Interface ▸ Tile Vertically
         "syswindows.cascade",  // Interface ▸ Cascade
+        // ---- Manage ----
+        "actrecord",           // Action Recorder ▸ Record
+        "actusermessage",      // Action Recorder ▸ Insert Message
+        "actbasepoint",        // Action Recorder ▸ Insert Base Point
+        "actuserinput",        // Action Recorder ▸ Pause for User Input
+        "actplay",             // Action Recorder ▸ Play
+        "actpreferences",      // Action Recorder ▸ Preference
+        "actmanager",          // Action Recorder ▸ Manage Action Macros
+        "cui",                 // Customization ▸ User Interface
+        "customize",           // Customization ▸ Tool Palettes
+        "cuiimport",           // Customization ▸ Import
+        "cuiexport",           // Customization ▸ Export
+        "editaliases",         // Customization ▸ Edit Aliases
+        "vbaide",              // Applications ▸ Visual Basic Editor
+        "vlisp",               // Applications ▸ Visual LISP Editor
+        "vbarun",              // Applications ▸ Run VBA Macro
+        "vbaload",             // Applications ▸ Load Project (slide-out)
+        "vbaman",              // Applications ▸ VBA Manager (slide-out)
+        "laytrans",            // CAD Standards ▸ Layer Translator
+        "checkstandards",      // CAD Standards ▸ Check
+        "standards",           // CAD Standards ▸ Configure
+        "purge.nonpurgeable",  // Cleanup ▸ Find Non-Purgeable Items
+        "performanceanalyzer", // Performance ▸ Performance Analyzer
     ];
 
     #[test]
@@ -451,7 +477,7 @@ mod tests {
     fn the_tab_row_has_autocads_nine_tabs_in_order() {
         let labels: Vec<_> = tabs().iter().map(|t| t.label).collect();
         assert_eq!(labels, ["Home", "Insert", "Annotate", "Parametric", "View", "Manage", "Output", "Collaborate", "Express Tools"]);
-        assert!(tabs()[..5].iter().all(|t| !t.panels.is_empty()), "Home, Insert, Annotate, Parametric and View are built");
+        assert!(tabs()[..6].iter().all(|t| !t.panels.is_empty()), "Home, Insert, Annotate, Parametric, View and Manage are built");
         assert!(is_tab("Express Tools") && !is_tab("Tool Sets") && !is_tab(""));
     }
 
