@@ -15,6 +15,7 @@ pub mod canvas;
 pub mod chrome;
 pub mod clipboard;
 pub mod closing;
+pub mod cmdbar;
 pub mod cmdline;
 pub mod context_menu;
 pub mod control;

@@ -1,6 +1,6 @@
 # UI parity
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-18 · **Change:** minor (status bar row laid out as AutoCAD 2026 for Windows) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0)
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-18 · **Change:** minor (command line bar laid out as AutoCAD 2026 for Windows) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0)
 
 How AsenaCAD's interaction compares with AutoCAD's: point entry, object snaps, tracking, dynamic
 input, grips, selection, the command line, chrome and navigation. A drafter's speed in AutoCAD
@@ -149,7 +149,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 | UNDO with Mark, Back, BEgin, End, Auto, Control | yes | count only, whole-document snapshots capped at 2,000 (`lib.rs:477`, `edit.rs:56`) |
 | SETVAR for every system variable | ~1,000 sysvars | about 60 session/header variables by name (`sysvars.rs`) |
 | Scripts (SCRIPT, `.scr`) | yes | script text via CLI/MCP/control; no `.scr` file command |
-| Floating/docked command window, transparency, lines of history | yes | floating overlay, history lines setting |
+| Floating/docked command window, transparency, lines of history | yes | floating bar laid out as AutoCAD 2026 for Windows: grip, close (COMMANDLINEHIDE; COMMANDLINE or Ctrl+9 brings it back), Customize (history lines, Options), recent commands, history toggle; history lines setting. Not yet: dragging or docking it, transparency |
 
 ## Chrome and palettes (≈ 45%)
 
@@ -202,6 +202,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-18 | minor | Command line bar as AutoCAD 2026 for Windows: grip, close (COMMANDLINEHIDE), Customize, recent commands, history toggle |
 | 2026-10-18 | minor | Status bar row as AutoCAD 2026 for Windows: layout bar (≡ · Model · layouts · +), separator band, default items in order, ▾ menus, Customization list |
 | 2026-10-12 | minor | Selected and hovered objects redrawn in the selection colour (text and arrowheads included); Options ▸ Selection laid out as AutoCAD's: Object grouping, Show grips, grip object limit, selection preview, Visual Effect Settings (selection area, preview filter) |
 | 2026-10-12 | minor | Animation effects (dialog and menu fades, smoothed wheel scrolling and ⌘/Ctrl+wheel zoom) follow the operating system's setting; View ▸ Accessibility ▸ Animation Effects chooses System, On or Off |

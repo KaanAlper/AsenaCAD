@@ -67,6 +67,18 @@ pub fn command_line_entries(app: &CadApp) -> Vec<Vec<Entry>> {
     groups
 }
 
+/// The command line's Customize (wrench) menu: how many history lines show above it, and the
+/// Options dialog.
+pub fn command_line_customize_entries(app: &CadApp) -> Vec<Vec<Entry>> {
+    let mut groups = Vec::new();
+    let lines: Vec<Entry> = LINES.iter().filter_map(|n| run(&n.to_string(), "ui.cmdline.lines", json!({ "lines": n }))).collect();
+    if !lines.is_empty() {
+        groups.push(vec![Entry::Sub { label: "Lines of Command History".into(), children: lines }]);
+    }
+    push(&mut groups, item(app, "options", None).into_iter().collect());
+    groups
+}
+
 /// A drawing tab's menu (`index` into the open drawings): New, Open, Save, Save As, Save All,
 /// Close, Close All Other Drawings and Copy Full File Path. Save and Save As act on that drawing.
 pub fn drawing_tab_entries(app: &CadApp, index: usize) -> Vec<Vec<Entry>> {

@@ -397,9 +397,9 @@ fn visible_lines(app: &CadApp, canvas: Rect, bar: Rect) -> usize {
 
 pub fn show(app: &mut CadApp, ui: &mut egui::Ui, canvas: Rect) {
     let t = Tokens::get();
-    let w = (canvas.width() * 0.48).clamp(360.0, 760.0).min((canvas.width() - 8.0).max(0.0));
-    let h = 24.0;
-    let bar = Rect::from_min_size(pos2(canvas.center().x - w / 2.0, canvas.bottom() - h - 10.0), vec2(w, h));
+    let bar = crate::cmdbar::bar_rect(canvas);
+    let parts = crate::cmdbar::Parts::new(bar);
+    let (w, h) = (bar.width(), bar.height());
     let p = ui.painter_at(canvas);
     history(app, ui, canvas, bar);
     // History lines above the bar (the expanded window replaces them).
@@ -413,68 +413,68 @@ pub fn show(app: &mut CadApp, ui: &mut egui::Ui, canvas: Rect) {
             p.text(pos2(hr.left() + 8.0, hr.top() + 1.0 + lh * i as f32), egui::Align2::LEFT_TOP, l, crate::theme::small(), t.text_dim);
         }
     }
-    p.rect_filled(bar, 3.0, t.cmd_bg);
-    p.rect_stroke(bar, 3.0, Stroke::new(1.0, t.cmd_border), egui::StrokeKind::Inside);
-    // Prompt glyph.
-    p.text(pos2(bar.left() + 8.0, bar.center().y), egui::Align2::LEFT_CENTER, ">_", crate::theme::mono(), t.text_dim);
-    let mut x = bar.left() + 30.0;
+    crate::cmdbar::paint(&p, &parts);
+    crate::cmdbar::controls(app, ui, &parts);
+    // The prompt and the typed text stay inside the input field.
+    let ip = p.with_clip_rect(parts.input.intersect(canvas));
+    let mut x = parts.input.left() + 4.0;
     let prompt = app.session.current_prompt();
     let font = crate::theme::body();
     match &prompt {
         Some(pr) => {
             // The grip modes name themselves ("** STRETCH **…").
             let name = app.session.running.as_ref().filter(|r| r.id != "grip").map(|r| r.id.to_ascii_uppercase() + " ").unwrap_or_default();
-            let g = p.layout_no_wrap(name, font.clone(), t.text_faint);
+            let g = ip.layout_no_wrap(name, font.clone(), t.text_faint);
             let gw = g.size().x;
-            p.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text_faint);
+            ip.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text_faint);
             x += gw;
             // A LISP `get…` prompt shows as the routine wrote it (no keywords, default or colon added).
             let message = if pr.raw { pr.display() } else { crate::i18n::t(&pr.message).to_string() };
-            let g = p.layout_no_wrap(message, font.clone(), t.text);
+            let g = ip.layout_no_wrap(message, font.clone(), t.text);
             let gw = g.size().x;
-            p.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
+            ip.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
             x += gw;
             if !pr.raw && !pr.keywords.is_empty() {
-                let g = p.layout_no_wrap(if pr.message.is_empty() { " [".into() } else { crate::tl!(" or [").into() }, font.clone(), t.text);
+                let g = ip.layout_no_wrap(if pr.message.is_empty() { " [".into() } else { crate::tl!(" or [").into() }, font.clone(), t.text);
                 let gw = g.size().x;
-                p.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
+                ip.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
                 x += gw;
                 let kws = pr.keywords.clone();
                 for (i, k) in kws.iter().enumerate() {
-                    let g = p.layout_no_wrap(k.clone(), font.clone(), t.cmd_keyword);
+                    let g = ip.layout_no_wrap(k.clone(), font.clone(), t.cmd_keyword);
                     let r = Rect::from_min_size(pos2(x, bar.top() + 3.0), vec2(g.size().x, h - 6.0));
                     let resp = ui.interact(r, ui.id().with(("kw", i)), Sense::click());
                     if resp.hovered() {
-                        p.rect_filled(r, 2.0, t.cmd_keyword_hover);
+                        ip.rect_filled(r, 2.0, t.cmd_keyword_hover);
                     }
                     let gw = g.size().x;
-                    p.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.cmd_keyword);
+                    ip.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.cmd_keyword);
                     x += gw;
                     if resp.clicked() {
                         let _ = app.session.input(Input::Keyword(k.clone()));
                     }
                     if i + 1 < kws.len() {
-                        let g = p.layout_no_wrap("/".into(), font.clone(), t.text);
+                        let g = ip.layout_no_wrap("/".into(), font.clone(), t.text);
                         let gw = g.size().x;
-                        p.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
+                        ip.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
                         x += gw;
                     }
                 }
-                let g = p.layout_no_wrap("]".into(), font.clone(), t.text);
+                let g = ip.layout_no_wrap("]".into(), font.clone(), t.text);
                 let gw = g.size().x;
-                p.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
+                ip.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
                 x += gw;
             }
             if let Some(d) = pr.default.as_ref().filter(|_| !pr.raw) {
-                let g = p.layout_no_wrap(format!(" <{d}>"), font.clone(), t.text);
+                let g = ip.layout_no_wrap(format!(" <{d}>"), font.clone(), t.text);
                 let gw = g.size().x;
-                p.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
+                ip.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
                 x += gw;
             }
             if !pr.raw {
-                let g = p.layout_no_wrap(": ".into(), font.clone(), t.text);
+                let g = ip.layout_no_wrap(": ".into(), font.clone(), t.text);
                 let gw = g.size().x;
-                p.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
+                ip.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
                 x += gw;
             } else if !pr.message.ends_with(' ') {
                 x += 4.0;
@@ -482,31 +482,22 @@ pub fn show(app: &mut CadApp, ui: &mut egui::Ui, canvas: Rect) {
         }
         None => {
             if app.cmd.buffer.is_empty() {
-                p.text(
-                    pos2(x, bar.center().y),
-                    egui::Align2::LEFT_CENTER,
-                    crate::tl!("Type a command"),
-                    egui::FontId::proportional(12.5),
-                    t.text_faint,
-                );
+                // AutoCAD's dim italic placeholder.
+                let format = egui::TextFormat { font_id: crate::theme::body(), color: t.text_faint, italics: true, ..Default::default() };
+                let job = egui::text::LayoutJob::single_section(crate::tl!("Type a command").to_string(), format);
+                let g = ip.layout_job(job);
+                ip.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text_faint);
             }
         }
     }
-    let g = p.layout_no_wrap(app.cmd.buffer.clone(), font, t.text);
+    let g = ip.layout_no_wrap(app.cmd.buffer.clone(), font, t.text);
     let gw = g.size().x;
-    p.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
+    ip.galley(pos2(x, bar.center().y - g.size().y / 2.0), g, t.text);
     // Caret.
     let blink = (ui.input(|i| i.time) * 2.0).floor() as i64 % 2 == 0;
     if blink {
-        p.line_segment([pos2(x + gw + 1.0, bar.top() + 5.0), pos2(x + gw + 1.0, bar.bottom() - 5.0)], Stroke::new(1.0, t.text));
+        ip.line_segment([pos2(x + gw + 1.0, bar.top() + 5.0), pos2(x + gw + 1.0, bar.bottom() - 5.0)], Stroke::new(1.0, t.text));
     }
-    // History chevron.
-    crate::icons::paint(
-        &p,
-        Rect::from_center_size(pos2(bar.right() - 14.0, bar.center().y), vec2(14.0, 14.0)),
-        if app.cmd.expanded { crate::icons::Icon::ChevronDown } else { crate::icons::Icon::ChevronUp },
-        false,
-    );
     // AutoComplete list.
     if !app.session.prompting() {
         let sug = suggestions(&app.cmd.buffer);
@@ -514,10 +505,10 @@ pub fn show(app: &mut CadApp, ui: &mut egui::Ui, canvas: Rect) {
             let rh = 20.0;
             let lr = Rect::from_min_size(
                 pos2(
-                    bar.left() + 24.0,
+                    parts.input.left(),
                     bar.top() - 6.0 - rh * sug.len() as f32 - (if lines.is_empty() { 0.0 } else { 16.0 * lines.len() as f32 + 6.0 }),
                 ),
-                vec2((bar.width() - 24.0).max(0.0), rh * sug.len() as f32),
+                vec2((bar.right() - parts.input.left()).max(0.0), rh * sug.len() as f32),
             );
             p.rect_filled(lr, 3.0, t.list_bg);
             p.rect_stroke(lr, 3.0, Stroke::new(1.0, t.cmd_border), egui::StrokeKind::Inside);
@@ -577,7 +568,7 @@ fn zones(app: &CadApp, canvas: Rect, bar: Rect) -> Zones {
             all = all.union(Rect::from_min_size(pos2(bar.left(), bar.top() - 6.0 - 20.0 * k as f32 - above), vec2(bar.width(), 1.0)));
         }
     }
-    Zones { lines, window, chevron: Rect::from_center_size(pos2(bar.right() - 14.0, bar.center().y), vec2(24.0, 22.0)), grip, all }
+    Zones { lines, window, chevron: crate::cmdbar::Parts::new(bar).history, grip, all }
 }
 
 /// The pointer on the command line: one widget under all of it keeps clicks, drags and the wheel
@@ -657,8 +648,7 @@ mod tests {
             app.session.echo(format!("line {i}"));
         }
         let canvas = Rect::from_min_size(Pos2::ZERO, vec2(300.0, 180.0));
-        let w = (canvas.width() * 0.48).clamp(360.0, 760.0).min((canvas.width() - 8.0).max(0.0));
-        let bar = Rect::from_min_size(pos2(canvas.center().x - w / 2.0, canvas.bottom() - 34.0), vec2(w, 24.0));
+        let bar = crate::cmdbar::bar_rect(canvas);
         let z = zones(&app, canvas, bar);
         assert!(canvas.contains_rect(bar));
         assert!(canvas.contains_rect(z.chevron));
@@ -691,8 +681,7 @@ mod tests {
         frame(&mut app, &ctx, Vec::new());
         frame(&mut app, &ctx, Vec::new());
         let canvas = app.canvas.rect.unwrap_or(Rect::NOTHING);
-        let w = (canvas.width() * 0.48).clamp(360.0, 760.0).min((canvas.width() - 8.0).max(0.0));
-        let bar = Rect::from_min_size(pos2(canvas.center().x - w / 2.0, canvas.bottom() - 34.0), vec2(w, 24.0));
+        let bar = crate::cmdbar::bar_rect(canvas);
         let z = zones(&app, canvas, bar);
         let Some(lines) = z.lines else { panic!("three history lines show by default") };
         // A click on the history lines opens the history window, and doesn't start a selection.

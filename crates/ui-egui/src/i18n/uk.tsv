@@ -1420,14 +1420,18 @@
 	Annotation Scale	Масштаб анотацій
 	AutoScale	Автомасштаб
 	Clean Screen	Чистий екран
+	Close Command Line	Закрити командний рядок
+	Command Line Grip	Маркер командного рядка
 	Coordinates	Координати
 	Customization	Налаштування
+	Customize	Налаштувати
 	Customize Status Bar	Налаштувати рядок стану
 	Dynamic UCS	Динамічна ПСК
 	Gizmo	Гізмо
 	Graphics Performance	Продуктивність графіки
 	Grid	Сітка
 	Grid Snap	Прив'язка до сітки
+	Hide Command Line	Приховати командний рядок
 	Isoplane Left	Ізоплощина ліва
 	Isoplane Right	Ізоплощина права
 	Isoplane Top	Ізоплощина верхня
@@ -1436,6 +1440,7 @@
 	Model Space	Простір моделі
 	Model or Paper Space	Простір моделі або аркуша
 	More layouts	Інші аркуші
+	No recent commands	Немає нещодавніх команд
 	Object Snap Settings...	Параметри об'єктної прив'язки...
 	Polar Snap	Полярна прив'язка
 	Selection Filtering	Фільтрування вибору
