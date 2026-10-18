@@ -1946,18 +1946,19 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
         w.f(50, s.oblique.to_degrees());
         w.i(71, if s.backwards { 2 } else { 0 } | if s.upside_down { 4 } else { 0 });
         w.f(42, 0.2);
-        // The built-in font goes out as `txt`, which every reader has; AsenaCAD's own name
-        // travels in `CADCRAFT` xdata (`1000 FONT`, name) so the style reopens with it.
-        let file = if s.font == asenacad_fonts_name() { "txt" } else { s.font.as_str() };
-        w.s(3, file);
+        // The built-in font goes out as `txt`, which every reader has; its name travels in
+        // `CADCRAFT` xdata (`1000 FONT`, name) so the style reopens with it. A legacy name of
+        // the built-in font (a drawing saved by CADCraft) goes out as the current name.
+        let builtin = cadcraft_fonts::is_builtin_font(&s.font);
+        w.s(3, if builtin { "txt" } else { s.font.as_str() });
         w.s(4, &s.big_font);
         if s.annotative {
             annotative_xdata(&mut w);
         }
-        if file != s.font {
+        if builtin {
             w.s(1001, dxf_ext::APP);
             w.s(1000, "FONT");
-            w.s(1000, dxf_ext::xdata_str(&s.font));
+            w.s(1000, dxf_ext::xdata_str(cadcraft_fonts::BUILTIN_FONT));
         }
     }
     let mut shape_handles: HashMap<String, String> = HashMap::new();
@@ -2653,10 +2654,6 @@ fn scale_list(w: &mut W, scales: &[(&cadcraft_doc::AnnoScale, String)], dict: &s
         w.f(141, s.drawing_units);
         w.i(290, i64::from(cadcraft_doc::same_factor(s.factor(), 1.0)));
     }
-}
-
-fn asenacad_fonts_name() -> &'static str {
-    "AsenaCAD Stroke"
 }
 
 /// One entity's DXF groups, as the writer stores them, without its `0` group: its type name

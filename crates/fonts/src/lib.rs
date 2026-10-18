@@ -31,6 +31,17 @@ pub use craft_fonts::{CRAFT_FONTS, CraftFont};
 /// Name of the built-in font.
 pub const BUILTIN_FONT: &str = "AsenaCAD Stroke";
 
+/// Earlier names of the built-in font, still found in drawings saved before the rename. They
+/// resolve to the built-in font but are never written: [`BUILTIN_FONT`] goes out instead.
+pub const LEGACY_BUILTIN_FONTS: &[&str] = &["CADCraft Stroke"];
+
+/// True when a text style font name means the built-in font: [`BUILTIN_FONT`] or one of
+/// [`LEGACY_BUILTIN_FONTS`], in any case, surrounding spaces ignored.
+pub fn is_builtin_font(name: &str) -> bool {
+    let n = name.trim();
+    n.eq_ignore_ascii_case(BUILTIN_FONT) || LEGACY_BUILTIN_FONTS.iter().any(|l| n.eq_ignore_ascii_case(l))
+}
+
 /// One laid-out run of text: strokes in local coordinates (baseline at y = 0, x from 0).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Run {
@@ -289,7 +300,7 @@ impl TextFont {
             return TextFont::Outline(f);
         }
         let n = name.trim();
-        if n.is_empty() || n.eq_ignore_ascii_case(BUILTIN_FONT) {
+        if n.is_empty() || is_builtin_font(n) {
             return TextFont::Stroke;
         }
         ttf::find(&ttf::font_alt()).map(TextFont::Outline).unwrap_or(TextFont::Stroke)
@@ -585,6 +596,18 @@ mod tests {
                     assert!((-2.0..=6.0).contains(&y), "{c:?} y={y}");
                 }
             }
+        }
+    }
+
+    #[test]
+    fn cadcraft_era_font_name_is_the_builtin_font() {
+        for n in [BUILTIN_FONT, "CADCraft Stroke", " cadcraft stroke ", "CADCRAFT STROKE", "asenacad stroke"] {
+            assert!(is_builtin_font(n), "{n:?}");
+            assert!(matches!(TextFont::resolve(n), TextFont::Stroke), "{n:?}");
+            assert!(ttf::find(n).is_none(), "{n:?} is never looked up as TrueType");
+        }
+        for n in ["CADCraft", "Stroke", "Arial", "txt", ""] {
+            assert!(!is_builtin_font(n), "{n:?}");
         }
     }
 

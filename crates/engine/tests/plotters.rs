@@ -190,3 +190,30 @@ fn plotwindow_keeps_the_picked_window_for_the_plot_dialog() {
     assert_eq!(r["window"], json!([[0.0, 0.0], [3.0, 4.0]]));
     assert!(s.execute("plotwindow", &json!({"p1": [0, 0], "p2": [3, 0]})).is_err());
 }
+
+#[test]
+fn cadcraft_era_device_names_resolve_to_the_builtins() {
+    use cadcraft_doc::PlotOutput;
+    use cadcraft_engine::cmd::plotters::find_device;
+    let mut s = session();
+    for (old, new, output) in [
+        ("CADCraft PDF", "AsenaCAD PDF", PlotOutput::Pdf),
+        ("cadcraft png", "AsenaCAD PNG", PlotOutput::Png),
+        (" CADCRAFT SVG ", "AsenaCAD SVG", PlotOutput::Svg),
+    ] {
+        let dev = find_device(old).unwrap_or_else(|| panic!("{old} resolves"));
+        assert_eq!((dev.name.as_str(), dev.output), (new, output), "{old}");
+    }
+    // The old names are never listed, and a user device can't take one.
+    assert!(names(&mut s).iter().all(|n| !n.to_ascii_lowercase().contains("cadcraft")));
+    assert!(s.execute("plottermanager", &json!({"action": "new", "name": "CADCraft PDF"})).is_err());
+    assert!(s.execute("plottermanager", &json!({"action": "delete", "name": "CADCraft SVG"})).is_err(), "still a built-in");
+    // A page setup naming an old device takes the new name.
+    let r = s.execute("pagesetup", &json!({"layout": "Layout1", "device": "CADCraft PNG"})).unwrap();
+    assert_eq!(r["page"]["device"], "AsenaCAD PNG");
+    // A layout saved by CADCraft (its page setup still holds the old name) plots with that device.
+    let layout = s.doc_mut().unwrap().layouts.iter_mut().find(|l| l.name == "Layout1").unwrap();
+    layout.page.device = "CADCraft SVG".into();
+    let o = plotted(s.execute("plot", &json!({"layout": "Layout1"})).unwrap());
+    assert_eq!(o["output"], "svg");
+}
