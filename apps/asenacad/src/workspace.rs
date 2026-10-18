@@ -45,10 +45,8 @@ fn snapshot(ui: &UiState) -> Result<Value, String> {
     if ui.qat_shown.len() > 64 || ui.qat_shown.iter().any(|id| id.len() > 64) {
         return Err("qatShown exceeds the workspace size limit".into());
     }
-    let status_items = cadcraft_ui_egui::chrome::statusbar::ITEMS;
-    if ui.status_shown.len() > status_items.len() || ui.status_shown.iter().any(|key| !status_items.iter().any(|item| item.key == key)) {
-        return Err("statusShown must list status bar items".into());
-    }
+    // Saved as a valid set: each item once, in the Customization list's order.
+    let (status_shown, _) = cadcraft_ui_egui::chrome::statusbar::normalize(&ui.status_shown);
     if !cadcraft_ui_egui::ribbon::model::is_tab(&ui.ribbon_tab) {
         return Err("ribbonTab must name a ribbon tab".into());
     }
@@ -72,7 +70,7 @@ fn snapshot(ui: &UiState) -> Result<Value, String> {
         "qatBelowRibbon": ui.qat_below_ribbon,
         "ribbonTab": ui.ribbon_tab,
         "ribbonMin": ui.ribbon_min,
-        "statusShown": ui.status_shown,
+        "statusShown": status_shown,
         "showNavbar": ui.show_navbar,
     }))
 }
@@ -105,6 +103,13 @@ fn read(path: &Path) -> Result<Option<UiState>, String> {
     {
         ui.docking = docking;
     }
+    // Status bar items this version doesn't know (a newer version's, or a typo) are dropped
+    // rather than refusing the whole workspace; duplicates go too.
+    let (status_shown, unknown) = cadcraft_ui_egui::chrome::statusbar::normalize(&ui.status_shown);
+    if !unknown.is_empty() {
+        log::warn!("{}: dropped unknown status bar items {unknown:?}", path.display());
+    }
+    ui.status_shown = status_shown;
     // Old or hand-edited files cannot reopen a dialog or replace the active drawing view.
     ui.dialog = None;
     ui.start_tab = false;
@@ -315,7 +320,7 @@ mod tests {
             br#"{"version":1,"workspace":{"qatBelowRibbon":1}}"#.to_vec(),
             br#"{"version":1,"workspace":{"ribbonTab":"Tool Sets"}}"#.to_vec(),
             br#"{"version":1,"workspace":{"ribbonMin":"tiny"}}"#.to_vec(),
-            br#"{"version":1,"workspace":{"statusShown":["grid","no-such-item"]}}"#.to_vec(),
+            br#"{"version":1,"workspace":{"statusShown":"grid"}}"#.to_vec(),
             format!(r#"{{"version":1,"workspace":{{"qatShown":[{}]}}}}"#, vec![r#""new""#; 65].join(",")).into_bytes(),
         ] {
             fs::write(&path, &bytes).unwrap();
@@ -325,6 +330,24 @@ mod tests {
             store.save_if_changed(&UiState { show_palettes: false, ..Default::default() }).unwrap();
             assert_eq!(fs::read(&path).unwrap(), bytes);
         }
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn unknown_and_repeated_status_bar_items_are_dropped_without_losing_the_workspace() {
+        let directory = temp_dir();
+        let path = directory.join("workspace.json");
+        fs::write(&path, br#"{"version":1,"workspace":{"statusShown":["osnap","no-such-item","grid","grid"],"showToolbar":true}}"#).unwrap();
+        let (mut store, ui, error) = Workspace::at(Some(path.clone()));
+        assert!(error.is_none(), "{error:?}");
+        let ui = ui.unwrap();
+        assert_eq!(ui.status_shown, ["grid", "osnap"], "known items once, in the Customization list's order");
+        assert!(ui.show_toolbar, "the rest of the workspace is restored");
+        // The file isn't left read-only: the next change is saved, normalized.
+        let changed = UiState { status_shown: vec!["dynmode".into(), "dynmode".into(), "grid".into()], ..ui };
+        store.save_if_changed(&changed).unwrap();
+        let value: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        assert_eq!(value["workspace"]["statusShown"], json!(["grid", "dynmode"]));
         fs::remove_dir_all(directory).unwrap();
     }
 

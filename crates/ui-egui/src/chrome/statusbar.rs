@@ -84,6 +84,14 @@ pub fn default_shown() -> Vec<String> {
     ITEMS.iter().filter(|i| i.default).map(|i| i.key.to_string()).collect()
 }
 
+/// `keys` as a valid shown set: in the Customization list's order, each item once; the second
+/// list holds the keys that name no item (saved by another version, or edited by hand).
+pub fn normalize(keys: &[String]) -> (Vec<String>, Vec<String>) {
+    let shown = ITEMS.iter().filter(|it| keys.iter().any(|k| k == it.key)).map(|it| it.key.to_string()).collect();
+    let unknown = keys.iter().filter(|k| !ITEMS.iter().any(|it| it.key == k.as_str())).cloned().collect();
+    (shown, unknown)
+}
+
 /// Every label the status bar row shows, for the translation catalogs.
 pub fn labels() -> impl Iterator<Item = &'static str> {
     ITEMS
@@ -550,6 +558,15 @@ mod tests {
                 cmd.to_ascii_uppercase()
             );
         }
+    }
+
+    #[test]
+    fn normalizing_orders_dedupes_and_reports_unknown_keys() {
+        let keys: Vec<String> = ["grid", "coordinates", "grid", "nope", "osnap"].iter().map(|k| k.to_string()).collect();
+        let (shown, unknown) = normalize(&keys);
+        assert_eq!(shown, ["coordinates", "grid", "osnap"]);
+        assert_eq!(unknown, ["nope"]);
+        assert_eq!(normalize(&default_shown()), (default_shown(), Vec::new()));
     }
 
     #[test]
