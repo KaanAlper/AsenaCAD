@@ -14,6 +14,7 @@ pub mod home;
 pub mod insert;
 pub mod layout;
 pub mod model;
+pub mod parametric;
 pub mod slideout;
 pub mod widgets;
 

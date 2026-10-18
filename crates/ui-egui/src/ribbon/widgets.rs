@@ -87,6 +87,10 @@ pub fn is_on(app: &CadApp, state: Toggle) -> bool {
         Toggle::QuickCalcPalette => app.ui.docking.layout.contains(&crate::docking::Panel::QuickCalc),
         // No xref fading is drawn yet: the button only reflects XDWGFADECTL as the drawing has it.
         Toggle::XrefFade => var("XDWGFADECTL").is_some_and(|v| v > 0),
+        Toggle::ParametersPalette => app.ui.dialog.as_deref() == Some("parameters"),
+        // CCONSTRAINTFORM isn't modelled yet: every constraint is dynamic, AutoCAD's default.
+        Toggle::DynamicConstraints => var("CCONSTRAINTFORM").unwrap_or(0) != 1,
+        Toggle::AnnotationalConstraints => var("CCONSTRAINTFORM") == Some(1),
     }
 }
 

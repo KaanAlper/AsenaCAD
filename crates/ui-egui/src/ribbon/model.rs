@@ -130,6 +130,12 @@ pub enum Toggle {
     QuickCalcPalette,
     /// Xrefs are faded (XDWGFADECTL > 0).
     XrefFade,
+    /// The Parameters Manager is open.
+    ParametersPalette,
+    /// New dimensional constraints are dynamic (CCONSTRAINTFORM 0, AutoCAD's default).
+    DynamicConstraints,
+    /// New dimensional constraints are annotational (CCONSTRAINTFORM 1).
+    AnnotationalConstraints,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -223,7 +229,7 @@ const TABS: &[Tab] = &[
     crate::ribbon::home::HOME,
     crate::ribbon::insert::INSERT,
     crate::ribbon::annotate::ANNOTATE,
-    unbuilt("Parametric"),
+    crate::ribbon::parametric::PARAMETRIC,
     unbuilt("View"),
     unbuilt("Manage"),
     unbuilt("Output"),
@@ -347,6 +353,10 @@ mod tests {
         "textalign",   // Text ▸ Text Align
         "justifytext", // Text ▸ Justify
         "scaletext",   // Text ▸ Scale (slide-out)
+        // ---- Parametric ----
+        "dcconvert",                    // Dimensional ▸ Convert
+        "cconstraintform.dynamic",      // Dimensional ▸ Dynamic Constraint Mode (toggle, slide-out)
+        "cconstraintform.annotational", // Dimensional ▸ Annotational Constraint Mode (toggle, slide-out)
     ];
 
     #[test]
@@ -382,7 +392,7 @@ mod tests {
     fn the_tab_row_has_autocads_nine_tabs_in_order() {
         let labels: Vec<_> = tabs().iter().map(|t| t.label).collect();
         assert_eq!(labels, ["Home", "Insert", "Annotate", "Parametric", "View", "Manage", "Output", "Collaborate", "Express Tools"]);
-        assert!(tabs()[..3].iter().all(|t| !t.panels.is_empty()), "Home, Insert and Annotate are built");
+        assert!(tabs()[..4].iter().all(|t| !t.panels.is_empty()), "Home, Insert, Annotate and Parametric are built");
         assert!(is_tab("Express Tools") && !is_tab("Tool Sets") && !is_tab(""));
     }
 

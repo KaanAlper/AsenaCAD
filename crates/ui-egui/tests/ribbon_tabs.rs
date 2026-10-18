@@ -514,6 +514,70 @@ fn annotate_is_as_wide_as_autocads() {
     );
 }
 
+// ---- Parametric ----
+
+#[test]
+fn parametric_matches_autocad() {
+    check_tab(
+        "Parametric",
+        &[
+            WantPanel {
+                label: "Geometric",
+                items: &[
+                    b("Auto Constrain", "large", 0, "autoconstrain"),
+                    b("Coincident", "small", 1, "gccoincident"),
+                    b("Collinear", "small", 1, "gccollinear"),
+                    b("Concentric", "small", 1, "gcconcentric"),
+                    b("Fix", "small", 1, "gcfix"),
+                    b("Parallel", "small", 2, "gcparallel"),
+                    b("Perpendicular", "small", 2, "gcperpendicular"),
+                    b("Horizontal", "small", 2, "gchorizontal"),
+                    b("Vertical", "small", 2, "gcvertical"),
+                    b("Tangent", "small", 3, "gctangent"),
+                    b("Smooth", "small", 3, "gcsmooth"),
+                    b("Symmetric", "small", 3, "gcsymmetric"),
+                    b("Equal", "small", 3, "gcequal"),
+                    b("Show/Hide", "small+label", 1, "constraintbar"),
+                    b("Show All", "small+label", 2, "constraintbar.showall"),
+                    b("Hide All", "small+label", 3, "constraintbar.hideall"),
+                ],
+                slideout: &[],
+                launcher: Some(("constraintsettings", "Constraint Settings, Geometric")),
+            },
+            WantPanel {
+                label: "Dimensional",
+                items: &[
+                    sp("Linear", "large", 0, &[("Linear", "dclinear"), ("Horizontal", "dchorizontal"), ("Vertical", "dcvertical")], 0),
+                    b("Aligned", "large", 0, "dcaligned"),
+                    b("Radius", "small", 1, "dcradius"),
+                    b("Diameter", "small", 1, "dcdiameter"),
+                    b("Angular", "small", 2, "dcangular"),
+                    b("Convert", "small", 2, "dcconvert"),
+                    b("Show/Hide", "small+label", 1, "dcdisplay"),
+                    b("Show All", "small+label", 2, "dcdisplay.showall"),
+                    b("Hide All", "small+label", 3, "dcdisplay.hideall"),
+                ],
+                slideout: &[
+                    tg("Dynamic Constraint Mode", "small+label", 1, "cconstraintform.dynamic"),
+                    tg("Annotational Constraint Mode", "small+label", 2, "cconstraintform.annotational"),
+                ],
+                launcher: Some(("constraintsettings", "Constraint Settings, Dimensional")),
+            },
+            WantPanel {
+                label: "Manage",
+                items: &[b("Delete Constraints", "large", 0, "delconstraint"), tg("Parameters Manager", "large", 0, "parameters")],
+                slideout: &[],
+                launcher: None,
+            },
+        ],
+    );
+}
+
+#[test]
+fn parametric_is_as_wide_as_autocads() {
+    check_widths("Parametric", &[("Geometric", 260.0), ("Dimensional", 256.0), ("Manage", 136.0)]);
+}
+
 // ---- Large labels ----
 
 /// The texts the ribbon paints with `tab` open at 1906 px, as laid out ("\n" = line break).
@@ -592,6 +656,7 @@ fn large_labels_wrap_as_in_autocads_screenshots() {
                 "Add\nCurrent Scale",
             ][..],
         ),
+        ("Parametric", &["Auto\nConstrain", "Linear", "Aligned", "Delete\nConstraints", "Parameters\nManager"][..]),
     ] {
         let painted = painted_labels(tab);
         let missing: Vec<_> = labels.iter().filter(|l| !painted.iter().any(|p| p == *l)).collect();
