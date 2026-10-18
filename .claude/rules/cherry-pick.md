@@ -3,6 +3,8 @@
 We forked `storytold/cadcraft` and diverge; there are no merges. A useful upstream fix comes in
 as a cherry-pick.
 
+0. Once per clone, make pushing to upstream impossible:
+   `git remote set-url --push upstream no-push`.
 1. `git fetch upstream` and list what is new: `git log --oneline <last-reviewed>..upstream/main`
    (the last reviewed upstream commit is recorded in `plan/STATUS.md` under "Upstream reviewed").
 2. Take only commits that fix bugs or crashes, or add AutoCAD behaviour we have not built

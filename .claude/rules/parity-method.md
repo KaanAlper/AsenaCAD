@@ -21,18 +21,27 @@ is backed by a side-by-side observation.
 ## Scripts
 - One behaviour per script, named `plan/autocad/scripts/<area>-<what>.scr`
   (e.g. `modify-trim-fence.scr`). Plain AutoCAD script syntax: one token per line or space,
-  a blank line is Enter.
-- Every script starts with `LOGFILEON` and ends with `LOGFILEOFF` so the command log is captured.
+  a blank line is Enter (trailing blank lines count; the skill keeps them).
+- Every script starts with `LOGFILEON` and ends with `LOGFILEOFF` so AutoCAD writes the command
+  log. These two lines are for AutoCAD only: `parity-compare` never sends `LOGFILE*` lines to
+  AsenaCAD.
 - Use only synthetic geometry the script creates itself; never open real drawings.
 
 ## plan/ layout (local, gitignored)
 ```
 plan/
-  STATUS.md                      milestone, next task, reference PC (ASENACAD_REF), AutoCAD path/start method
+  STATUS.md        Milestone:, Next task:, Reference PC: (note; `disposable` allows force-closing
+                   AutoCAD), AutoCAD exe:, Upstream reviewed:  (see AGENTS.md "Start every session here")
   autocad/
-    scripts/   <area>-<what>.scr
-    screenshots/ <area>-<what>-<n>.png   (only via tools/autocad/shot-acad.sh)
-    logs/      <area>-<what>.log  (AutoCAD command log)
-    notes/     <area>.md          (what was observed: prompts, keywords, defaults)
-    uia/       <name>.tsv         (UI Automation dumps from tools/autocad/uia-dump.ps1)
+    env.sh         export ASENACAD_REF=<device>  ACAD='<acad.exe path on the PC>'  [AS=<asenascale>]
+                   sourced by every skill block: `. plan/autocad/env.sh; AS=${AS:-asenascale}`
+    scripts/       <name>.scr                    (<name> = <area>-<what>)
+    screenshots/   <name>-<n>.png                AutoCAD, only via tools/autocad/shot-acad.sh
+                   <name>.asenacad.png           AsenaCAD (parity-compare)
+    logs/          <name>.log                    AutoCAD command log
+                   <name>.asenacad.jsonl         AsenaCAD: one reply per script line (parity-compare)
+                   <name>.asenacad-drawing.json  AsenaCAD drawing.inspect after the script
+                   <name>.asenacad-app.log       AsenaCAD's own stdout/stderr during the run
+    notes/         <area>.md                     what was observed: prompts, keywords, defaults, diffs
+    uia/           <name>.tsv                    UI Automation dumps (tools/autocad/uia-dump.ps1)
 ```
