@@ -342,7 +342,7 @@ pub fn split_button(ui: &mut Ui, app: &mut CadApp, key: &str, label: Option<&str
     let menu_label = crate::tf!("{label} options", label = shown);
     icons::describe_control(ui, &arrow, &menu_label, None, false);
     let arrow = tooltips(arrow, &menu_label, &Availability::Missing);
-    if let Some((i, cmd)) = menu_popup(app, &arrow, menu) {
+    if let Some((i, cmd)) = menu_popup(app, &arrow, menu, matches!(size, Size::Large)) {
         RibbonState::remember(ui.ctx(), key, i);
         start(app, cmd);
     } else if face.clicked() {
@@ -352,17 +352,31 @@ pub fn split_button(ui: &mut Ui, app: &mut CadApp, key: &str, label: Option<&str
 }
 
 /// The menu `anchor` toggles open: `menu`'s entries; returns the one chosen (index, command).
-fn menu_popup(app: &CadApp, anchor: &Response, menu: &[Entry]) -> Option<(usize, &'static str)> {
+/// `large`: the menu of a large button, whose rows have large icons (AutoCAD's Circle, Set
+/// Location and URL Options lists: 40 px rows with 32 px icons, as wide as their longest entry).
+fn menu_popup(app: &CadApp, anchor: &Response, menu: &[Entry], large: bool) -> Option<(usize, &'static str)> {
     let mut chosen = None;
-    egui::Popup::from_toggle_button_response(anchor).close_behavior(egui::PopupCloseBehavior::CloseOnClick).show(|ui| {
-        ui.set_min_width(MENU_W);
+    let mut popup = egui::Popup::from_toggle_button_response(anchor).close_behavior(egui::PopupCloseBehavior::CloseOnClick);
+    if large {
+        // AutoCAD's large rows run edge to edge and follow each other with no gap.
+        popup = popup.frame(egui::Frame::popup(&anchor.ctx.global_style()).inner_margin(1.0));
+    }
+    popup.show(|ui| {
+        let row = if large { MenuRow::large(ui, menu) } else { MenuRow::SMALL };
+        ui.set_min_width(row.width);
+        if large {
+            ui.spacing_mut().item_spacing.y = 0.0;
+        }
         for (i, e) in menu.iter().enumerate() {
             match e {
+                Entry::Separator if large => {
+                    ui.add(egui::Separator::default().spacing(LARGE_MENU_SEPARATOR));
+                }
                 Entry::Separator => {
                     ui.separator();
                 }
                 Entry::Command { icon, label, cmd } => {
-                    if menu_entry(ui, app, *icon, label, cmd).clicked() {
+                    if menu_entry(ui, app, row, *icon, label, cmd).clicked() {
                         chosen = Some((i, *cmd));
                     }
                 }
@@ -371,6 +385,37 @@ fn menu_popup(app: &CadApp, anchor: &Response, menu: &[Entry]) -> Option<(usize,
     });
     chosen
 }
+
+/// The geometry of a split menu's rows.
+#[derive(Clone, Copy)]
+struct MenuRow {
+    width: f32,
+    height: f32,
+    icon: f32,
+    /// Where the label starts, from the row's left edge.
+    text: f32,
+}
+
+impl MenuRow {
+    const SMALL: Self = Self { width: MENU_W, height: SMALL_H + 2.0, icon: SMALL_ICON, text: 30.0 };
+    /// A large row: 40 px tall, the 32 px icon 4 px from the left, the label 40 px in, 8 px
+    /// to spare after the longest label.
+    fn large(ui: &Ui, menu: &[Entry]) -> Self {
+        const TEXT: f32 = LARGE_ICON + 8.0;
+        let widest = menu
+            .iter()
+            .filter_map(|e| match e {
+                Entry::Command { label, .. } => Some(small_label(ui, crate::i18n::t(label), true).size().x),
+                Entry::Separator => None,
+            })
+            .fold(0.0_f32, f32::max);
+        Self { width: TEXT + widest + 8.0, height: LARGE_MENU_ROW_H, icon: LARGE_ICON, text: TEXT }
+    }
+}
+
+/// A large menu row's height, and the space a separator between two of them takes.
+const LARGE_MENU_ROW_H: f32 = 40.0;
+const LARGE_MENU_SEPARATOR: f32 = 6.0;
 
 /// A drop-down button: the whole button opens `menu`, whose entries start their commands. It is
 /// enabled while any entry's command exists; `key` keeps equal buttons apart.
@@ -395,7 +440,7 @@ pub fn menu_button(ui: &mut Ui, app: &mut CadApp, key: &str, icon: Icon, label: 
     }
     icons::describe_control(ui, &resp, label, None, false);
     let resp = tooltips(resp, shown, &Availability::Missing);
-    if let Some((_, cmd)) = menu_popup(app, &resp, menu) {
+    if let Some((_, cmd)) = menu_popup(app, &resp, menu, matches!(size, Size::Large)) {
         start(app, cmd);
     }
     resp
@@ -454,17 +499,18 @@ pub fn separator(ui: &mut Ui) -> Response {
 }
 
 /// One row of a split button's menu: icon and label.
-fn menu_entry(ui: &mut Ui, app: &CadApp, icon: Icon, label: &str, cmd: &str) -> Response {
+fn menu_entry(ui: &mut Ui, app: &CadApp, row: MenuRow, icon: Icon, label: &str, cmd: &str) -> Response {
     let why = availability(ui, app, cmd);
     let enabled = why.is_ready();
     let shown = crate::i18n::t(label);
-    let resp = reserve(ui, vec2(MENU_W, SMALL_H + 2.0), enabled, Sense::click());
+    let resp = reserve(ui, vec2(row.width, row.height), enabled, Sense::click());
     paint_state(ui, resp.rect, &resp, false);
-    let icon_rect = Rect::from_center_size(pos2(resp.rect.left() + 14.0, resp.rect.center().y), Vec2::splat(SMALL_ICON));
+    let icon_x = resp.rect.left() + (row.text - row.icon) / 2.0;
+    let icon_rect = Rect::from_min_size(pos2(icon_x, resp.rect.center().y - row.icon / 2.0), Vec2::splat(row.icon));
     icons::paint(ui.painter(), icon_rect, icon, !enabled);
     let galley = small_label(ui, shown, enabled);
     let y = resp.rect.center().y - galley.size().y / 2.0;
-    ui.painter().galley(pos2(resp.rect.left() + 30.0, y), galley, text_color(enabled));
+    ui.painter().galley(pos2(resp.rect.left() + row.text, y), galley, text_color(enabled));
     icons::describe_control(ui, &resp, label, None, false);
     resp.on_disabled_hover_ui(|ui| {
         ui.label(why.disabled_text());

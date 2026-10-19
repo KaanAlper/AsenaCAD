@@ -58,6 +58,24 @@ fn the_circle_menu_lists_autocads_variants_in_order_with_separators() {
 }
 
 #[test]
+fn a_large_splits_menu_has_large_rows_and_a_small_splits_small_ones() {
+    // AutoCAD's Circle list: 40 px rows with 32 px icons, about as wide as its longest entry.
+    let mut h = harness("Draw");
+    h.get_by_label("Circle options").click();
+    h.run_steps(3);
+    let row = h.get_by_label("Center, Radius").rect();
+    assert_eq!(row.height(), 40.0, "a large row: {row:?}");
+    assert!(row.width() > 110.0 && row.width() < 160.0, "as wide as its longest entry: {row:?}");
+    let circle = h.get_by_role_and_label(Role::Button, "Circle").rect();
+    assert!((row.left() - circle.left()).abs() < 12.0, "the list opens under the button: {row:?} {circle:?}");
+
+    let mut h = harness("Modify");
+    h.get_by_label("Trim options").click();
+    h.run_steps(3);
+    assert_eq!(h.get_by_label("Extend").rect().height(), 24.0, "a small split's list keeps small rows");
+}
+
+#[test]
 fn choosing_2_point_keeps_the_circle_label_and_starts_circle_2p() {
     let mut h = harness("Draw");
     h.get_by_label("Circle options").click();
