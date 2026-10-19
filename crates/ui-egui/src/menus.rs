@@ -35,7 +35,8 @@ pub const UI_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
     ("ui.animations", "Animation Effects", &[], None),
     ("ui.toggle.toolbar", "Tool Bar", &["Window", "Tool Bar"], None),
     ("ui.toggle.filetabs", "File Tab", &["Window", "File Tab"], None),
-    // The layout tabs on the status bar on or off (`{on?: bool}`).
+    // View ▸ Interface ▸ Layout Tabs: `{on?: bool}` shows or hides the layout tabs on the status
+    // bar (no `on`: flips them) → `{on}`.
     ("ui.toggle.layouttabs", "Layout Tabs", &[], None),
     ("ui.toggle.statusbar", "Status Bar", &["Window", "Status Bar"], None),
     ("ui.toggle.cmdline", "Command Line", &["Window", "Command Line"], Some("Cmd+9")),

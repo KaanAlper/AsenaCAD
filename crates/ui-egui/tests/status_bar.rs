@@ -336,3 +336,35 @@ fn object_snap_with_no_modes_set_opens_the_object_snap_settings() {
     assert_eq!(h.state().session.settings.osmode, mode::END | mode::OFF);
     assert!(h.state().ui.dialog.is_none());
 }
+
+/// The x of the painted text `text`, if the status bar row paints it.
+fn painted_at(h: &Harness<'_, CadApp>, text: &str) -> Option<f32> {
+    fn find(shape: &egui::Shape, text: &str) -> Option<f32> {
+        match shape {
+            egui::Shape::Text(t) if t.galley.text() == text => Some(t.pos.x),
+            egui::Shape::Vec(shapes) => shapes.iter().find_map(|s| find(s, text)),
+            _ => None,
+        }
+    }
+    h.output().shapes.iter().find_map(|s| find(&s.shape, text))
+}
+
+#[test]
+fn layout_tabs_off_hides_the_layout_bar_and_the_readout_starts_at_the_left() {
+    let h = harness_with(|app| {
+        let r = app.run("ui.toggle.layouttabs", json!({ "on": false }));
+        assert_eq!(r, Ok(json!({ "on": false })));
+        app.set_status("Layout tabs are hidden");
+    });
+    for label in ["Layout list", "Model", "Layout1", "Layout2", "New layout"] {
+        assert!(!in_bar(&h, label), "{label} is hidden with the layout tabs");
+    }
+    assert!(in_bar(&h, "MODEL"), "the status bar items stay");
+    let x = painted_at(&h, "Layout tabs are hidden").expect("the readout is painted");
+    assert!(x < 20.0, "the readout starts at the row's left end: {x}");
+    // Without `on` the command flips the tabs back and reports it.
+    let mut h = h;
+    assert_eq!(h.state_mut().run("ui.toggle.layouttabs", serde_json::Value::Null), Ok(json!({ "on": true })));
+    h.run_steps(3);
+    assert!(in_bar(&h, "Layout1"));
+}

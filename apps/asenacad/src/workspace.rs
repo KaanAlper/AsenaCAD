@@ -308,6 +308,22 @@ mod tests {
     }
 
     #[test]
+    fn hidden_layout_tabs_survive_and_older_files_show_them() {
+        let directory = temp_dir();
+        let path = directory.join("workspace.json");
+        let (mut store, _, _) = Workspace::at(Some(path.clone()));
+        store.save_if_changed(&UiState { show_layout_tabs: false, ..Default::default() }).unwrap();
+        let value: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        assert_eq!(value["workspace"]["showLayoutTabs"], false);
+        assert!(!read(&path).unwrap().unwrap().show_layout_tabs);
+        // A workspace saved before View ▸ Interface ▸ Layout Tabs existed shows the layout tabs.
+        fs::write(&path, br#"{"version":1,"workspace":{"showFileTabs":false}}"#).unwrap();
+        let older = read(&path).unwrap().unwrap();
+        assert!(older.show_layout_tabs && !older.show_file_tabs);
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
     fn malformed_oversized_and_newer_state_are_reported_and_preserved() {
         let directory = temp_dir();
         let path = directory.join("workspace.json");
