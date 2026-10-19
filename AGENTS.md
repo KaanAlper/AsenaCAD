@@ -106,6 +106,18 @@ Windows ribbon/command catalog (M1).
   locked) use `ui.render` or `asenacad-cli`.
 - Headless: `asenacad-cli run --sample --script 'LINE 0,0 10,10\n' --export out.png`;
   `asenacad-cli info file.dxf`; `asenacad-cli mcp`.
+- **UI tests as CI runs them:** CI embeds craft-fonts, so run the UI tests with and without it.
+  The ref is `craft-fonts-ref` in `.github/workflows/freebsd.yml`:
+  ```sh
+  git clone https://github.com/storytold/craft-fonts /tmp/craft-fonts
+  git -C /tmp/craft-fonts checkout <craft-fonts-ref>
+  CRAFT_FONTS_DIR=/tmp/craft-fonts cargo test -p asenacad-ui-egui
+  ```
+  Changing `CRAFT_FONTS_DIR` rebuilds `asenacad-fonts` and every crate above it. Layout must not
+  depend on the interface font or the display scale: `tests/chrome_geometry.rs` runs each window
+  check with the system font and with egui's own (`UiFont::Egui`, what a machine without DejaVu
+  Sans or Segoe UI shows), at scale 1 and 1.34. Measure text widths with left-aligned galleys:
+  a centred galley's width is snapped to physical pixels and changes with the scale.
 - **The reference AutoCAD:** `asenascale windows|exec "$ASENACAD_REF" …` (see the
   `autocad-observe` skill; the device name is in `plan/autocad/env.sh`). These commands need an
   AsenaScale release with the PC-to-PC commands (KaanAlper/AsenaScale#2); if the `asenascale` on
