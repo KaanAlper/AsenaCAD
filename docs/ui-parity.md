@@ -66,7 +66,7 @@ the read, so its rows come from the screenshot), against AsenaCAD rendered by th
 | Insert ▸ Block | ◐ | Insert ▾ (large drop-down, a gallery of the drawing's blocks), Detect and Convert ▾ (large), Edit Attribute ▾, the attribute display list, Replace | Same layout and lists. Insert is a drop-down whose list has only More Options..., which starts INSERT (no gallery of blocks yet); Detect and Convert, Search and Convert and Replace have no command yet. The attribute display drop-down is a plain list box (AutoCAD's has an icon in front) |
 | Insert ▸ Block Definition | ✅ | Create Block ▾ (Create Block, Write Block), Define Attributes, Manage Attributes, Block Editor (large); slide-out with Set Base Point and Synchronize | Same items, sizes, list and slide-out; every item runs its command |
 | Insert ▸ Reference | ◐ | Attach, Clip, Adjust (large); Underlay Layers, the frame display list, the underlay snap list; slide-out with Edit Reference and the xref fading toggle and slider; External References launcher | Same layout and launcher (it opens the External References palette). Attach is a placeholder; Clip, Adjust, Underlay Layers and the fading toggle have no command yet. The frame and underlay snap lists show AutoCAD's defaults but are disabled (frame display and underlay snapping are not modelled); the fading slider shows its value but is disabled. Both lists are plain list boxes (AutoCAD's have an icon in front) |
-| Insert ▸ Import | ◐ | PDF Import ▾ (PDF Import, DGN Import, Import), Recognize SHX Text, Recognition Settings, Combine Text (large) | Same layout and list. Only Import has a command: the face (PDF Import), DGN Import, both SHX text tools and Combine Text are disabled |
+| Insert ▸ Import | ◐ | PDF Import ▾ (PDF Import, DGN Import, Import), Recognize SHX Text, Recognition Settings, Combine Text (large) | Same layout and list. Import and Combine Text (TXT2MTXT) have a command: the face (PDF Import), DGN Import and both SHX text tools are disabled |
 | Insert ▸ Data | ◐ | Field (large), Update Fields, OLE Object, Hyperlink | Same layout; none of the four has a command yet, so all are disabled |
 | Insert ▸ Linking & Extraction | ◐ | Data Link (large), Download from Source, Upload to Source, Extract Data | Same layout; Upload to Source has no command yet |
 | Insert ▸ Location | ◐ | Set Location ▾ (large drop-down button: the whole button opens From Esri Maps, From File, —, From Bing Maps) | Same drop-down button and list. None of the entries has a command yet (Esri and Bing are online map services), so it is disabled |
@@ -99,11 +99,11 @@ the read, so its rows come from the screenshot), against AsenaCAD rendered by th
 | Collaborate ▸ Autodesk Docs | ◐ | Push to Autodesk Docs (large toggle) | Same toggle, disabled: it needs Autodesk Docs |
 | Collaborate ▸ Traces | ◐ | Traces Palette (large toggle), Markup Import (large) | Same items, disabled: both need Autodesk's online services |
 | Collaborate ▸ Compare | ✅ | DWG Compare (large) | Same button; it runs COMPARE |
-| Express Tools ▸ Blocks | ◐ | Explode Attributes, Replace Block (large); List Properties, Import Attributes, Export Attributes; slide-out with Convert block to xref, Copy Nested Objects, Extend to Nested Objects, Trim to Nested Objects | Same layout and slide-out; Copy Nested Objects runs NCOPY, the other eight have no command yet |
-| Express Tools ▸ Text | ◐ | Arc Aligned, Modify Text ▾ (Explode, Change Case, Rotate, Fit, Justify) (large); Convert to Mtext, Auto Number, Enclose in Object; slide-out with Remote Text, Text Mask, Unmask Text | Same layout, list and slide-out; none of the tools has a command yet, so Modify Text and its ▾ are disabled |
-| Express Tools ▸ Modify | ◐ | Move/Copy/Rotate, Stretch Multiple, centred in the panel's height; slide-out with Flatten objects, Extended Clip, Extended Offset, Convert Shape to Block | Same layout (the two rows centred) and slide-out; Flatten objects runs FLATTEN, the other five have no command yet |
+| Express Tools ▸ Blocks | ◐ | Explode Attributes, Replace Block (large); List Properties, Import Attributes, Export Attributes; slide-out with Convert block to xref, Copy Nested Objects, Extend to Nested Objects, Trim to Nested Objects | Same layout and slide-out; Explode Attributes runs BURST and Copy Nested Objects runs NCOPY, the other seven have no command yet |
+| Express Tools ▸ Text | ◐ | Arc Aligned, Modify Text ▾ (Explode, Change Case, Rotate, Fit, Justify) (large); Convert to Mtext, Auto Number, Enclose in Object; slide-out with Remote Text, Text Mask, Unmask Text | Same layout, list and slide-out; Convert to Mtext runs TXT2MTXT, the other tools have no command yet, so Modify Text and its ▾ are disabled |
+| Express Tools ▸ Modify | ◐ | Move/Copy/Rotate, Stretch Multiple, centred in the panel's height; slide-out with Flatten objects, Extended Clip, Extended Offset, Convert Shape to Block | Same layout (the two rows centred) and slide-out; Move/Copy/Rotate runs MOCORO and Flatten objects runs FLATTEN, the other four have no command yet |
 | Express Tools ▸ Layout | ◐ | Align Space, Synchronize Viewports, Merge Layout; slide-out with List Viewport Scale | Same layout and slide-out; none of the four has a command yet |
-| Express Tools ▸ Draw | ◐ | Break-line Symbol, Super Hatch (large) | Same buttons, disabled: neither has a command yet |
+| Express Tools ▸ Draw | ◐ | Break-line Symbol, Super Hatch (large) | Same buttons; Break-line Symbol runs BREAKLINE, Super Hatch is disabled: it has no command yet |
 | Express Tools ▸ Dimension | ◐ | Annotation Attachment ▾ (Attach Leader to Annotation, Global Attach Leader to Annotation, Detach Leaders from Annotation) (large); Reset Text, Import Style, Export Style | Same layout and list; none of the tools has a command yet |
 | Express Tools ▸ Tools | ◐ | Command Aliases (large); Attach Xdata, List Xdata, System Variables; slide-out with Extended Plan, Make Linetype, Make Shape | Same layout and slide-out; Command Aliases runs ALIASEDIT, the other six have no command yet |
 | Express Tools ▸ Web | ◐ | URL Options ▾ (large drop-down button: the whole button opens Show URLs, Change URLs, Find and Replace URLs) | Same drop-down button and list; none of the entries has a command yet, so it is disabled |
@@ -192,7 +192,6 @@ differ.
 | `dgnimport` | Insert ▸ Import ▸ PDF Import ▸ DGN Import |
 | `pdfshxtext` | Insert ▸ Import ▸ Recognize SHX Text |
 | `pdfshxtext.settings` | Insert ▸ Import ▸ Recognition Settings |
-| `txt2mtxt` | Insert ▸ Import ▸ Combine Text; Express Tools ▸ Text ▸ Convert to Mtext |
 | `field` | Insert ▸ Data ▸ Field |
 | `updatefield` | Insert ▸ Data ▸ Update Fields |
 | `insertobj` | Insert ▸ Data ▸ OLE Object |
@@ -263,7 +262,6 @@ differ.
 | `pushtodocsopen` | Collaborate ▸ Autodesk Docs ▸ Push to Autodesk Docs (Autodesk online service) |
 | `tracepaletteopen` | Collaborate ▸ Traces ▸ Traces Palette (Autodesk online service) |
 | `markupimport` | Collaborate ▸ Traces ▸ Markup Import (Autodesk online service) |
-| `burst` | Express Tools ▸ Blocks ▸ Explode Attributes (explodes blocks, keeping attribute values as text) |
 | `blockreplace` | Express Tools ▸ Blocks ▸ Replace Block |
 | `xlist` | Express Tools ▸ Blocks ▸ List Properties (of a nested object) |
 | `attin` | Express Tools ▸ Blocks ▸ Import Attributes |
@@ -281,7 +279,6 @@ differ.
 | `rtext` | Express Tools ▸ Text ▸ Remote Text (slide-out) |
 | `textmask` | Express Tools ▸ Text ▸ Text Mask (slide-out) |
 | `textunmask` | Express Tools ▸ Text ▸ Unmask Text (slide-out) |
-| `mocoro` | Express Tools ▸ Modify ▸ Move/Copy/Rotate |
 | `mstretch` | Express Tools ▸ Modify ▸ Stretch Multiple |
 | `clipit` | Express Tools ▸ Modify ▸ Extended Clip (slide-out) |
 | `exoffset` | Express Tools ▸ Modify ▸ Extended Offset (slide-out) |
@@ -290,7 +287,6 @@ differ.
 | `vpsync` | Express Tools ▸ Layout ▸ Synchronize Viewports |
 | `layoutmerge` | Express Tools ▸ Layout ▸ Merge Layout |
 | `vpscale` | Express Tools ▸ Layout ▸ List Viewport Scale (slide-out) |
-| `breakline` | Express Tools ▸ Draw ▸ Break-line Symbol |
 | `superhatch` | Express Tools ▸ Draw ▸ Super Hatch |
 | `qlattach` | Express Tools ▸ Dimension ▸ Annotation Attachment ▸ Attach Leader to Annotation |
 | `qlattachset` | Express Tools ▸ Dimension ▸ Annotation Attachment ▸ Global Attach Leader to Annotation |
