@@ -1,13 +1,15 @@
-# Quick static checks for the release pipeline (seconds, no Rust build): workflow syntax,
-# packaging shell/PowerShell scripts, and the Linux desktop/AppStream/Flatpak metadata.
+# Quick static checks of the workflows and packaging files (no Rust build): actionlint on the
+# workflows, shellcheck on the packaging shell scripts (packaging/.shellcheckrc), a parse of the
+# PowerShell scripts, the Linux desktop entry, AppStream metainfo and MIME type file, and the
+# YAML manifests (Flatpak, nfpm).
 name: Packaging lint
 
 on:
-  push:
-    branches: [main, release]
-    paths: [".github/workflows/**", "packaging/**", "assets/app-icon/**"]
   pull_request:
-    paths: [".github/workflows/**", "packaging/**", "assets/app-icon/**"]
+    paths: [".github/workflows/**", "packaging/**"]
+  push:
+    branches: [main]
+    paths: [".github/workflows/**", "packaging/**"]
   workflow_dispatch:
 
 permissions:
@@ -17,7 +19,51 @@ concurrency:
   group: packaging-lint-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  ACTIONLINT_VERSION: 1.7.12
+  # sha256 of actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz (the release's checksums file).
+  ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+  APP_ID: io.github.kaanalper.asenacad
+
 jobs:
   lint:
-    # Intentionally tracked at @main (not SHA-pinned) so org-wide CI improvements, security fixes, and build optimizations propagate without PR churn across all craftapp repos.
-    uses: storytold/craft-common-actions/.github/workflows/packaging-lint.yml@main
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Tools
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends shellcheck desktop-file-utils appstream libxml2-utils python3-yaml
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -fsSLo "$RUNNER_TEMP/$archive" "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/$archive"
+          echo "$ACTIONLINT_SHA256  $RUNNER_TEMP/$archive" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" actionlint
+      - name: actionlint
+        run: '"$RUNNER_TEMP/actionlint" -color'
+      - name: shellcheck
+        run: git ls-files -z 'packaging/*.sh' | xargs -0 --no-run-if-empty shellcheck
+      - name: PowerShell syntax
+        shell: pwsh
+        run: |
+          $failed = $false
+          foreach ($file in git ls-files 'packaging/*.ps1') {
+            $tokens = $null; $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref] $tokens, [ref] $errors) | Out-Null
+            foreach ($e in $errors) { Write-Output "::error file=$file,line=$($e.Extent.StartLineNumber)::$($e.Message)"; $failed = $true }
+            if (-not $errors) { Write-Output "ok $file" }
+          }
+          if ($failed) { exit 1 }
+      - name: Desktop entry, metainfo and MIME type
+        run: |
+          desktop-file-validate "packaging/linux/$APP_ID.desktop"
+          sed -e 's/@VERSION@/0.0.0/g' -e "s/@DATE@/$(date -u +%Y-%m-%d)/g" \
+            "packaging/linux/$APP_ID.metainfo.xml.in" >"$RUNNER_TEMP/$APP_ID.metainfo.xml"
+          appstreamcli validate --no-net --explain "$RUNNER_TEMP/$APP_ID.metainfo.xml"
+          xmllint --noout "packaging/linux/$APP_ID.mime.xml"
+      - name: YAML manifests
+        run: |
+          git ls-files -z 'packaging/*.yml' 'packaging/*.yaml' |
+            xargs -0 --no-run-if-empty python3 -c 'import sys, yaml; [yaml.safe_load(open(f)) or print(f"empty: {f}") for f in sys.argv[1:]]; print("ok", *sys.argv[1:])'

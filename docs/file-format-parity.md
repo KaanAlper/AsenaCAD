@@ -1,6 +1,6 @@
 # File-format parity
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-12 · **Change:** minor (multiline attributes read, drawn and written) · **Target:** Autodesk AutoCAD 2027
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-19 · **Change:** minor (AsenaCAD's own drawing data read only under its `ASENACAD` names) · **Target:** Autodesk AutoCAD 2027
 
 Every format AutoCAD 2027 reads or writes, with AsenaCAD's support, fidelity and tests. Work
 items are in [gaps.md](gaps.md#file-formats); the weighted score feeds
@@ -25,7 +25,7 @@ below, and ≈ 20–40 h for 3D exchange formats that wait for 3D modelling.
   supporting formats below exist in the target. None of them may be copied.
 - No AutoCAD-produced file is committed or used as a fixture. A real-file corpus needs owner
   action (see [gaps.md](gaps.md)): files made by people who license them to us, kept in a
-  separate `storytold/cadcraft-corpus` repo.
+  separate test-corpus repo (planned).
 
 ## DWG, version by version
 
@@ -135,6 +135,7 @@ our output in AutoCAD black-box.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | AsenaCAD's own drawing data (xdata application, XRECORD keys, header snapshots) and plotter/plot style table files are read only under the `ASENACAD`/`asenacad` names AsenaCAD writes; the names CADCraft used are no longer read. The real-file corpus is a separate test-corpus repo (planned) |
 | 2026-10-12 | minor | PDF output: object transparency plotted as PDF alpha (`/ExtGState` `/ca` `/CA`) when the page setup's or the plot's "Plot transparency" is on; PNG plots blend it, SVG uses `opacity`; plots without it are unchanged byte for byte |
 | 2026-10-12 | minor | DXF/DWG save: the Model layout's plot settings are written as AsenaCAD plots model space, drawing extents scaled to fit (PLOTSETTINGS 74 = 1, 75 = 0), instead of plot type 5 "Layout information", which other programs' Plot dialogs can't use for model space |
 | 2026-10-12 | minor | VIEWPORT frozen layers also written and read as AutoCAD's group 341 layer handles, so third-party viewers honour per-viewport freezing in DXF (DWG converter gap noted) |

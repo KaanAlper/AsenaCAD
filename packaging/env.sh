@@ -53,7 +53,7 @@ copy_docs() {
   copy_font_licences "$dest"
 }
 
-# Builds made with craft-fonts (CRAFT_FONTS_DIR, set by the release workflow) embed its fonts, so
+# Builds made with craft-fonts (CRAFT_FONTS_DIR, a checkout of storytold/craft-fonts) embed its fonts, so
 # the package carries their licences as OFL-<family-dir>.txt. Nothing without CRAFT_FONTS_DIR.
 copy_font_licences() {
   local dest="$1" f

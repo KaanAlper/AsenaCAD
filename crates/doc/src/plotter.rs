@@ -19,8 +19,6 @@ pub const MAX_PLOTTER_NAME: usize = 100;
 pub const MAX_PAPER_MM: f64 = 5080.0;
 
 const FILE_MARKER: &str = "asenacadPlotter";
-/// The marker of files written before the rename (read only).
-const LEGACY_FILE_MARKER: &str = "cadcraftPlotter";
 const FILE_VERSION: u64 = 1;
 
 /// What a device writes.
@@ -194,7 +192,7 @@ impl PlotterConfig {
             return Err("the plotter configuration file is too large".into());
         }
         let v: serde_json::Value = serde_json::from_str(text).map_err(|e| format!("not an AsenaCAD plotter configuration: {e}"))?;
-        match v.get(FILE_MARKER).or_else(|| v.get(LEGACY_FILE_MARKER)).and_then(serde_json::Value::as_u64) {
+        match v.get(FILE_MARKER).and_then(serde_json::Value::as_u64) {
             Some(FILE_VERSION) => {}
             Some(n) => return Err(format!("plotter configuration format version {n} is newer than this AsenaCAD reads")),
             None => return Err(format!("not an AsenaCAD plotter configuration (no `{FILE_MARKER}`)")),
@@ -251,19 +249,5 @@ mod tests {
         assert!(PlotterConfig::from_file_text(r#"{"asenacadPlotter": 9, "name": "x"}"#).is_err());
         assert_eq!(plotter_file_name("../a/b:c").as_deref(), Some("___a_b_c.plotter.json"));
         assert_eq!(plotter_file_name("  "), None);
-    }
-
-    #[test]
-    fn a_file_with_the_legacy_marker_reads_and_saves_with_the_new_one() {
-        let c = PlotterConfig { name: "Office A3".into(), output: PlotOutput::Svg, ..PlotterConfig::default() };
-        let text = c.to_file_text();
-        assert!(text.contains("\"asenacadPlotter\": 1") && !text.contains("cadcraft"), "{text}");
-        let legacy = text.replace("asenacadPlotter", "cadcraftPlotter");
-        let back = PlotterConfig::from_file_text(&legacy).unwrap();
-        assert_eq!(back, PlotterConfig::from_file_text(&text).unwrap());
-        let again = back.to_file_text();
-        assert_eq!(again, text);
-        assert!(!again.contains("cadcraft"), "only the new marker is written");
-        assert!(PlotterConfig::from_file_text(r#"{"cadcraftPlotter": 9, "name": "x"}"#).is_err(), "newer legacy version");
     }
 }

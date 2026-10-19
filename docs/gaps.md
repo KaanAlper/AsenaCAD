@@ -1,6 +1,6 @@
 # Where AsenaCAD falls short of AutoCAD
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-19 · **Change:** minor (U14 restated after the side-by-side pass of all nine ribbon tabs; E3 restated; U15: the ribbon's Dimension button; U16: GRIDDISPLAY) · **Target:** Autodesk AutoCAD 2027
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-19 · **Change:** minor (S7 added: no release workflow; S1 restated; U14 restated after the side-by-side pass of all nine ribbon tabs; E3 restated; U15: the ribbon's Dimension button; U16: GRIDDISPLAY) · **Target:** Autodesk AutoCAD 2027
 
 Every known shortfall, one row each, ranked within each section by user impact. This is the work
 list: agents pick from here (top of a section first), and remove or update a row in the same PR
@@ -75,7 +75,7 @@ Detail: [file-format-parity.md](file-format-parity.md).
 | FF2 | Multileader leftovers (native MULTILEADER read/write landed, #459): several landings per multileader (extra leader roots are folded into the lines), per-object overrides (leader colour and linetype, arrowhead symbol, text frame), annotative scale contexts; check the text placement of our MULTILEADER output in AutoCAD | Medium | 3–5 |
 | FF3 | Save-version leftovers (DXF/DWG 2000–2018, binary DXF, SAVEAS `version`/`binary` and the default save version landed, #421): no R14 DWG or R12 DXF output; the Save dialog can't pick the version per file (the file picker doesn't report the chosen type; File > Default Save Format sets it); no command-line SAVEAS format prompt | Low | 2–4 |
 | FF4 | Code-page leftovers (pre-2007 DXF read in their `$DWGCODEPAGE` landed, #505): Johab (ANSI_1361) and DOS 855/857/860–865/869 read as ANSI_1252; saving declares `ANSI_1252` instead of the file's code page (the text is pure ASCII, so still correct); acadrust approximates DOS code pages in pre-2007 DWG (DOS437 as 866, DOS850 as 1252) | Low | 1–2 |
-| FF5 | **[alpha blocker]** Real-file corpus (`storytold/cadcraft-corpus`), open → save → reopen tests, black-box check in AutoCAD | High | 10–15 + human |
+| FF5 | **[alpha blocker]** Real-file corpus (a separate test-corpus repo, planned), open → save → reopen tests, black-box check in AutoCAD | High | 10–15 + human |
 | FF6 | **[alpha blocker]** DWG throughput: a 10 MB DWG took ~2 min to fail (#57) | High for real projects | 6–10 |
 | FF7 | Table record and object handles from other programs' files are renumbered on the first save (entity handles are kept; `*D` blocks no longer duplicate and once reopened, AsenaCAD's own files keep every handle across saves, #495) | Low | 4–6 |
 | FF8 | SHX fonts (shape and big fonts) not read | Medium-high (text metrics differ) | 8–12 |
@@ -113,11 +113,12 @@ Detail: [localization-parity.md](localization-parity.md).
 
 | # | Gap | Evidence | Est. |
 |---|---|---|---|
-| S1 | No CI runs `cargo xtask ci` on pull requests (only packaging lint and release builds) | `.github/workflows/` | 2–3 |
+| S1 | No CI runs `cargo xtask ci` on pull requests (only packaging lint, Nix evaluation, and `cargo test` on FreeBSD and Windows ARM64) | `.github/workflows/` | 2–3 |
 | S2 | ~~`cargo fmt --check` fails on main~~ fixed on main (8fceaaf) | — | 0 |
 | S3 | 40 open PRs, many community bug fixes awaiting review | `gh pr list` | 10–20 |
 | S4 | Open correctness issues: extents union far-apart geometry (#166), lines not visible mid-command (#44), browser plot shows raw PDF bytes (#134) (closing a tab and browser saves fixed, #76, #133) | issues | 4–6 |
 | S5 | No smoke test of every command through the UI (PR #42 proposes one) | — | 6–10 |
+| S7 | Own release workflow (packages, signing, notarization): not built. The shared release workflow was removed; the packaging scripts in `packaging/` build packages locally, nothing builds, signs or publishes a release | `.github/workflows/`, [releasing.md](releasing.md) | 8–12 (est.) |
 
 ## Platforms
 
@@ -148,6 +149,8 @@ Detail: [localization-parity.md](localization-parity.md).
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | S7 added: AsenaCAD has no release workflow of its own (packages, signing, notarization); the shared one was removed. S1 restated: pull requests get packaging lint, Nix evaluation and `cargo test` on FreeBSD and Windows ARM64, not `cargo xtask ci` |
+| 2026-10-19 | trivial | FF5: the corpus is a separate test-corpus repo (planned), not yet named |
 | 2026-10-19 | minor | U14 restated after the side-by-side pass of all nine ribbon tabs at 1906 px (item widths, spacing and large lists now match): the icons and swatches in front of some lists, Find Text's search button, Annotation Text Height's ▾, Base's ▾, three panels a few pixels narrow, the reference drawing's metric defaults |
 | 2026-10-19 | minor | U14: Express Tools ▸ Modify's rows are centred now |
 | 2026-10-19 | minor | U14: nine more ribbon items have a command (the viewport arrangements and Join) |

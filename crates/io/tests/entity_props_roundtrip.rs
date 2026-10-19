@@ -177,35 +177,6 @@ fn builtin_font_name_roundtrips_and_other_readers_get_txt() {
     assert_eq!(r.text_styles.iter().find(|s| s.name == "Standard").map(|s| s.font.as_str()), Some("isocp.shx"));
 }
 
-#[test]
-fn cadcraft_era_font_name_reads_as_the_builtin_and_writes_the_new_name() {
-    // A drawing written by CADCraft: the built-in font went out as `txt` with the old name in
-    // `CADCRAFT` xdata; a style set to the old name by hand is the built-in font too.
-    let mut d = Drawing::new_metric();
-    d.text_styles.push(TextStyle { name: "Old".into(), font: "cadcraft stroke".into(), ..TextStyle::default() });
-    let text = write_dxf(&d).replace("AsenaCAD Stroke", "CADCraft Stroke");
-    let old = text.lines().map(|l| if l.trim() == "ASENACAD" { "CADCRAFT" } else { l }).collect::<Vec<_>>().join("\n");
-    assert!(old.contains("CADCraft Stroke") && old.lines().any(|l| l.trim() == "CADCRAFT"));
-    let r = read_dxf(old.as_bytes()).expect("open the CADCraft file");
-    for name in ["Standard", "Old"] {
-        let font = r.text_styles.iter().find(|s| s.name == name).map(|s| s.font.clone()).unwrap_or_default();
-        assert!(asenacad_fonts::is_builtin_font(&font), "{name}: {font:?} is the built-in font");
-    }
-    // Saved again, every style that names the built-in font writes `txt` and the new name.
-    let text = write_dxf(&r);
-    assert!(!text.to_ascii_lowercase().contains("cadcraft stroke"), "the old name is never written");
-    let g = groups(&text);
-    let table = g.iter().position(|(c, v)| *c == 2 && v == "STYLE").expect("STYLE table");
-    for name in ["Standard", "Old"] {
-        let at = table + g.iter().skip(table).position(|(c, v)| *c == 2 && v == name).expect("style");
-        assert_eq!(g.iter().skip(at).find(|(c, _)| *c == 3).map(|(_, v)| v.as_str()), Some("txt"), "{name}");
-    }
-    let again = read_dxf(text.as_bytes()).expect("reopen");
-    for name in ["Standard", "Old"] {
-        assert_eq!(again.text_styles.iter().find(|s| s.name == name).map(|s| s.font.as_str()), Some("AsenaCAD Stroke"), "{name}");
-    }
-}
-
 /// The (code, value) pairs of a DXF text.
 fn groups(text: &str) -> Vec<(i32, String)> {
     let lines: Vec<&str> = text.lines().map(str::trim).collect();

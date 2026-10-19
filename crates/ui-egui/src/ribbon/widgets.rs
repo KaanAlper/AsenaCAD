@@ -139,6 +139,20 @@ fn large_label(ui: &Ui, text: &str, enabled: bool) -> std::sync::Arc<egui::Galle
     ui.painter().layout_job(job)
 }
 
+/// The width a large label needs: its widest line, measured left-aligned. Not the centred
+/// [`large_label`]'s width: epaint measures a centred row from glyph positions it has already
+/// snapped to physical pixels, so that width changes with the display scale (by up to a pixel,
+/// differently per font). Left-aligned text measures the same at every scale, so large buttons,
+/// panels and the widths at which panels collapse are the same in points at any scale.
+fn large_label_width(ui: &Ui, text: &str) -> f32 {
+    large_lines(ui, text).lines().map(|line| small_label(ui, line, true).size().x).fold(0.0, f32::max)
+}
+
+/// Whether a large label takes two lines ("Detect and / Convert").
+fn large_label_wraps(ui: &Ui, text: &str) -> bool {
+    large_lines(ui, text).contains('\n')
+}
+
 /// `text` as AutoCAD lays a large label out: a single word on one line; more words on two,
 /// broken at the last space that keeps the first line within [`LARGE_WRAP`] ("Detect and /
 /// Convert", "Layer / Properties", "Data / Link"), or after the first word when even that is
@@ -195,20 +209,20 @@ fn paint_large(ui: &Ui, rect: Rect, icon: Icon, label: &str, enabled: bool, chev
 /// Properties" is its "Properties" line plus about that), and never narrower than the icon
 /// with 5 px either side.
 fn large_width(ui: &Ui, label: &str) -> f32 {
-    (large_label(ui, label, true).size().x + 6.0).max(LARGE_MIN_W)
+    (large_label_width(ui, label) + 6.0).max(LARGE_MIN_W)
 }
 
 /// A large split button's width: its widest label line and room for the ▾ either side, whether
 /// the ▾ sits under a one-line label (Circle ▾) or right of the second line (Revision / Cloud ▾).
 fn large_split_width(ui: &Ui, label: &str) -> f32 {
-    (large_label(ui, label, true).size().x + LARGE_DROP_PAD).max(LARGE_MIN_W)
+    (large_label_width(ui, label) + LARGE_DROP_PAD).max(LARGE_MIN_W)
 }
 
 /// A large drop-down button's width: with a two-line label as a split's (Set / Location ▾);
 /// with a one-line label as a plain button's, its ▾ under the label (Insert's block gallery is
 /// 38 px).
 fn large_menu_width(ui: &Ui, label: &str) -> f32 {
-    if large_label(ui, label, true).rows.len() > 1 { large_split_width(ui, label) } else { large_width(ui, label) }
+    if large_label_wraps(ui, label) { large_split_width(ui, label) } else { large_width(ui, label) }
 }
 
 /// Paint a small face (16 px icon, optionally the label right of it) into `rect`.

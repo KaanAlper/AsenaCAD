@@ -8,11 +8,6 @@
 //! named-object-dictionary entries `ASENACAD_CONSTRAINTS`, `ASENACAD_LAYERSTATES`,
 //! `ASENACAD_PLOTSTYLES`, `ASENACAD_ANNOTATION`, `ASENACAD_HANDSEED` and
 //! `ASENACAD_MLEADERSTYLE` (XRECORDs). Other readers keep or ignore them.
-//!
-//! Drawings saved before the rename (and by CADCraft, which AsenaCAD is a fork of) carry the
-//! same data under `CADCRAFT` and `CADCRAFT_*`. Reading accepts those names when the new one is
-//! absent and treats them as AsenaCAD's own (never kept as another application's data); saving
-//! writes only the new names.
 
 use std::collections::HashMap;
 
@@ -25,8 +20,6 @@ use serde_json::Value;
 
 /// Registered application name of AsenaCAD's extended data.
 pub(crate) const APP: &str = "ASENACAD";
-/// The application name drawings saved before the rename use for the same data (read only).
-pub(crate) const LEGACY_APP: &str = "CADCRAFT";
 /// Named-object-dictionary key of the constraint XRECORD.
 pub(crate) const CONSTRAINTS_KEY: &str = "ASENACAD_CONSTRAINTS";
 /// Named-object-dictionary key of the saved layer states XRECORD.
@@ -337,38 +330,6 @@ pub(crate) fn xdata<'a>(tags: &'a [Tag], app: &str) -> &'a [Tag] {
     rest.get(..end).unwrap_or(&[])
 }
 
-/// AsenaCAD's own xdata of a record: the [`APP`] run, else (a drawing saved before the rename)
-/// the [`LEGACY_APP`] run.
-pub(crate) fn own_xdata(tags: &[Tag]) -> &[Tag] {
-    let x = xdata(tags, APP);
-    if x.is_empty() { xdata(tags, LEGACY_APP) } else { x }
-}
-
-/// The name a drawing saved before the rename uses for one of AsenaCAD's own names
-/// (`ASENACAD_HANDSEED` → `CADCRAFT_HANDSEED`); `None` for other names.
-pub(crate) fn legacy_name(name: &str) -> Option<String> {
-    name.strip_prefix(APP).map(|rest| format!("{LEGACY_APP}{rest}"))
-}
-
-/// The current name of a legacy (pre-rename) name of AsenaCAD's (`CADCRAFT_LAYISO` →
-/// `ASENACAD_LAYISO`, case-insensitive); `None` for other names.
-pub(crate) fn renamed(name: &str) -> Option<String> {
-    name.get(..LEGACY_APP.len()).filter(|p| p.eq_ignore_ascii_case(LEGACY_APP))?;
-    name.get(LEGACY_APP.len()..).map(|rest| format!("{APP}{rest}"))
-}
-
-/// Whether an application name or dictionary key is AsenaCAD's own: it starts with [`APP`] or
-/// [`LEGACY_APP`] (case-insensitive).
-pub(crate) fn is_own_name(name: &str) -> bool {
-    [APP, LEGACY_APP].iter().any(|p| name.get(..p.len()).is_some_and(|h| h.eq_ignore_ascii_case(p)))
-}
-
-/// Whether a dictionary key names the XRECORD `key` (one of the `*_KEY` constants) under its
-/// current or its legacy name.
-pub(crate) fn is_key(name: &str, key: &str) -> bool {
-    name == key || legacy_name(key).is_some_and(|l| name == l)
-}
-
 /// The groups inside `1000 <name>` `1002 {` … `1002 }` of an xdata run (nested braces kept).
 pub(crate) fn xdata_list<'a>(x: &'a [Tag], name: &str) -> &'a [Tag] {
     let Some(at) = x.iter().position(|t| t.code == 1000 && t.str().trim().eq_ignore_ascii_case(name)) else { return &[] };
@@ -420,7 +381,7 @@ pub(crate) fn read_newer_dimvars(
     blocks: &HashMap<String, String>,
     ltypes: &HashMap<String, String>,
 ) -> serde_json::Map<String, Value> {
-    read_dimvar_list(xdata_list(own_xdata(tags), DIMVARS_LIST), styles, blocks, ltypes)
+    read_dimvar_list(xdata_list(xdata(tags, APP), DIMVARS_LIST), styles, blocks, ltypes)
 }
 
 /// `1070 <code>` / value pairs of dimension variables.
@@ -454,7 +415,7 @@ pub(crate) const PAPER_VIEW: &str = "PAPERVIEW";
 /// xdata, where the writer puts it. Later strings are layer names (VPFROZEN, VPCOLORS), so a layer
 /// called PAPERVIEW does not count.
 pub(crate) fn is_paper_view(tags: &[Tag]) -> bool {
-    own_xdata(tags).iter().find(|t| t.code == 1000).is_some_and(|t| t.str().trim().eq_ignore_ascii_case(PAPER_VIEW))
+    xdata(tags, APP).iter().find(|t| t.code == 1000).is_some_and(|t| t.str().trim().eq_ignore_ascii_case(PAPER_VIEW))
 }
 
 /// Snap kinds in AsenaCAD's ASSOC xdata.
@@ -534,7 +495,7 @@ pub(crate) fn marks_xdata(m: &asenacad_doc::DimMarks) -> Vec<Tag> {
 /// The marks written by [`marks_xdata`] (no oblique angle); empty for other writers. Damaged
 /// items are skipped.
 pub(crate) fn read_marks(tags: &[Tag]) -> asenacad_doc::DimMarks {
-    let list = xdata_list(own_xdata(tags), "MARKS");
+    let list = xdata_list(xdata(tags, APP), "MARKS");
     let list = list.get(..list.len().min(MAX_XDATA_ITEMS)).unwrap_or(&[]);
     let mut m = asenacad_doc::DimMarks::default();
     let num = |i: usize, code: i32| list.get(i).filter(|t| t.code == code).map(Tag::f64).filter(|x| x.is_finite());
@@ -572,7 +533,7 @@ pub(crate) fn read_marks(tags: &[Tag]) -> asenacad_doc::DimMarks {
 
 /// The arc centre written by [`arclen_xdata`]; None for other dimensions and other writers.
 pub(crate) fn read_arclen(tags: &[Tag]) -> Option<asenacad_geom::Vec3> {
-    let list = xdata_list(own_xdata(tags), "ARCLEN");
+    let list = xdata_list(xdata(tags, APP), "ARCLEN");
     let g = |c: i32| list.iter().find(|t| t.code == c).map(Tag::f64).filter(|v| v.is_finite());
     Some(asenacad_geom::Vec3::new(g(1010)?, g(1020)?, g(1030).unwrap_or(0.0)))
 }
@@ -587,7 +548,7 @@ pub(crate) fn frozen_xdata(layers: &[String]) -> Vec<Tag> {
 
 /// The frozen layer names written by [`frozen_xdata`]; empty for files from other writers.
 pub(crate) fn read_frozen(tags: &[Tag]) -> Vec<String> {
-    let list = xdata_list(own_xdata(tags), "VPFROZEN");
+    let list = xdata_list(xdata(tags, APP), "VPFROZEN");
     list.iter().take(MAX_XDATA_ITEMS).filter(|t| t.code == 1000).map(Tag::str).collect()
 }
 
@@ -605,7 +566,7 @@ pub(crate) fn layer_colors_xdata(colors: &[(String, Color)]) -> Vec<Tag> {
 
 /// The overrides written by [`layer_colors_xdata`]; empty for files from other writers, bad pairs are skipped.
 pub(crate) fn read_layer_colors(tags: &[Tag]) -> Vec<(String, Color)> {
-    let list = xdata_list(own_xdata(tags), "VPCOLORS");
+    let list = xdata_list(xdata(tags, APP), "VPCOLORS");
     let names: Vec<String> = list.iter().take(MAX_XDATA_ITEMS * 2).filter(|t| t.code == 1000).map(Tag::str).collect();
     names.as_chunks::<2>().0.iter().filter_map(|[name, color]| Some((name.clone(), Color::parse(color)?))).collect()
 }
@@ -614,7 +575,7 @@ const POINT_NAMES: [&str; 5] = ["defpt", "p13", "p14", "p15", "p16"];
 
 /// Associativity links from AsenaCAD xdata; malformed links are skipped.
 pub(crate) fn read_assoc(tags: &[Tag]) -> Vec<DimAssoc> {
-    let list = xdata_list(own_xdata(tags), "ASSOC");
+    let list = xdata_list(xdata(tags, APP), "ASSOC");
     let mut out = Vec::new();
     let mut i = 0;
     while let Some(t) = list.get(i) {
@@ -727,7 +688,7 @@ pub(crate) fn array_xdata(p: &ArrayParams) -> Vec<Tag> {
 /// The array parameters written by [`array_xdata`]; `None` for other records and for
 /// parameters that are not usable.
 pub(crate) fn read_array(tags: &[Tag]) -> Option<ArrayParams> {
-    let list = xdata_list(own_xdata(tags), "ARRAY");
+    let list = xdata_list(xdata(tags, APP), "ARRAY");
     let mut text = String::new();
     for t in list.iter().take(MAX_XDATA_ITEMS).filter(|t| t.code == 1000) {
         text.push_str(&t.str());

@@ -11,11 +11,14 @@ as a cherry-pick.
    differently. Skip Mac-UI work that conflicts with our Windows ribbon layout.
 3. `git cherry-pick -x <sha>` (keeps "cherry picked from commit …" in the message). Resolve
    conflicts in favour of our behaviour; the renamed product strings (`CADCraft` → `AsenaCAD`),
-   app paths (`apps/cadcraft*` → `apps/asenacad*`) and crate names are the usual conflicts.
-   Upstream code names the crates `cadcraft-*` / `cadcraft_*` and uses `CADCRAFT_*` env vars and
-   drawing names; rename them while resolving, e.g. on the files the pick touched:
-   `git diff --name-only HEAD | xargs sed -i -e 's/cadcraft\([-_]\)/asenacad\1/g' -e 's/CADCRAFT_/ASENACAD_/g'`.
-   Never rename a `CADCRAFT*` legacy constant or test (they keep old drawings readable), and keep
-   `storytold/cadcraft` URLs.
+   app paths, crate names, environment variables and drawing names are the usual conflicts.
+   Upstream's crate and path prefix is its project name in lower case, its environment
+   variables and drawing names use it in upper case; rename them to `asenacad`/`ASENACAD` while
+   resolving, e.g. on the files the pick touched:
+   ```sh
+   up=$(echo CADCraft | tr A-Z a-z); UP=$(echo CADCraft | tr a-z A-Z)
+   git diff --name-only HEAD | xargs sed -i -e "s/${up}\([-_]\)/asenacad\1/g" -e "s/${UP}/ASENACAD/g"
+   ```
+   AsenaCAD reads only its own `ASENACAD` names; keep `storytold/cadcraft` URLs.
 4. `cargo xtask ci`, then commit. Update "Upstream reviewed" in `plan/STATUS.md`.
 5. Review upstream once a month at most; never block feature work on it.

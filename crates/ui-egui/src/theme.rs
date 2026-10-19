@@ -408,6 +408,8 @@ pub fn install_fonts(ctx: &egui::Context, language: &str) {
             &[
                 "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
                 "/usr/share/fonts/TTF/DejaVuSans.ttf",
+                // FreeBSD's `dejavu` package.
+                "/usr/local/share/fonts/dejavu/DejaVuSans.ttf",
                 "/usr/share/fonts/noto/NotoSans-Regular.ttf",
                 "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
             ]
