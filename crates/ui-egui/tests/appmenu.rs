@@ -127,6 +127,24 @@ fn first_level_entries_are_in_autocads_order_with_two_separators() {
     }
 }
 
+/// Resting on an entry's name shows its sub-pane, as resting on its ▸ does; an entry without
+/// one (Save) brings the documents back.
+#[test]
+fn hovering_an_entrys_name_shows_its_sub_pane() {
+    let mut h = harness();
+    open_menu(&mut h);
+    assert!(!has_item(&h, "Drawing Template"));
+    item(&h, "Save As").hover();
+    h.run_steps(3);
+    assert!(has_item(&h, "Drawing Template"), "Save As's sub-pane is shown");
+    item(&h, "Import").hover();
+    h.run_steps(3);
+    assert!(has_item(&h, "Other Formats") && !has_item(&h, "Drawing Template"), "Import's sub-pane replaces it");
+    item(&h, "Save").hover();
+    h.run_steps(3);
+    assert!(!has_item(&h, "Other Formats") && has_item(&h, "By Ordered List"), "Save brings the documents back");
+}
+
 /// Each sub-pane's entries in order, with whether each is enabled (on an empty model-space
 /// drawing).
 #[test]

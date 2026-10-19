@@ -21,7 +21,6 @@ mod view;
 use egui::{Color32, Shape, Stroke};
 
 use super::{Icon, Pen};
-use crate::theme::Tokens;
 
 const YELLOW: Color32 = Color32::from_rgb(0xf5, 0xd0, 0x3b);
 const GOLD: Color32 = Color32::from_rgb(0xe6, 0xb4, 0x3c);
@@ -100,9 +99,9 @@ impl Pen<'_> {
     fn thick(&self, x1: f32, y1: f32, x2: f32, y2: f32, w: f32, c: Color32) {
         self.p.line_segment([self.at(x1, y1), self.at(x2, y2)], Stroke::new(w * self.sc(), c));
     }
-    /// Blank out a rectangle with the panel colour, so a badge sits in front of the motif.
+    /// Blank out a rectangle with the surface colour, so a badge sits in front of the motif.
     fn knock(&self, x: f32, y: f32, w: f32, h: f32) {
-        self.fill_rect(x, y, w, h, Tokens::get().panel);
+        self.fill_rect(x, y, w, h, self.bg);
     }
     /// A small cross marking a point object.
     fn mark(&self, x: f32, y: f32) {
@@ -184,7 +183,7 @@ impl Pen<'_> {
     fn pointer(&self, x: f32, y: f32) {
         let pts = [(0.0, 0.0), (0.0, 9.0), (2.2, 7.0), (4.0, 10.3), (5.4, 9.6), (3.6, 6.4), (6.6, 6.2)];
         let v: Vec<P> = pts.iter().map(|(px, py)| (x + px, y + py)).collect();
-        self.fill_poly(&[v[0], v[1], v[2], v[6]], Tokens::get().panel);
+        self.fill_poly(&[v[0], v[1], v[2], v[6]], self.bg);
         self.poly(&v, true, self.base);
     }
 }

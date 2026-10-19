@@ -231,9 +231,10 @@ fn body(app: &mut CadApp, ui: &mut Ui, rect: Rect, st: &mut State, act: &mut Opt
     let back = ui.interact(rect, ui.id().with("appmenu-back"), Sense::click());
     back.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Other, true, crate::tl!("Application Menu")));
     let p = ui.painter();
-    p.rect_filled(rect, 0.0, t.panel);
-    let pane = Rect::from_min_max(o + vec2(144.0, 39.0), o + vec2(423.0, 527.0));
-    p.rect_filled(pane, 0.0, t.ribbon_bg);
+    // A darker frame (the search row and the first-level column) around the lighter pane.
+    p.rect_filled(rect, 0.0, frame_bg());
+    let pane = Rect::from_min_max(o + vec2(144.0, 39.0), o + vec2(423.0, SIZE.y - 1.0));
+    p.rect_filled(pane, 0.0, t.panel);
     p.rect_stroke(rect, 0.0, Stroke::new(1.0, t.border), egui::StrokeKind::Inside);
     search_box(ui, o, st, act);
     radio(ui, o + vec2(91.0, 45.0), Icon::RecentDocs, crate::tl!("Recent Documents"), st, Docs::Recent);
@@ -346,18 +347,36 @@ fn radio(ui: &mut Ui, at: Pos2, icon: Icon, label: &str, st: &mut State, docs: D
 
 /// The y offset (from the menu's top) of each first-level row, separators skipped.
 pub(crate) fn row_tops() -> Vec<f32> {
+    layout().0
+}
+
+/// The y offset (from the menu's top) of each separator's line.
+fn separator_mids() -> Vec<f32> {
+    layout().1
+}
+
+/// Row tops and separator lines of the first-level list, in one walk down it.
+fn layout() -> (Vec<f32>, Vec<f32>) {
     let mut y = LIST.y;
-    let mut out = Vec::new();
+    let (mut tops, mut mids) = (Vec::new(), Vec::new());
     for row in model::ROWS {
         match row {
             model::Row::Top(_) => {
-                out.push(y);
+                tops.push(y);
                 y += ROW_H;
             }
-            model::Row::Separator => y += SEPARATOR_H,
+            model::Row::Separator => {
+                mids.push(y + SEPARATOR_H / 2.0);
+                y += SEPARATOR_H;
+            }
         }
     }
-    out
+    (tops, mids)
+}
+
+/// The frame's colour: the status bar's, a shade darker than the pane.
+fn frame_bg() -> Color32 {
+    Tokens::get().chrome_dark
 }
 
 /// Whether first-level entry `top`'s default command may run now.
@@ -368,13 +387,9 @@ fn default_ready(app: &CadApp, ctx: &egui::Context, top: &Top) -> bool {
 /// The first-level list: separators, then each entry's main part and ▸.
 fn first_level(app: &CadApp, ui: &mut Ui, o: Pos2, st: &mut State, act: &mut Option<Act>) {
     let t = Tokens::get();
-    let mut y = LIST.y;
-    for row in model::ROWS {
-        if let model::Row::Separator = row {
-            let mid = o.y + y + SEPARATOR_H / 2.0;
-            ui.painter().line_segment([pos2(o.x + LIST.x + 10.0, mid), pos2(o.x + LIST.x + LIST_W, mid)], Stroke::new(1.0, t.border));
-            y += SEPARATOR_H;
-        }
+    for mid in separator_mids() {
+        let y = o.y + mid;
+        ui.painter().line_segment([pos2(o.x + LIST.x + 10.0, y), pos2(o.x + LIST.x + LIST_W, y)], Stroke::new(1.0, t.cmd_border));
     }
     for (i, (top, y)) in model::tops().zip(row_tops()).enumerate() {
         let row = Rect::from_min_size(o + vec2(LIST.x, y), vec2(LIST_W, ROW_H));
@@ -389,7 +404,8 @@ fn first_level(app: &CadApp, ui: &mut Ui, o: Pos2, st: &mut State, act: &mut Opt
         }
         let main = hit(ui, main_rect, ui.id().with(("appmenu-top", i)), default_ready(app, ui.ctx(), top), focused);
         let dim = !main.enabled();
-        icons::paint(ui.painter(), Rect::from_min_size(row.min + vec2(11.0, 6.0), Vec2::splat(32.0)), top.icon, dim);
+        let surface = if shown || main.hovered() { t.ribbon_hover } else { frame_bg() };
+        icons::paint_large(ui.painter(), Rect::from_min_size(row.min + vec2(11.0, 6.0), Vec2::splat(32.0)), top.icon, dim, surface);
         let label = crate::i18n::t(top.label);
         let width = main_w - 50.0;
         let f = font(ui);
@@ -404,14 +420,21 @@ fn first_level(app: &CadApp, ui: &mut Ui, o: Pos2, st: &mut State, act: &mut Opt
                 None => open_sub(st, i),
             }
         }
-        if main.hovered() && !has_sub && !main.is_pointer_button_down_on() {
-            // An entry without a sub-pane brings the documents back.
-            st.show_pane(Pane::Documents);
+        if main.hovered() && !main.is_pointer_button_down_on() && st.query.trim().is_empty() {
+            // Resting on an entry's name shows its sub-pane, as on its ▸; an entry without one
+            // brings the documents back.
+            if !has_sub {
+                st.show_pane(Pane::Documents);
+            } else if !matches!(st.pane, Pane::Nested(n, _) if n == i) {
+                st.show_pane(Pane::Sub(i));
+            }
         }
         if has_sub {
             let arrow_rect = Rect::from_min_size(pos2(main_rect.right(), main_rect.top()), vec2(ARROW_W, ROW_H - 2.0));
             let arrow = hit(ui, arrow_rect, ui.id().with(("appmenu-arrow", i)), true, false);
-            icons::paint(ui.painter(), Rect::from_center_size(arrow_rect.center(), Vec2::splat(9.0)), Icon::ChevronRight, false);
+            let c = arrow_rect.center();
+            let tip = [pos2(c.x - 2.0, c.y - 4.0), pos2(c.x + 2.5, c.y), pos2(c.x - 2.0, c.y + 4.0)];
+            ui.painter().add(egui::Shape::convex_polygon(tip.to_vec(), t.icon, Stroke::NONE));
             let name = crate::tf!("{label} submenu", label = label);
             icons::describe_control(ui, &arrow, &name, None, false);
             if arrow.hovered() || arrow.clicked() {
@@ -440,7 +463,7 @@ fn bottom_buttons(ui: &mut Ui, o: Pos2, act: &mut Option<Act>) {
         let w = ui.fonts_mut(|fonts| fonts.layout_no_wrap(label.to_string(), f, t.text).size().x) + 12.0;
         let rect = Rect::from_min_size(pos2(right - w, o.y + BOTTOM_Y), vec2(w, BOTTOM_H));
         let resp = hit(ui, rect, ui.id().with(("appmenu-bottom", label)), true, false);
-        ui.painter().rect_stroke(rect, 2.0, Stroke::new(1.0, t.border), egui::StrokeKind::Inside);
+        ui.painter().rect_stroke(rect, 2.0, Stroke::new(1.0, t.cmd_border), egui::StrokeKind::Inside);
         ui.painter().text(rect.center(), egui::Align2::CENTER_CENTER, label, font(ui), t.text);
         icons::describe_control(ui, &resp, label, None, false);
         if resp.clicked() {
@@ -554,5 +577,18 @@ fn keyboard(app: &CadApp, ctx: &egui::Context, st: &mut State, act: &mut Option<
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn separators_sit_after_export_and_after_drawing_utilities() {
+        let tops = row_tops();
+        // Export is the 6th entry, Drawing Utilities the 9th: each line is in the gap below it.
+        assert_eq!(separator_mids(), [tops[5] + ROW_H + SEPARATOR_H / 2.0, tops[8] + ROW_H + SEPARATOR_H / 2.0]);
+        assert_eq!(tops[6] - tops[5], ROW_H + SEPARATOR_H);
     }
 }

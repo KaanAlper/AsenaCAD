@@ -513,16 +513,26 @@ pub enum Icon {
 /// Paint `icon` into `rect` (square), with `dim` for disabled.
 pub fn paint(p: &Painter, rect: Rect, icon: Icon, dim: bool) {
     let t = Tokens::get();
+    paint_pen(&colored(p, rect, (rect.width() / 16.0).clamp(1.0, 1.6), dim, t.panel), icon);
+}
+
+/// Paint `icon` large on surface `bg` (the Application menu's 32 px entries): lines a third
+/// heavier than [`paint`]'s, so a big icon doesn't look like a thin sketch.
+pub fn paint_large(p: &Painter, rect: Rect, icon: Icon, dim: bool, bg: Color32) {
+    paint_pen(&colored(p, rect, (rect.width() / 14.0).clamp(1.0, 2.4), dim, bg), icon);
+}
+
+/// The multicolour pen, faded when `dim`.
+fn colored(p: &Painter, rect: Rect, w: f32, dim: bool, bg: Color32) -> Pen<'_> {
+    let t = Tokens::get();
     let alpha = |c: Color32| if dim { c.gamma_multiply(0.4) } else { c };
-    let pen =
-        Pen { p, r: rect, w: (rect.width() / 16.0).clamp(1.0, 1.6), base: alpha(t.icon), acc: alpha(t.icon_accent), pt: alpha(t.icon_point), dim };
-    paint_pen(&pen, icon);
+    Pen { p, r: rect, w, base: alpha(t.icon), acc: alpha(t.icon_accent), pt: alpha(t.icon_point), dim, bg }
 }
 
 /// Paint `icon` into `rect` in one colour (every stroke, accent and point), for glyphs on a
 /// surface of their own such as the navigation bar's light strip.
 pub fn paint_tinted(p: &Painter, rect: Rect, icon: Icon, color: Color32) {
-    let pen = Pen { p, r: rect, w: (rect.width() / 16.0).clamp(1.0, 1.6), base: color, acc: color, pt: color, dim: false };
+    let pen = Pen { p, r: rect, w: (rect.width() / 16.0).clamp(1.0, 1.6), base: color, acc: color, pt: color, dim: false, bg: Tokens::get().panel };
     paint_pen(&pen, icon);
 }
 

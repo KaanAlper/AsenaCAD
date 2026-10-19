@@ -11,6 +11,8 @@ pub(super) struct Pen<'a> {
     pub(super) acc: Color32,
     pub(super) pt: Color32,
     pub(super) dim: bool,
+    /// The surface under the icon, which `knock` paints to blank out part of a motif.
+    pub(super) bg: Color32,
 }
 
 impl Pen<'_> {
