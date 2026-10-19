@@ -164,7 +164,7 @@ fn hostile_handle_seed_does_not_panic() {
     d.add(&Space::Model, Common::default(), EntityKind::Dimension(linear([0.0, 0.0], [10.0, 0.0], [5.0, 3.0]))).unwrap();
     let p = pairs(&asenacad_io::write_dxf(&d));
     // The dictionary entry names the XRECORD; its group 1 holds the seed.
-    let key = p.iter().position(|(c, v)| *c == 3 && v == "CADCRAFT_HANDSEED").unwrap();
+    let key = p.iter().position(|(c, v)| *c == 3 && v == "ASENACAD_HANDSEED").unwrap();
     let h = p[key + 1].1.clone();
     let rec = p.iter().position(|(c, v)| *c == 5 && *v == h).unwrap();
     let at = rec + p[rec..].iter().position(|(c, _)| *c == 1).unwrap();

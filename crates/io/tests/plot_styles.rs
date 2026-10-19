@@ -74,7 +74,7 @@ fn named_plot_styles_round_trip_through_the_plot_style_dictionary() {
     d.plot_style_tables.push(pens.clone());
     let text = write_dxf(&d);
     assert!(text.contains("ACAD_PLOTSTYLENAME") && text.contains("ACDBPLACEHOLDER") && text.contains("ACDBDICTIONARYWDFLT"));
-    assert!(text.contains("CADCRAFT_PLOTSTYLES"));
+    assert!(text.contains("ASENACAD_PLOTSTYLES"));
     let back = read_dxf(text.as_bytes()).unwrap();
     assert_eq!(back.layer("Walls").unwrap().plot_style, "Black");
     assert_eq!(back.layer("0").unwrap().plot_style, "Normal");
@@ -83,7 +83,7 @@ fn named_plot_styles_round_trip_through_the_plot_style_dictionary() {
     assert_eq!(back.plot_style_tables, vec![pens]);
     // A drawing without named styles still writes the dictionary with Normal, and no tables.
     let plain = write_dxf(&Drawing::new_metric());
-    assert!(plain.contains("ACAD_PLOTSTYLENAME") && !plain.contains("CADCRAFT_PLOTSTYLES"));
+    assert!(plain.contains("ACAD_PLOTSTYLENAME") && !plain.contains("ASENACAD_PLOTSTYLES"));
 }
 
 #[test]

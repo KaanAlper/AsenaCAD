@@ -21,9 +21,9 @@ use asenacad_doc::{Drawing, Entity, EntityKind, Handle, RawTag, Unknown};
 use asenacad_dxf::{Section, Tag};
 
 /// Named object dictionary entries AsenaCAD writes itself from its model (plus every key that
-/// starts with `CADCRAFT`): they are read into the model, not kept raw. A change that starts
-/// modelling another entry adds it here. (An entry the writer writes is also never written
-/// twice: the kept one is left out.)
+/// starts with `ASENACAD`, or `CADCRAFT` in drawings saved before the rename): they are read
+/// into the model, not kept raw. A change that starts modelling another entry adds it here. (An
+/// entry the writer writes is also never written twice: the kept one is left out.)
 const MODELLED_KEYS: &[&str] = &[
     "ACAD_GROUP",
     "ACAD_LAYOUT",
@@ -41,9 +41,10 @@ const MODELLED_KEYS: &[&str] = &[
 /// changes that model them; stale copies would contradict the drawing).
 const MODELLED_XDICT_KEYS: &[&str] = &["ACAD_DIMASSOC", "ACAD_SORTENTS", "ACDBCONTEXTDATAMANAGER"];
 
-/// Applications whose xdata AsenaCAD reads and writes itself. `ACAD` holds dimension overrides
-/// (DSTYLE) on dimensions and dimension styles; elsewhere it is kept.
-const OWN_APPS: &[&str] = &["CADCRAFT", "ACADANNOTATIVE", "ACCMTRANSPARENCY", "ACAECLAYERSTANDARD"];
+/// Applications whose xdata AsenaCAD reads and writes itself (`CADCRAFT` is AsenaCAD's own in
+/// drawings saved before the rename). `ACAD` holds dimension overrides (DSTYLE) on dimensions
+/// and dimension styles; elsewhere it is kept.
+const OWN_APPS: &[&str] = &[crate::dxf_ext::APP, crate::dxf_ext::LEGACY_APP, "ACADANNOTATIVE", "ACCMTRANSPARENCY", "ACAECLAYERSTANDARD"];
 
 /// Most objects kept from one file.
 const MAX_OBJECTS: usize = 1_000_000;
@@ -178,7 +179,7 @@ fn is_dictionary(kind: &str) -> bool {
 
 fn modelled_key(key: &str) -> bool {
     let k = up(key);
-    k.starts_with("CADCRAFT") || MODELLED_KEYS.contains(&k.as_str())
+    crate::dxf_ext::is_own_name(&k) || MODELLED_KEYS.contains(&k.as_str())
 }
 
 /// The roles of a file's handles (see [`ForeignKey`]): table records and tables by type and

@@ -62,7 +62,7 @@ fn manage_devices() {
 
     // Save as text, load under another name, delete.
     let text = s.execute("plottermanager", &json!({"action": "save", "name": "Office Raster"})).unwrap()["text"].as_str().unwrap().to_string();
-    assert!(text.contains("\"cadcraftPlotter\": 1"), "{text}");
+    assert!(text.contains("\"asenacadPlotter\": 1"), "{text}");
     s.execute("plottermanager", &json!({"action": "load", "text": text, "name": "Office Copy"})).unwrap();
     let copy = s.execute("plottermanager", &json!({"action": "get", "name": "Office Copy"})).unwrap();
     assert_eq!(copy["output"], "png");

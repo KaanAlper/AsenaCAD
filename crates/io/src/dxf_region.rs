@@ -1,6 +1,6 @@
 //! Regions in DXF. A REGION entity holds ACIS solid-modeler data, which no public specification
 //! describes in enough detail, so AsenaCAD writes a region as closed LWPOLYLINEs, one per loop,
-//! which every DXF reader understands. The first carries `CADCRAFT` xdata naming it a region
+//! which every DXF reader understands. The first carries `ASENACAD` xdata naming it a region
 //! and holding its other loops (`1000 REGION`); the others are marked `1000 REGIONPART`. Reading
 //! our own file builds the region back from the first and drops the others. Foreign REGIONs are
 //! kept as unknown objects.

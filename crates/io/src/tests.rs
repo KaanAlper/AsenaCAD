@@ -1074,7 +1074,7 @@ fn dimension_associativity_roundtrips() {
     let mut skipping = false;
     for t in tags {
         if t.code == 1001 {
-            skipping = t.str() == "CADCRAFT";
+            skipping = t.str() == crate::dxf_ext::APP;
         } else if t.code < 1000 {
             skipping = false;
         }
@@ -1155,7 +1155,7 @@ fn constraints_and_parameters_roundtrip_exactly() {
     let mut d = Drawing::new_imperial();
     let (constraints, parametric) = parametric_sample(&mut d);
     let text = write_dxf(&d);
-    assert!(text.contains("CADCRAFT_CONSTRAINTS") && text.contains("XRECORD"));
+    assert!(text.contains("ASENACAD_CONSTRAINTS") && text.contains("XRECORD"));
     assert!(!text.contains("\\U+0041"), "no DXF unicode escape may appear in the payload");
     let back = read_dxf(text.as_bytes()).unwrap();
     assert_eq!(back.constraints, constraints);
@@ -1164,7 +1164,7 @@ fn constraints_and_parameters_roundtrip_exactly() {
     assert_eq!(again.constraints, constraints);
     assert_eq!(again.parametric, parametric);
     // Drawings without parametric data carry no record.
-    assert!(!write_dxf(&Drawing::new_imperial()).contains("CADCRAFT_CONSTRAINTS"));
+    assert!(!write_dxf(&Drawing::new_imperial()).contains("ASENACAD_CONSTRAINTS"));
 }
 
 #[test]
@@ -1185,7 +1185,7 @@ fn layer_states_roundtrip_next_to_constraints() {
     }
     d.layer_states.push(LayerState { name: "All off".into(), layers: off });
     let text = write_dxf(&d);
-    assert!(text.contains("CADCRAFT_LAYERSTATES"));
+    assert!(text.contains("ASENACAD_LAYERSTATES"));
     let back = read_dxf(text.as_bytes()).unwrap();
     assert_eq!(back.layer_states, d.layer_states);
     assert_eq!(back.constraints, constraints);
@@ -1193,7 +1193,7 @@ fn layer_states_roundtrip_next_to_constraints() {
     #[cfg(not(target_arch = "wasm32"))]
     assert_eq!(read(&write(&d, "x.dwg").unwrap(), "x.dwg").unwrap().layer_states, d.layer_states);
     // Drawings without saved layer states carry no record.
-    assert!(!write_dxf(&Drawing::new_imperial()).contains("CADCRAFT_LAYERSTATES"));
+    assert!(!write_dxf(&Drawing::new_imperial()).contains("ASENACAD_LAYERSTATES"));
 }
 
 fn table_sample() -> Table {
@@ -1443,7 +1443,8 @@ fn hostile_extension_data_never_panics() {
         obj("0\nDICTIONARY\n3\nS\n350\nE\n0\nTABLESTYLE\n5\nE\n40\n-7\n140\n0\n280\n9\n"),
         "0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nDIMSTYLE\n0\nDIMSTYLE\n2\nX\n271\n99999\n340\nBAD\n342\n0\n343\nFFFF\n176\n70000\n278\n0\n278\n1114112\n77\n-1\n1001\nAcadAnnotative\n1000\nAnnotativeData\n1002\n{\n0\nSTYLE\n2\nS\n70\n-1\n71\n99999\n0\nENDTAB\n0\nENDSEC\n0\nEOF\n".to_string(),
     ];
-    for t in &cases {
+    // AsenaCAD's data under its current and its legacy (pre-rename) names.
+    for t in cases.iter().flat_map(|c| [c.replace("CADCRAFT", crate::dxf_ext::APP), c.to_string()]) {
         if let Ok(d) = read(t.as_bytes(), "x.dxf") {
             let _ = asenacad_render::build(&d, &Space::Model, &asenacad_render::Options::default());
             let _ = write_dxf(&d);
@@ -1796,7 +1797,7 @@ fn hostile_gradient_groups_never_panic() {
         hatch("1001\nCADCRAFT\n1000\nGRADIENT\n1000\nX\n1040\n1e308\n1070\n-1\n1000\nnot a colour\n1000\n999,999,999\n"),
         hatch("1001\nCADCRAFT\n1000\nGRADIENT\n1040\nnan\n1001\nACAD\n1000\n\n"),
     ];
-    for t in &cases {
+    for t in cases.iter().flat_map(|c| [c.replace("CADCRAFT", crate::dxf_ext::APP), c.to_string()]) {
         let d = read(t.as_bytes(), "x.dxf").unwrap();
         for h in hatches(&d) {
             if let Some(g) = &h.gradient {
@@ -2372,4 +2373,178 @@ fn foreign_table_reads_cell_text_height_and_keeps_style_scale() {
     let t2 = first(&back, |k| if let EntityKind::Table(x) = k { Some(x.clone()) } else { None });
     assert_eq!(t2.cells[0][0].text_height, Some(150.0));
     assert_eq!(t2.cells[0][1].text_height, None);
+}
+
+/// A drawing with every kind of AsenaCAD's own data: xdata (dimension associativity and
+/// overrides, tables, dimension style variables) and each XRECORD (constraints, layer states,
+/// plot style tables, annotative scaling, the handle seed, the current multileader style).
+fn own_data_sample() -> Drawing {
+    let mut d = extension_sample();
+    d.layer_states.push(LayerState { name: "Plot".into(), layers: d.layers.clone() });
+    let pens = PlotStyleTable::named("pens.stb", "ours", vec![PlotStyle { name: "Thick".into(), lineweight: Some(70), ..PlotStyle::default() }]);
+    d.plot_style_tables.push(pens);
+    d.scales.push(AnnoScale::new("Site plan", 1.0, 250.0));
+    d.header.set_str("CANNOSCALE", "1:50");
+    let anno = Common { anno_scales: vec![AnnoScale::new("1:50", 1.0, 50.0), AnnoScale::new("Site plan", 1.0, 250.0)], ..Default::default() };
+    d.add(&Space::Model, anno, EntityKind::Line(Line { a: Vec3::new(0.0, 50.0, 0.0), b: Vec3::new(5.0, 50.0, 0.0) })).unwrap();
+    d.mleader_styles.push(MLeaderStyle { name: "Callout".into(), ..Default::default() });
+    d.header.set_str("CMLEADERSTYLE", "Callout");
+    d
+}
+
+/// `text` with every group value that is `from` or starts with `from_` renamed to `to`.
+fn rename_own(text: &str, from: &str, to: &str) -> String {
+    let prefix = format!("{from}_");
+    text.split_inclusive('\n')
+        .map(|line| {
+            let value = line.trim_end_matches(['\r', '\n']);
+            if value == from || value.starts_with(&prefix) { line.replacen(from, to, 1) } else { line.to_string() }
+        })
+        .collect()
+}
+
+/// The DXF a drawing saved before the rename has: the same data under `CADCRAFT` (xdata
+/// application) and `CADCRAFT_*` (XRECORD keys).
+fn as_legacy(text: &str) -> String {
+    rename_own(text, "ASENACAD", "CADCRAFT")
+}
+
+/// The (code, value) pairs of a DXF text.
+fn pairs(text: &str) -> Vec<(String, String)> {
+    let lines: Vec<&str> = text.lines().map(str::trim).collect();
+    lines.chunks(2).filter_map(|c| Some((c.first()?.to_string(), c.get(1)?.to_string()))).collect()
+}
+
+/// How often group `code` has `value`.
+fn count(text: &str, code: &str, value: &str) -> usize {
+    pairs(text).iter().filter(|(c, v)| c == code && v == value).count()
+}
+
+/// `text` with header variables (`$NAME`, group 1 value) added at the end of its HEADER.
+fn with_header_vars(text: &str, vars: &[(&str, &str)]) -> String {
+    let mut p = pairs(text);
+    let end = p.iter().position(|(c, v)| c == "0" && v == "ENDSEC").unwrap();
+    let extra = vars.iter().flat_map(|(n, v)| [("9".to_string(), format!("${n}")), ("1".to_string(), v.to_string())]);
+    p.splice(end..end, extra);
+    p.iter().map(|(c, v)| format!("{c}\n{v}\n")).collect()
+}
+
+const OWN_KEYS: [&str; 6] =
+    ["ASENACAD_CONSTRAINTS", "ASENACAD_LAYERSTATES", "ASENACAD_PLOTSTYLES", "ASENACAD_ANNOTATION", "ASENACAD_HANDSEED", "ASENACAD_MLEADERSTYLE"];
+
+#[test]
+fn a_drawing_saved_before_the_rename_reads_as_before_and_saves_only_the_new_names() {
+    let text = write_dxf(&own_data_sample());
+    for key in OWN_KEYS {
+        assert_eq!(count(&text, "3", key), 1, "the sample writes {key}");
+    }
+    assert!(count(&text, "1001", "ASENACAD") > 3, "the sample writes AsenaCAD xdata");
+    assert!(!text.contains("CADCRAFT"));
+    let legacy = as_legacy(&text);
+    for key in OWN_KEYS {
+        assert_eq!((count(&legacy, "3", key), count(&legacy, "3", &key.replace("ASENACAD", "CADCRAFT"))), (0, 1), "{key}");
+    }
+    assert_eq!(count(&legacy, "1001", "CADCRAFT"), count(&text, "1001", "ASENACAD"));
+    assert!(!legacy.contains("ASENACAD"));
+    // Read exactly as the same drawing saved with the new names: nothing is lost, and the
+    // legacy data is AsenaCAD's own, not another application's data kept raw.
+    let new = read_dxf(text.as_bytes()).unwrap();
+    let old = read_dxf(legacy.as_bytes()).unwrap();
+    assert_eq!(old, new);
+    assert!(old.foreign.is_empty(), "{:?}", old.foreign);
+    assert!(old.skipped_records.is_empty(), "{:?}", old.skipped_records);
+    assert!(!old.constraints.is_empty() && !old.layer_states.is_empty() && !old.plot_style_tables.is_empty());
+    assert_eq!(old.header.str("CMLEADERSTYLE", ""), "Callout");
+    assert_eq!(old.header.str("CANNOSCALE", ""), "1:50");
+    // Saved again, it writes only the new names, once each, and no legacy APPID.
+    let again = write_dxf(&old);
+    assert_eq!(again, write_dxf(&new));
+    assert!(!again.contains("CADCRAFT"), "no legacy name is written");
+    for key in OWN_KEYS {
+        assert_eq!(count(&again, "3", key), 1, "{key} once in the named object dictionary");
+    }
+}
+
+#[test]
+fn legacy_header_variables_read_under_the_new_names() {
+    let mut d = Drawing::new_metric();
+    d.layers.push(Layer::new("Walls"));
+    let layers = serde_json::to_string(&d.layers).unwrap();
+    let text = write_dxf(&d);
+    let legacy = with_header_vars(&text, &[("CADCRAFT_LAYISO", &layers), ("CADCRAFT_LAYERP", &layers)]);
+    let r = read_dxf(legacy.as_bytes()).unwrap();
+    assert_eq!(r.header.str("ASENACAD_LAYISO", ""), layers);
+    assert_eq!(r.header.str("ASENACAD_LAYERP", ""), layers);
+    assert!(r.header.vars.keys().all(|k| !k.starts_with("CADCRAFT")), "{:?}", r.header.vars.keys());
+    assert!(!write_dxf(&r).contains("CADCRAFT"));
+    // A file with both names keeps the current one.
+    let both = with_header_vars(&text, &[("CADCRAFT_LAYISO", &layers), ("ASENACAD_LAYISO", "[]")]);
+    let r = read_dxf(both.as_bytes()).unwrap();
+    assert_eq!(r.header.str("ASENACAD_LAYISO", ""), "[]");
+    assert!(r.header.get("CADCRAFT_LAYISO").is_none());
+}
+
+#[test]
+fn current_names_win_over_legacy_ones() {
+    let mut d = Drawing::new_metric();
+    d.layer_states.push(LayerState { name: "Old".into(), layers: d.layers.clone() });
+    let legacy = as_legacy(&write_dxf(&d));
+    // The same file with a second, current record next to the legacy one.
+    let mut p = pairs(&legacy);
+    let key = p.iter().position(|(c, v)| c == "3" && v == "CADCRAFT_LAYERSTATES").unwrap();
+    let handle = p[key + 1].1.clone();
+    let rec = p.iter().position(|(c, v)| c == "5" && *v == handle).unwrap();
+    let rec_start = rec - 1;
+    let rec_end = rec + p[rec..].iter().position(|(c, _)| c == "0").unwrap();
+    let mut copy: Vec<(String, String)> = p[rec_start..rec_end].to_vec();
+    copy[1].1 = "FFFF0".into();
+    for (_, v) in &mut copy {
+        *v = v.replace("\"Old\"", "\"New\"");
+    }
+    p.splice(rec_end..rec_end, copy);
+    p.splice(key..key, [("3".to_string(), "ASENACAD_LAYERSTATES".to_string()), ("350".to_string(), "FFFF0".to_string())]);
+    let merged: String = p.iter().map(|(c, v)| format!("{c}\n{v}\n")).collect();
+    let r = read_dxf(merged.as_bytes()).unwrap();
+    assert_eq!(r.layer_states.iter().map(|s| s.name.as_str()).collect::<Vec<_>>(), ["New"]);
+    let again = write_dxf(&r);
+    assert!(!again.contains("CADCRAFT"), "the legacy record is not kept");
+    assert_eq!(count(&again, "3", "ASENACAD_LAYERSTATES"), 1);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn a_dwg_saved_before_the_rename_reads_as_before() {
+    let d = own_data_sample();
+    let version = crate::save_version(&d).max(asenacad_dxf::Version::R2004);
+    let bridge = crate::dxf_write::dwg_bridge(&d, version);
+    assert_eq!(count(&bridge, "3", "ASENACAD_CONSTRAINTS"), 1);
+    let new = read(&asenacad_dwg::dxf_to_dwg_as(bridge.as_bytes(), version.code()).unwrap(), "x.dwg").unwrap();
+    let legacy = asenacad_dwg::dxf_to_dwg_as(as_legacy(&bridge).as_bytes(), version.code()).unwrap();
+    let old = read(&legacy, "x.dwg").unwrap();
+    assert_eq!(old.constraints, d.constraints);
+    assert_eq!((&old.constraints, &old.parametric), (&new.constraints, &new.parametric));
+    assert_eq!(old.layer_states, new.layer_states);
+    assert_eq!(old.plot_style_tables, new.plot_style_tables);
+    assert_eq!(old.header.str("CMLEADERSTYLE", ""), new.header.str("CMLEADERSTYLE", ""));
+    let dims = |d: &Drawing| {
+        d.model.iter().filter_map(|e| if let EntityKind::Dimension(x) = &e.kind { Some(x.assoc.clone()) } else { None }).collect::<Vec<_>>()
+    };
+    assert_eq!(dims(&old), dims(&new));
+    assert_eq!(dims(&old), dims(&d), "associativity xdata read");
+    assert!(dims(&old).iter().any(|a| !a.is_empty()));
+    assert!(old.foreign.is_empty(), "{:?}", old.foreign);
+    let again = write(&old, "x.dxf").unwrap();
+    assert!(!String::from_utf8_lossy(&again).contains("CADCRAFT"));
+}
+
+#[test]
+fn the_committed_sample_drawing_with_legacy_names_reads_as_with_the_new_ones() {
+    let legacy = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/apartment.dxf")).unwrap();
+    assert!(count(&legacy, "1001", "CADCRAFT") > 0, "the example is a pre-rename file");
+    let renamed = rename_own(&legacy, "CADCRAFT", "ASENACAD");
+    let old = read_dxf(legacy.as_bytes()).unwrap();
+    assert_eq!(old, read_dxf(renamed.as_bytes()).unwrap());
+    assert!(old.foreign.is_empty(), "{:?}", old.foreign);
+    let again = write_dxf(&old);
+    assert!(!again.contains("CADCRAFT") && count(&again, "1001", "ASENACAD") > 0);
 }

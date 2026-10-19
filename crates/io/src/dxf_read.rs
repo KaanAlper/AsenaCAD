@@ -587,7 +587,7 @@ fn acad_table(tags: &[Tag]) -> Table {
     }
     flat.resize(rows * cols, TableCell::default());
     let cells: Vec<Vec<TableCell>> = if cols == 0 { vec![Vec::new(); rows] } else { flat.chunks(cols).map(<[TableCell]>::to_vec).collect() };
-    let x = crate::dxf_ext::xdata(tags, crate::dxf_ext::APP);
+    let x = crate::dxf_ext::own_xdata(tags);
     let ours = x.iter().position(|t| t.code == 1000 && t.str() == "TABLE").map(|p| x.get(p + 1..).unwrap_or(&[]));
     let (title, header, text_height, style) = match ours {
         Some(o) => {
@@ -879,10 +879,10 @@ fn pattern_definition(tags: &[Tag], scale: f64, angle: f64, origin: Vec2) -> Vec
         .collect()
 }
 
-/// Hatch origin and background colour from `CADCRAFT` xdata: `1000 HATCH`, `1011` origin,
+/// Hatch origin and background colour from `ASENACAD` xdata: `1000 HATCH`, `1011` origin,
 /// `1000` background colour name (empty for none). Defaults when absent.
 fn hatch_xdata(tags: &[Tag]) -> (Vec2, Option<Color>) {
-    let x = crate::dxf_ext::xdata(tags, crate::dxf_ext::APP);
+    let x = crate::dxf_ext::own_xdata(tags);
     let Some(at) = x.windows(2).position(|w| matches!(w, [m, o] if m.code == 1000 && m.str() == "HATCH" && o.code == 1011)) else {
         return (Vec2::ZERO, None);
     };
@@ -903,9 +903,9 @@ fn gradient(tags: &[Tag]) -> Option<Gradient> {
     if tags.iter().any(|x| x.code == 450) { native_gradient(tags) } else { xdata_gradient(tags) }
 }
 
-/// `CADCRAFT` xdata: `1000 GRADIENT`, then name, 1040 angle, 1070 centered, colour 1 and 2 names.
+/// `ASENACAD` xdata: `1000 GRADIENT`, then name, 1040 angle, 1070 centered, colour 1 and 2 names.
 fn xdata_gradient(tags: &[Tag]) -> Option<Gradient> {
-    let x = crate::dxf_ext::xdata(tags, crate::dxf_ext::APP);
+    let x = crate::dxf_ext::own_xdata(tags);
     let at = x.iter().position(|t| t.code == 1000 && t.str() == "GRADIENT")?;
     let o = x.get(at + 1..).unwrap_or(&[]);
     let d = default_gradient();
@@ -1068,7 +1068,7 @@ fn entity_extras(kind: &str, tags: &[Tag], h: Handle, k: &mut EntityKind, rx: &m
             if let Some(b) = t.s(2) {
                 rx.table_blocks.insert(b.to_ascii_uppercase());
             }
-            let ours = crate::dxf_ext::xdata(tags, crate::dxf_ext::APP).iter().any(|t| t.code == 1000 && t.str() == "TABLE");
+            let ours = crate::dxf_ext::own_xdata(tags).iter().any(|t| t.code == 1000 && t.str() == "TABLE");
             if !ours {
                 rx.table_style_fix.push((h, t.s(342).map(|sh| sh.trim().to_ascii_uppercase()).unwrap_or_default()));
             }
@@ -1348,6 +1348,14 @@ fn header(tags: &[Tag], d: &mut Drawing) {
             i += 1;
         }
     }
+    // AsenaCAD's own variables under their legacy names (`$CADCRAFT_LAYISO`, saved before the
+    // rename) are kept under the current names, unless the file has those too.
+    let legacy: Vec<String> = d.header.vars.keys().filter(|k| crate::dxf_ext::renamed(k).is_some()).cloned().collect();
+    for old in legacy {
+        if let (Some(v), Some(new)) = (d.header.vars.remove(&old), crate::dxf_ext::renamed(&old)) {
+            d.header.vars.entry(new).or_insert(v);
+        }
+    }
 }
 
 /// True when a style record carries `AcadAnnotative` xdata with the annotative flag set.
@@ -1356,7 +1364,7 @@ fn annotative(tags: &[Tag]) -> bool {
     list.iter().filter(|t| t.code == 1070).nth(1).is_some_and(|t| t.i64() != 0)
 }
 
-/// A text style's font: AsenaCAD's own font name from `CADCRAFT` xdata (`1000 FONT`, name)
+/// A text style's font: AsenaCAD's own font name from `ASENACAD` xdata (`1000 FONT`, name)
 /// while the font file is still the `txt` written for other readers; the TrueType family of the
 /// style's `ACAD` xdata (`1000` typeface) when it has no font file (how AutoCAD stores TrueType
 /// styles); otherwise the file.
@@ -1367,7 +1375,7 @@ fn style_font(tags: &[Tag], file: String) -> String {
     {
         return face;
     }
-    let x = crate::dxf_ext::xdata(tags, crate::dxf_ext::APP);
+    let x = crate::dxf_ext::own_xdata(tags);
     let own = x.windows(2).find_map(|w| match w {
         [m, n] if m.code == 1000 && m.str() == "FONT" && n.code == 1000 => Some(n.str()),
         _ => None,
@@ -1521,7 +1529,7 @@ fn tables(tags: &[Tag], d: &mut Drawing, rx: &mut Rx) {
                 if !(center.x.is_finite() && center.y.is_finite()) {
                     continue;
                 }
-                let x = crate::dxf_ext::xdata(&tg, crate::dxf_ext::APP);
+                let x = crate::dxf_ext::own_xdata(&tg);
                 let field = |key: &str| {
                     x.iter().position(|t| t.code == 1000 && t.str() == key).and_then(|i| x.get(i + 1)).filter(|t| t.code == 1000).map(Tag::str)
                 };
@@ -1665,7 +1673,9 @@ pub fn read(bytes: &[u8]) -> Result<Drawing> {
     // a polyface mesh) would otherwise get handles that records further on still have. A file
     // AsenaCAD wrote names its own next handle, above which its rebuilt records are numbered
     // (#495), so it is left to that.
-    let ours = secs.iter().any(|s| s.name == "OBJECTS" && s.tags.iter().any(|t| t.code == 3 && t.str() == crate::dxf_ext::HANDSEED_KEY));
+    let ours = secs
+        .iter()
+        .any(|s| s.name == "OBJECTS" && s.tags.iter().any(|t| t.code == 3 && crate::dxf_ext::is_key(&t.str(), crate::dxf_ext::HANDSEED_KEY)));
     for t in secs.iter().filter(|_| !ours).flat_map(|s| s.tags.iter()).filter(|t| t.code == 5 || t.code == 105) {
         if let Some(h) = Handle::parse_hex(t.str().trim()) {
             d.bump_handseed(h);
@@ -1984,8 +1994,11 @@ impl Objects {
     }
 
     /// The text of the AsenaCAD XRECORD stored under `key` in a dictionary (its 1/3 strings).
+    /// The text of AsenaCAD's XRECORD `key`, or of its legacy name in a drawing saved before
+    /// the rename when the current one is absent.
     fn xrecord_text(&self, key: &str) -> Option<String> {
-        let h = self.names.iter().find(|(_, n)| n.as_str() == key).map(|(h, _)| h)?;
+        let find = |k: &str| self.names.iter().find(|(_, n)| n.as_str() == k).map(|(h, _)| h);
+        let h = find(key).or_else(|| crate::dxf_ext::legacy_name(key).and_then(|l| find(&l)))?;
         let tags = self.xrecords.get(h)?;
         let mut text = String::new();
         for t in tags.iter().filter(|t| t.code == 1 || t.code == 3) {
@@ -2235,7 +2248,7 @@ fn page_setup(t: &T) -> PageSetup {
 
 /// A layout's saved paper-space view (centre, height) from AsenaCAD xdata.
 fn layout_view(tags: &[Tag]) -> Option<(Vec2, f64)> {
-    let list = crate::dxf_ext::xdata_list(crate::dxf_ext::xdata(tags, crate::dxf_ext::APP), "PSVIEW");
+    let list = crate::dxf_ext::xdata_list(crate::dxf_ext::own_xdata(tags), "PSVIEW");
     let g = |c: i32| list.iter().find(|t| t.code == c).map(Tag::f64).filter(|v| v.is_finite());
     Some((Vec2::new(g(1010)?, g(1020)?), g(1040)?))
 }

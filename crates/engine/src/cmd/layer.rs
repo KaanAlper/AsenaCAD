@@ -274,12 +274,12 @@ fn run_current(s: &mut Session, p: &Value) -> Result<Value> {
 
 fn prev_push(d: &mut asenacad_doc::Drawing) {
     let snap = serde_json::to_string(&d.layers).unwrap_or_default();
-    d.header.set_str("CADCRAFT_LAYERP", &snap);
+    d.header.set_str("ASENACAD_LAYERP", &snap);
 }
 
 fn run_layerp(s: &mut Session, _p: &Value) -> Result<Value> {
     let d = s.doc_mut()?;
-    let snap = d.header.str("CADCRAFT_LAYERP", "");
+    let snap = d.header.str("ASENACAD_LAYERP", "");
     let layers: Vec<Layer> = serde_json::from_str(&snap).map_err(|_| bad("layerp", "No previous layer state."))?;
     d.layers = layers;
     Ok(json!({"message": "Restored previous layer states."}))
@@ -346,7 +346,7 @@ fn run_layiso(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let d = s.doc_mut()?;
     prev_push(d);
-    d.header.set_str("CADCRAFT_LAYISO", &serde_json::to_string(&d.layers).unwrap_or_default());
+    d.header.set_str("ASENACAD_LAYISO", &serde_json::to_string(&d.layers).unwrap_or_default());
     for l in &mut d.layers {
         if !keep.iter().any(|k| k.eq_ignore_ascii_case(&l.name)) {
             l.on = false;
@@ -360,7 +360,7 @@ fn run_layiso(s: &mut Session, p: &Value) -> Result<Value> {
 
 fn run_layuniso(s: &mut Session, _p: &Value) -> Result<Value> {
     let d = s.doc_mut()?;
-    let snap = d.header.str("CADCRAFT_LAYISO", "");
+    let snap = d.header.str("ASENACAD_LAYISO", "");
     let layers: Vec<Layer> = serde_json::from_str(&snap).map_err(|_| bad("layuniso", "No isolated layers."))?;
     d.layers = layers;
     ok()

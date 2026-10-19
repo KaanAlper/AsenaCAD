@@ -378,7 +378,8 @@ pub fn list(s: &Session) -> Value {
         for (k, v) in &d.header.vars {
             if matches!(k.as_str(), "ANGBASE" | "SNAPUNIT" | "GRIDUNIT") {
                 m.insert(k.clone(), get(s, k).unwrap_or(Value::Null));
-            } else if !k.starts_with("CADCRAFT_") {
+            } else if !(k.starts_with("ASENACAD_") || k.starts_with("CADCRAFT_")) {
+                // AsenaCAD's internal variables (also under their pre-rename names) aren't listed.
                 m.insert(k.clone(), serde_json::to_value(v).unwrap_or(Value::Null));
             }
         }

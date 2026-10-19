@@ -199,7 +199,7 @@ fn annotative_xdata(w: &mut W) {
     w.s(1002, "}");
 }
 
-/// Override (`ACAD` DSTYLE) and associativity (`CADCRAFT` ASSOC) xdata of a dimension.
+/// Override (`ACAD` DSTYLE) and associativity (`ASENACAD` ASSOC) xdata of a dimension.
 fn dim_xdata(w: &mut W, dm: &Dimension, cx: &Ctx) {
     let mut ov = W { t: Vec::new(), next: 0, pstyles: HashMap::new(), layers: HashMap::new(), reactors: HashMap::new() };
     let mut sah = false;
@@ -1164,7 +1164,7 @@ fn mleader_fallback(w: &mut W, d: &Drawing, e: &Entity, m: &MLeader, owner: &str
 /// A hatch's gradient fill (DXF Reference, HATCH group codes 450–470): two-colour gradient
 /// with its rotation (radians), shift (0 = centered, 1 = shifted) and per-colour 463 records
 /// carrying ACI (63) and, for true colours, the RGB value (421). Those groups belong to R2004+
-/// files, so the same gradient also travels as `CADCRAFT` xdata, which survives this R2000
+/// files, so the same gradient also travels as `ASENACAD` xdata, which survives this R2000
 /// file's conversion to DWG (where the native fields don't exist).
 fn gradient(w: &mut W, g: &Gradient) {
     w.i(450, 1);
@@ -1203,11 +1203,11 @@ fn thickness(w: &mut W, e: &Entity) {
     }
 }
 
-/// Hatch origin and background colour as `CADCRAFT` xdata: `1000 HATCH`, the origin as a
+/// Hatch origin and background colour as `ASENACAD` xdata: `1000 HATCH`, the origin as a
 /// world position (`1011`, moved with the hatch by other programs) and the background colour
 /// name (`1000`, empty for none). The DXF Reference has no HATCH groups for either: other
 /// readers get the origin through the pattern lines' base points (43/44), the background isn't
-/// carried. Appended to the gradient's `CADCRAFT` xdata when there is one.
+/// carried. Appended to the gradient's `ASENACAD` xdata when there is one.
 fn hatch_xdata(w: &mut W, h: &Hatch) {
     if h.origin == Vec2::ZERO && h.background.is_none() {
         return;
@@ -1947,7 +1947,7 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
         w.i(71, if s.backwards { 2 } else { 0 } | if s.upside_down { 4 } else { 0 });
         w.f(42, 0.2);
         // The built-in font goes out as `txt`, which every reader has; its name travels in
-        // `CADCRAFT` xdata (`1000 FONT`, name) so the style reopens with it. A legacy name of
+        // `ASENACAD` xdata (`1000 FONT`, name) so the style reopens with it. A legacy name of
         // the built-in font (a drawing saved by CADCraft) goes out as the current name.
         let builtin = asenacad_fonts::is_builtin_font(&s.font);
         w.s(3, if builtin { "txt" } else { s.font.as_str() });

@@ -38,11 +38,12 @@ files are not read; we haven't found a public specification of that format.
 
 ## Files
 
-`<name>.plotter.json`, UTF-8 JSON with a format marker:
+`<name>.plotter.json`, UTF-8 JSON with a format marker (`cadcraftPlotter` in files written before
+the rename: still read, saved with the new marker):
 
 ```json
 {
-  "cadcraftPlotter": 1,
+  "asenacadPlotter": 1,
   "name": "Office A3",
   "description": "Raster proofs",
   "output": "png",

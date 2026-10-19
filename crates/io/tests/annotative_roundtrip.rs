@@ -61,7 +61,7 @@ fn scales_of(d: &Drawing, value: &str) -> Vec<String> {
 fn annotative_scaling_round_trips() {
     let d = drawing();
     let text = write_dxf(&d);
-    assert!(text.contains("ACAD_SCALELIST") && text.contains("AcDbScale") && text.contains("CADCRAFT_ANNOTATION"));
+    assert!(text.contains("ACAD_SCALELIST") && text.contains("AcDbScale") && text.contains("ASENACAD_ANNOTATION"));
     let r = read_dxf(text.as_bytes()).unwrap();
     assert_eq!(r.scales, d.scales);
     assert_eq!(r.header.str("CANNOSCALE", ""), "1:50");
@@ -79,7 +79,7 @@ fn annotative_scaling_round_trips() {
 fn plain_drawings_write_no_annotation_record_and_keep_their_default_list() {
     let d = Drawing::new_metric();
     let text = write_dxf(&d);
-    assert!(!text.contains("CADCRAFT_ANNOTATION"));
+    assert!(!text.contains("ASENACAD_ANNOTATION"));
     let r = read_dxf(text.as_bytes()).unwrap();
     assert_eq!(r.scales, asenacad_doc::metric_scales());
     assert_eq!(read_dxf(write_dxf(&Drawing::new_imperial()).as_bytes()).unwrap().scales, asenacad_doc::imperial_scales());

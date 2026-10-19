@@ -183,8 +183,9 @@ fn cadcraft_era_font_name_reads_as_the_builtin_and_writes_the_new_name() {
     // `CADCRAFT` xdata; a style set to the old name by hand is the built-in font too.
     let mut d = Drawing::new_metric();
     d.text_styles.push(TextStyle { name: "Old".into(), font: "cadcraft stroke".into(), ..TextStyle::default() });
-    let old = write_dxf(&d).replace("AsenaCAD Stroke", "CADCraft Stroke");
-    assert!(old.contains("CADCraft Stroke"));
+    let text = write_dxf(&d).replace("AsenaCAD Stroke", "CADCraft Stroke");
+    let old = text.lines().map(|l| if l.trim() == "ASENACAD" { "CADCRAFT" } else { l }).collect::<Vec<_>>().join("\n");
+    assert!(old.contains("CADCraft Stroke") && old.lines().any(|l| l.trim() == "CADCRAFT"));
     let r = read_dxf(old.as_bytes()).expect("open the CADCraft file");
     for name in ["Standard", "Old"] {
         let font = r.text_styles.iter().find(|s| s.name == name).map(|s| s.font.clone()).unwrap_or_default();

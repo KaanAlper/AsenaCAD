@@ -88,11 +88,12 @@ prints as `Normal`. A colour-dependent table ignores the property.
 ## Table files
 
 Tables are saved in our own format: UTF-8 JSON with a format marker. Fields left at "use the
-object's" are omitted.
+object's" are omitted. Files written before the rename carry the marker `cadcraftPlotStyleTable`;
+they are still read and are saved with the new marker.
 
 ```json
 {
-  "cadcraftPlotStyleTable": 1,
+  "asenacadPlotStyleTable": 1,
   "name": "office.stb",
   "description": "Office pens",
   "kind": "named",
@@ -127,5 +128,5 @@ Binary `.ctb`/`.stb` files are not read. We haven't found a public specification
   `ACAD_PLOTSTYLENAME` is an `ACDBDICTIONARYWDFLT` whose entries name `ACDBPLACEHOLDER` objects
   (default `Normal`). Layers and objects point at them with group 390. An object without a 390
   is `ByLayer`. `ByBlock` isn't written, so it reads back as `ByLayer`.
-- Tables kept in the drawing travel in the `CADCRAFT_PLOTSTYLES` XRECORD (JSON) of the named
-  object dictionary.
+- Tables kept in the drawing travel in the `ASENACAD_PLOTSTYLES` XRECORD (JSON) of the named
+  object dictionary (`CADCRAFT_PLOTSTYLES` in drawings saved before the rename, still read).

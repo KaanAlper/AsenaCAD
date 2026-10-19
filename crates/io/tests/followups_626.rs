@@ -131,7 +131,7 @@ fn newer_dimstyle_variables_are_table_groups_from_2004() {
     let (d, st) = dim_drawing();
     let r2000 = dxf(&d, Version::R2000);
     let rec = dimstyle_record(&r2000, "Detail");
-    assert!(rec.windows(4).any(|w| w == ["1001", "CADCRAFT", "1000", "DIMVARS"]), "R2000: xdata");
+    assert!(rec.windows(4).any(|w| w == ["1001", "ASENACAD", "1000", "DIMVARS"]), "R2000: xdata");
     assert!(!rec.chunks(2).any(|p| p[0] == "345"), "R2000: no DIMLTYPE group");
     for v in [Version::R2004, Version::R2018] {
         let text = dxf(&d, v);
@@ -213,7 +213,7 @@ fn modelled_dictionaries_are_not_kept_twice() {
         assert_eq!(records(&third, kind), records(&first, kind), "{kind} after two");
     }
     let l = lines(&again);
-    for key in ["ACAD_MLINESTYLE", "ACAD_SCALELIST", "ACAD_GROUP", "ACAD_MLEADERSTYLE", "ACAD_PLOTSTYLENAME", "CADCRAFT_HANDSEED"] {
+    for key in ["ACAD_MLINESTYLE", "ACAD_SCALELIST", "ACAD_GROUP", "ACAD_MLEADERSTYLE", "ACAD_PLOTSTYLENAME", "ASENACAD_HANDSEED"] {
         assert_eq!(l.windows(2).filter(|w| *w == ["3", key]).count(), 1, "{key} once in the named object dictionary");
     }
 }
