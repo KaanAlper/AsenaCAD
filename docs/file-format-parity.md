@@ -53,7 +53,10 @@ title/header suppression.
 Everything lost in the DXF read/write paths below is also lost through DWG, plus whatever
 `acadrust`'s own DXF output omits (proxy objects, ACIS data, custom objects: not measured). User
 report #57: a 10 MB DWG failed after about two minutes; limits now stop runaway conversions
-early (#175), but the throughput problem remains. **DWG ≈ 30% read, ≈ 15% write.**
+early (#175), but the throughput problem remains. DGN line style components that no line style
+definition uses (leftovers of DGN imports, hundreds of thousands in some drawings) are left out
+on read with a note, so such files no longer exceed the DXF limit (#1482). **DWG ≈ 30% read,
+≈ 15% write.**
 
 ## DXF, version by version
 
@@ -136,6 +139,7 @@ our output in AutoCAD black-box.
 | Date | Change | Summary |
 |---|---|---|
 | 2026-10-19 | minor | AsenaCAD's own drawing data (xdata application, XRECORD keys, header snapshots) and plotter/plot style table files are read only under the `ASENACAD`/`asenacad` names AsenaCAD writes; the names CADCraft used are no longer read. The real-file corpus is a separate test-corpus repo (planned) |
+| 2026-10-17 | minor | DWG read: DGN line style components no line style definition reaches are left out before the DXF bridge, with a read note; an 83 MB site plan with 888,483 of them (1.2 GB of DXF, over the limit) now opens (#1482) |
 | 2026-10-12 | minor | PDF output: object transparency plotted as PDF alpha (`/ExtGState` `/ca` `/CA`) when the page setup's or the plot's "Plot transparency" is on; PNG plots blend it, SVG uses `opacity`; plots without it are unchanged byte for byte |
 | 2026-10-12 | minor | DXF/DWG save: the Model layout's plot settings are written as AsenaCAD plots model space, drawing extents scaled to fit (PLOTSETTINGS 74 = 1, 75 = 0), instead of plot type 5 "Layout information", which other programs' Plot dialogs can't use for model space |
 | 2026-10-12 | minor | VIEWPORT frozen layers also written and read as AutoCAD's group 341 layer handles, so third-party viewers honour per-viewport freezing in DXF (DWG converter gap noted) |
