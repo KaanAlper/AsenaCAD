@@ -268,10 +268,28 @@ pub(super) fn show(app: &mut CadApp, ui: &mut egui::Ui) {
                         }
                     });
                 }
+                // The style's values with this dimension's own overrides; editing one overrides
+                // it for the selected dimensions, as AutoCAD's Properties palette does.
+                let st = d.dim_style(&dm.style).cloned().unwrap_or_default().with_overrides(&dm.overrides);
+                if rows.group(ui, collapsed, "Lines & Arrows") {
+                    num(ui, "Arrow size", "arrowSize", len(st.arrow_size), &mut set, &mut bad, &ids);
+                }
                 if rows.group(ui, collapsed, "Text") {
+                    num(ui, "Text height", "textHeight", len(st.text_height), &mut set, &mut bad, &ids);
                     row(ui, "Text override", true, &dm.text, |ui| {
                         if let Some(s) = edit_field(ui, ui.id().with(("dimtxt", &ids)), dm.text.clone()) {
                             set = Some(json!({ "handles": ids, "textOverride": s }));
+                        }
+                    });
+                }
+                if rows.group(ui, collapsed, "Fit") {
+                    num(ui, "Dim scale overall", "dimScale", real(st.scale), &mut set, &mut bad, &ids);
+                }
+                if rows.group(ui, collapsed, "Primary Units") {
+                    let cur = st.decimals.to_string();
+                    row(ui, "Precision", true, &cur, |ui| {
+                        if let Some(n) = pick_menu(ui, &cur, (0..=8).map(|n: u8| n.to_string())).and_then(|n| n.parse::<u8>().ok()) {
+                            set = Some(json!({ "handles": ids, "precision": n }));
                         }
                     });
                 }

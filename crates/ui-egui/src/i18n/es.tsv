@@ -61,6 +61,7 @@
 	Area	Área
 	Arrange Panel	Organizar panel
 	Array	Matriz
+	Arrow size	Tamaño de flecha
 	Attach	Adjuntar
 	Attach DWG...	Adjuntar DWG...
 	Attribute	Atributo
@@ -225,6 +226,7 @@
 	Deselect All	Deseleccionar todo
 	Detach	Desenlazar
 	Diameter	Diámetro
+	Dim scale overall	Escala global de cota
 	Dim style	Estilo de cota
 	Dimension	Acotación
 	Dimension Break	Partir cota
@@ -766,6 +768,7 @@
 	Position X	Posición X
 	Position Y	Posición Y
 	Position Z	Posición Z
+	Precision	Precisión
 	Previous	Anterior
 	Previous Layer	Capa anterior
 	Primitives	Primitivas
