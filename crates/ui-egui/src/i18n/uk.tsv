@@ -1686,3 +1686,109 @@
 	Layer States Manager	Диспетчер станів шарів
 	Rename	Перейменувати
 	{filter}: {shown} layers displayed of {total} total layers	{filter}: показано шарів: {shown} із {total}
+	Application Menu	Меню програми
+	Search Commands	Пошук команд
+	Recent Documents	Останні документи
+	Open Documents	Відкриті документи
+	By Ordered List	За порядком
+	By Type	За типом
+	Icons	Значки
+	Document View	Вигляд документів
+	Exit AsenaCAD	Вийти з AsenaCAD
+	{label} submenu	Підменю «{label}»
+	Back	Назад
+	Scroll up	Прокрутити вгору
+	Scroll down	Прокрутити вниз
+	Commands	Команди
+	No commands found	Команд не знайдено
+	Not available in model space	Недоступно в просторі моделі
+	Publish	Публікація
+	Drawing	Креслення
+	Sheet Set	Підшивка
+	Drawing from AutoCAD Web & Mobile	Креслення з AutoCAD Web & Mobile
+	DGN	DGN
+	Sample Files	Файли-зразки
+	Bracket	Кронштейн
+	Drawing to AutoCAD Web & Mobile	Креслення в AutoCAD Web & Mobile
+	Drawing Template	Шаблон креслення
+	Drawing Standards	Стандарти креслення
+	Other Formats	Інші формати
+	Save Layout as a Drawing	Зберегти аркуш як креслення
+	DWG Convert	Перетворення DWG
+	3D DWF	3D DWF
+	Send to 3D Print Service	Надіслати до служби 3D-друку
+	Archive	Архів
+	eTransmit	eTransmit
+	Email	Електронна пошта
+	Share View	Поділитися видом
+	View Plot and Publish Details	Подробиці друку й публікації
+	3D Print	3D-друк
+	Manage Plotters	Керування плотерами
+	Manage Plot Styles	Керування стилями друку
+	Edit Plot Style Tables	Редагувати таблиці стилів друку
+	Drawing Properties	Властивості креслення
+	Recover	Відновити
+	Recover with Xrefs	Відновити з зовнішніми посиланнями
+	Open the Drawing Recovery Manager	Відкрити диспетчер відновлення креслень
+	Current Drawing	Поточне креслення
+	All Drawings	Усі креслення
+	Begin a new drawing or sheet set	Почати нове креслення або підшивку
+	Open drawings, sheet sets and other files	Відкрити креслення, підшивки та інші файли
+	Keep a copy under another name or format	Зберегти копію під іншою назвою чи у форматі
+	Bring other file formats into this drawing	Додати до креслення файли інших форматів
+	Write this drawing in another format	Записати креслення в іншому форматі
+	Hand the drawing on to other people	Передати креслення іншим людям
+	Send sheets to paper, a plotter or a file	Вивести аркуші на папір, плотер або у файл
+	Look after the drawing file and its settings	Обслуговування файла креслення та його параметрів
+	Close the drawings you are done with	Закрити креслення, з якими ви закінчили
+	Start a new drawing from the default template.	Почати нове креслення з типового шаблону.
+	Set up a new sheet set.	Створити нову підшивку.
+	Open AsenaCAD's sample drawing of a bracket.	Відкрити креслення-зразок AsenaCAD із кронштейном.
+	Open a drawing file.	Відкрити файл креслення.
+	Open a drawing kept in Autodesk's online storage.	Відкрити креслення з онлайн-сховища Autodesk.
+	Open a sheet set file.	Відкрити файл підшивки.
+	Bring a MicroStation DGN file in as a new drawing.	Відкрити файл MicroStation DGN як нове креслення.
+	Drawings to look at and try things on.	Креслення, щоб роздивитися й випробувати.
+	Save a copy as a DWG drawing.	Зберегти копію як креслення DWG.
+	Save a copy in Autodesk's online storage.	Зберегти копію в онлайн-сховищі Autodesk.
+	Keep this drawing's settings as a DWT to start others from.	Зберегти параметри креслення як DWT, щоб починати з нього інші.
+	Save the drawing's styles and layers as a standards file (DWS).	Зберегти стилі й шари креслення як файл стандартів (DWS).
+	Save a copy as DWG or DXF, in the version you pick.	Зберегти копію як DWG або DXF у вибраній версії.
+	Make a new drawing from what the current layout shows.	Створити нове креслення з того, що показує поточний аркуш.
+	Convert drawing files to another DWG version.	Перетворити файли креслень на іншу версію DWG.
+	Bring the geometry and text of a PDF page into the drawing.	Додати геометрію й текст сторінки PDF до креслення.
+	Bring a MicroStation DGN file into the drawing.	Додати файл MicroStation DGN до креслення.
+	Bring in a file of another format.	Додати файл іншого формату.
+	Write the drawing as a DWF file.	Записати креслення у файл DWF.
+	Write the drawing as a DWFx file.	Записати креслення у файл DWFx.
+	Write the 3D model as a 3D DWF file.	Записати 3D-модель у файл 3D DWF.
+	Write the drawing as a PDF file.	Записати креслення у файл PDF.
+	Write the drawing as a MicroStation DGN file.	Записати креслення у файл MicroStation DGN.
+	Write the drawing in another file format.	Записати креслення в іншому форматі файла.
+	Send the model to an online 3D printing service.	Надіслати модель до онлайн-служби 3D-друку.
+	Pack a sheet set and its files into one archive.	Запакувати підшивку та її файли в один архів.
+	Gather the drawing and the files it uses into a package.	Зібрати креслення й пов’язані файли в пакет.
+	Attach the drawing to a new e-mail message.	Вкласти креслення в новий лист.
+	Publish views of the drawing for others to see online.	Опублікувати види креслення для перегляду онлайн.
+	Hand out a link to the drawing through Autodesk's cloud.	Поділитися посиланням на креслення через хмару Autodesk.
+	Put the current layout on paper or into a plot file.	Вивести поточний аркуш на папір або у файл друку.
+	Plot several sheets in one go.	Надрукувати кілька аркушів за раз.
+	Check on screen how the sheet will come out.	Перевірити на екрані, яким вийде аркуш.
+	List what the last plots and publishes did.	Показати, що зробили останні друк і публікації.
+	Choose the paper, plotter and scale each layout plots with.	Вибрати папір, плотер і масштаб друку кожного аркуша.
+	Prepare the model for a 3D printer.	Підготувати модель для 3D-принтера.
+	Add and set up plotters.	Додати й налаштувати плотери.
+	Add and change plot style tables.	Додати й змінити таблиці стилів друку.
+	Open a plot style table in its editor.	Відкрити таблицю стилів друку в редакторі.
+	Fix what it can in a broken drawing, then load it.	Виправити, що можливо, у пошкодженому кресленні й завантажити його.
+	Repair a drawing and the drawings it references.	Виправити креслення та креслення, на які воно посилається.
+	Title, author, keywords and other facts about the drawing.	Назва, автор, ключові слова та інші відомості про креслення.
+	Show what differs between this drawing and another one.	Показати відмінності між цим та іншим кресленням.
+	Choose how lengths and angles are shown.	Вибрати, як показувати довжини й кути.
+	Check the drawing for errors and fix them.	Перевірити креслення на помилки й виправити їх.
+	List the drawing's limits, extents and settings.	Показати межі, габарити й параметри креслення.
+	Remove unused layers, blocks and styles.	Видалити невикористані шари, блоки та стилі.
+	Repair damaged drawing files.	Виправити пошкоджені файли креслень.
+	List the backup and autosave copies to recover from.	Показати резервні й автозбережені копії для відновлення.
+	Close this drawing.	Закрити це креслення.
+	Close every open drawing.	Закрити всі відкриті креслення.

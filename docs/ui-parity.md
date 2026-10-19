@@ -1,6 +1,6 @@
 # UI parity
 
-> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-19 · **Change:** minor (Windows baseline: the Properties palette and the Layer Properties Manager) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0); the Windows baseline section: Autodesk AutoCAD 2026 (Windows)
+> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-19 · **Change:** minor (Windows baseline: the Application menu, the Properties palette and the Layer Properties Manager) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0); the Windows baseline section: Autodesk AutoCAD 2026 (Windows)
 
 How AsenaCAD's interaction compares with AutoCAD's: point entry, object snaps, tracking, dynamic
 input, grips, selection, the command line, chrome and navigation. A drafter's speed in AutoCAD
@@ -15,11 +15,11 @@ ignored; there are no context menus. Remaining: **≈ 110–170 Opus 5.5 hours**
 
 ## Windows AutoCAD 2026 baseline
 
-> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** minor (M1d: the Properties palette and the Layer Properties Manager) · **Target:** Autodesk AutoCAD 2026 (Windows)
+> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** minor (the Application menu; M1d: the Properties palette and the Layer Properties Manager) · **Target:** Autodesk AutoCAD 2026 (Windows)
 
 The rest of this doc still measures against AutoCAD 2027 for Mac; this section is the first part
 re-measured against the Windows target (milestone M1a: title row, ribbon, document tabs and the
-shell around the drawing; M1b: the other ribbon tabs).
+shell around the drawing; M1b: the other ribbon tabs; M1c: the Application menu).
 
 **How this was measured.** AutoCAD 2026 for Windows was observed on the reference PC on
 2026-10-18: an empty Drawing1 in the default workspace with the Home tab open, in a 1906 × 1026
@@ -44,11 +44,11 @@ screenshot of each opened on an empty drawing at 1906 × 1026 and a UI Automatio
 (control names, order and rectangles; the property grid itself is drawn by AutoCAD and isn't in
 the read, so its rows come from the screenshot), against AsenaCAD rendered by the headless harness.
 
-**Measured: 71 rows, 16 ✅, 54 ◐, 1 ✗.**
+**Measured: 74 rows, 16 ✅, 58 ◐, 0 ✗.**
 
 | Element | Status | AutoCAD 2026 (Windows) | AsenaCAD and the differences |
 |---|---|---|---|
-| Title row: Application button | ◐ | Leftmost in the window's own caption row, with a ▾; opens the Application menu | Same place and ▾, but it opens the File menu's entries until the Application menu lands (row below). On Windows and Linux the title row sits under the system's title bar, so the window buttons are the system's, not on the title row's right end; on macOS it starts after the traffic lights |
+| Title row: Application button | ◐ | Leftmost in the window's own caption row, with a ▾; opens the Application menu | Same place and ▾; it opens the Application menu (rows below). On Windows and Linux the title row sits under the system's title bar, so the window buttons are the system's, not on the title row's right end; on macOS it starts after the traffic lights |
 | Title row: Quick Access Toolbar | ✅ | New, Open, Save, Save As, two Web & Mobile buttons, Plot, Undo and Redo split buttons, Customize ▾, Share; the Customize list has 17 commands, More Commands, Show Menu Bar, Show Below the Ribbon | Same buttons in the same order without the Autodesk online ones ([below](#intentionally-absent-autodesk-online-services)); same Customize list and options |
 | Title row: title | ✅ | Product and drawing name, centred | "AsenaCAD  <drawing>.dwg", centred; it slides or is cut short to stay between the toolbar and the InfoCenter |
 | Title row: InfoCenter | ✅ | Hide-search ▸, search box, Search, Sign In ▾, App Store, Stay Connected ▾, Help split | Hide-search ▸, search box with the same placeholder, Search, Help split; the online items are left out on purpose. Search starts a command whose name or alias is typed, else opens our Command Reference (AutoCAD searches its online help) |
@@ -116,7 +116,10 @@ the read, so its rows come from the screenshot), against AsenaCAD rendered by th
 | Layout bar | ✅ | Layouts menu ≡, Model, Layout1, Layout2, + at the status bar's left | Same controls in the same order; in a narrow window ≡, Model, the current layout and + always stay |
 | Status bar | ◐ | 16 default items from MODEL to Clean Screen, then Customization ≡; some with ▾ menus (snap type, polar angles, isoplanes, object snaps, annotation scale, workspaces) | Same items, order and ▾ menus; in a narrow window the items that don't fit go from the left end. Workspace Switching, Annotation Monitor and Clean Screen are disabled until their commands exist |
 | Status bar Customization | ◐ | A check list of 29 items with separators, 14 hidden by default | Same list, order, separators and defaults, saved with the workspace. 3D Object Snap, Dynamic UCS, Selection Filtering, Gizmo, Lock UI and Graphics Performance are disabled |
-| Application menu | ✗ | Search box; New, Open, Save, Save As, Import, Export, Publish, Print, Drawing Utilities, Close with sub-panes; Recent and Open Documents; Options and Exit | Not built (M1c): the Application button lists the File menu's entries |
+| Application menu | ◐ | A 424 × 568 popup under the Application button: search box at the top right; New, Open, Save, Save As, Import, Export, (separator) Publish, Print, Drawing Utilities, (separator) Close as 44 px rows with 32 px icons and a 20 px ▸; Options and Exit at the bottom right; Escape closes it | Same size and place, entries, order, separators and ▸ parts. A main part runs its command (NEW, OPEN, QSAVE, SAVEAS, IMPORT, EXPORT, PLOT, CLOSE); Publish and Drawing Utilities show their sub-pane (what AutoCAD runs there was not observed). Options opens the Options dialog; Exit AsenaCAD closes through the app's close path, so unsaved drawings ask first. Escape or a click outside closes it; Up/Down, Right, Left and Enter walk it. Not observed in AutoCAD: its keyboard handling and the arrows' accessible names (ours: "New submenu", …) |
+| Application menu sub-panes | ◐ | Hovering or clicking a ▸ covers the right pane with a framed list: a heading line, then entries with a 32 px icon, a bold label and a short description; Save Layout as a Drawing is disabled in model space; a ▾ scrolls a long list; Sample Files and Recover have lists of their own | Same entries in the same order with our own headings and descriptions; online entries and entries whose command AsenaCAD lacks are disabled (lists below). Save As ▸ Drawing and Drawing Template open the save dialog with .dwg and .dwt suggested; Sample Files lists our sample drawing; Recover's own list (Recover, Recover with Xrefs) was not observed and is our reading; ours goes back with a ◂ |
+| Application menu documents | ◐ | Recent Documents by default, two radio icons switch to Open Documents; an "ordered by" drop-down ("By Ordered List") and a view drop-down; Open Documents keeps only the view button | Same controls in the same places. Recent Documents come from the recent-files list, ordered By Ordered List (most recent first) or By Type; the view is a list or larger icons. AutoCAD's other orderings and views were not observed and are not built; documents can't be pinned. Clicking a document opens it, or switches to it when it is open |
+| Application menu search | ◐ | "Search Commands" box with a magnifier that is disabled until text is typed; typing lists matching commands | Same box and button. Matches command names, aliases and labels and lists them over the right pane; a result, Enter or the button starts the command. AutoCAD's result layout was not observed |
 | Properties palette | ◐ | PROPERTIES (Ctrl+1) docks it at the drawing's left, about 270 wide, with a vertical title strip (Close, Auto-hide, menu; the name written upwards). Top: the object list ("No selection" or the selected types with counts) and three buttons: Toggle value of PICKADD Sysvar, Select Objects, Quick Select. Nothing selected: collapsible General (Color, Layer, Linetype, Linetype scale, Lineweight, Transparency, Thickness), 3D Visualization (Material), Plot style (Plot style, Plot style table, Plot table attached to, Plot table type), View (Center X, Y, Z, Height, Width), Misc (Annotation scale, UCS icon On, UCS icon at origin, …); read-only values greyed | Same place, width, strip, top row, groups, rows and order; the three buttons run PICKADD, SELECT and QSELECT; read-only values are greyed; with a selection, General then the object's own groups under AutoCAD's names (Geometry, Text, Pattern, Misc, Custom). Differences: our docking area keeps a tab with the palette's name above it; Auto-hide is disabled and the strip's menu has only Close; new objects' transparency, materials and model space page setups aren't modelled, so Transparency, Material and Plot style table (in model space) are greyed; the UCS icon is never drawn at the origin, so UCS icon at origin is a greyed No; Misc stops there (no UCS per viewport, UCS Name: there is no UCS yet); selected objects show fewer rows than AutoCAD (no Z coordinates, Hyperlink, Plot style, Thickness or Material rows) |
 | Layer Properties Manager | ◐ | LAYER opens it at the drawing area's top left, 650 × 350, with a vertical title strip. Top row: "Current layer: …" and a "Search for layer" box with a magnifier. Toolbar: New Property Filter, New Group Filter, Layer States Manager; New Layer, New Layer VP Frozen in All Viewports, Delete Layer, Set Current above the grid; Refresh, a greyed button and Settings at the right. Left: the Filters tree (All ▸ All Used Layers) with « and Invert. Grid: Status, Name, On, Freeze, Lock, Plot, Color, Linetype, Lineweight, Transparency, Plot Style (layouts only), New VP Freeze, Description. Status line "All: n layers displayed of m total layers" | Same place, size, strip, top row, toolbar order and positions, filter tree, Invert, column order, names and widths, and status line. The search box filters the grid (`*` and `?` work); clicks toggle On, Freeze, Lock, Plot and New VP Freeze; Color, Linetype and Lineweight open pickers; double-click renames a layer or edits its description; Status shows the current layer's check and double-click makes a layer current. New Layer, Delete Layer and Set Current run their commands; Refresh rescans which layers are used. Differences: New Property Filter, New Group Filter, New Layer VP Frozen in All Viewports and Settings are disabled (no command yet), so the tree has only All and All Used Layers; Layer States Manager opens a small list (save, restore, delete, rename) rather than AutoCAD's dialog; the greyed button between Refresh and Settings wasn't identified and its place is left empty; the second « beside Invert isn't built; Auto-hide is disabled; one row is selected at a time; columns can't be resized, moved or hidden; Transparency is edited in its cell and the colour, linetype and lineweight pickers open in place (AutoCAD opens dialogs); inside a layout viewport only VP Freeze and VP Color are added (after New VP Freeze; their place there wasn't observed) |
 
@@ -134,6 +137,15 @@ are left out of the shell rather than shown disabled:
 - **Stay Connected** (InfoCenter): links to Autodesk's online channels and feedback.
 - **Open from Web & Mobile** and **Save to Web & Mobile** (Quick Access Toolbar): drawings stored
   in Autodesk's online storage.
+
+The Application menu's online entries are such services too. Like the Collaborate tab's tools they
+stay in the menu, disabled, so the menu has AutoCAD's entries:
+
+- **Drawing from AutoCAD Web & Mobile** (Open) and **Drawing to AutoCAD Web & Mobile** (Save As):
+  drawings kept in Autodesk's online storage.
+- **Send to 3D Print Service** (Publish): sends the model to an online 3D printing service.
+- **Share View** and **Share Drawing** (Publish): views of the drawing published, and links to it
+  handed out, through Autodesk's cloud.
 
 The Collaborate tab's tools are such services too. Unlike the items above they stay in the
 ribbon, disabled, so the tab has AutoCAD's panels and buttons; only DWG Compare works:
@@ -295,6 +307,34 @@ differ.
 | `showurls` | Express Tools ▸ Web ▸ URL Options ▸ Show URLs |
 | `churls` | Express Tools ▸ Web ▸ URL Options ▸ Change URLs |
 | `repurls` | Express Tools ▸ Web ▸ URL Options ▸ Find and Replace URLs |
+
+### Application menu items without a command
+
+Application menu entries that name an AutoCAD command AsenaCAD doesn't have yet. They are shown
+disabled with "Not available yet". This list is `chrome::appmenu::model::tests::UNBUILT`; a test
+fails when the two differ. Email's and Edit Plot Style Tables' command names were not verified.
+
+| Command | Application menu entry |
+|---|---|
+| `newsheetset` | New ▸ Sheet Set |
+| `opensheetset` | Open ▸ Sheet Set |
+| `dgnimport` | Open ▸ DGN, Import ▸ DGN |
+| `saveas.dws` | Save As ▸ Drawing Standards (saving a .dws standards file) |
+| `exportlayout` | Save As ▸ Save Layout as a Drawing (disabled in model space in AutoCAD too) |
+| `dwgconvert` | Save As ▸ DWG Convert |
+| `pdfimport` | Import ▸ PDF |
+| `exportdwf` | Export ▸ DWF |
+| `exportdwfx` | Export ▸ DWFx |
+| `3ddwf` | Export ▸ 3D DWF |
+| `dgnexport` | Export ▸ DGN |
+| `archive` | Publish ▸ Archive |
+| `etransmit` | Publish ▸ eTransmit |
+| `mail` | Publish ▸ Email (sends the drawing with the system's mail program) |
+| `viewplotdetails` | Print ▸ View Plot and Publish Details |
+| `3dprint` | Print ▸ 3D Print |
+| `stylesmanager.edit` | Print ▸ Edit Plot Style Tables (Manage Plot Styles opens the Plot Style Manager) |
+| `recoverall` | Drawing Utilities ▸ Recover ▸ Recover with Xrefs |
+| `dwgprops` | Drawing Utilities ▸ Drawing Properties |
 
 ## How this was measured
 
@@ -485,7 +525,8 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
-| 2026-10-19 | minor | M1d: the Properties palette (docked at the drawing's left with a title strip, the object list and its three buttons, AutoCAD's groups and rows, read-only values greyed) and the Layer Properties Manager (a palette at the drawing area's top left with a title strip, AutoCAD's toolbar, filter tree with Invert, grid columns and status line) compared with AutoCAD's screenshots and UI Automation reads; two ◐ rows (71 rows: 16 ✅, 54 ◐, 1 ✗) |
+| 2026-10-19 | minor | M1d: the Properties palette (docked at the drawing's left with a title strip, the object list and its three buttons, AutoCAD's groups and rows, read-only values greyed) and the Layer Properties Manager (a palette at the drawing area's top left with a title strip, AutoCAD's toolbar, filter tree with Invert, grid columns and status line) compared with AutoCAD's screenshots and UI Automation reads; two ◐ rows (74 rows: 16 ✅, 58 ◐, 0 ✗) |
+| 2026-10-19 | minor | Windows baseline: the Application menu (M1c) replaces the File menu's entries under the Application button: AutoCAD's size and place, first-level entries and separators, every sub-pane with our own descriptions, Recent and Open Documents, command search, Options and Exit; the ✗ row becomes four ◐ rows (16 ✅, 56 ◐, 0 ✗); its online entries listed as intentionally absent but shown disabled; 19 entries without a command listed (checked by a test) |
 | 2026-10-19 | minor | Side-by-side pass of all nine tabs at 1906 px against AutoCAD's screenshots and UI Automation rectangles: large buttons are at least 38 px wide (not 42), large splits and two-line drop-downs leave room for the ▾ either side of the label (Circle 52 px, Measure 67, Set Location 64), items of one row stand with no gap, a large item and a small column are 1 px apart and two small columns 5 px, panels pad 3 px on the left and 2 px on the right, large items stand 4 px below the panel's top; Insert ▸ Import has AutoCAD's line after PDF Import; a large button's list has 40 px rows with large icons, as wide as its longest entry; the tab row becomes ✅ (16 ✅, 52 ◐, 1 ✗, recounted); differences left: Base's ▾, the icons and swatches in front of some lists, Find Text's search button, Annotation Text Height's ▾ |
 | 2026-10-19 | minor | Output ▸ Plot drops to ◐: View Details has no command |
 | 2026-10-19 | minor | Express Tools ▸ Web ▸ URL Options is a drop-down button with Show URLs, Change URLs and Find and Replace URLs (observed) |

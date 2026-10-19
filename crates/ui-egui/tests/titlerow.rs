@@ -253,22 +253,14 @@ fn help_opens_the_command_reference_and_its_menu_lists_the_help_menu() {
 }
 
 #[test]
-fn the_application_button_lists_the_file_menu() {
+fn the_application_button_opens_the_application_menu() {
     let mut h = harness();
     h.get_by_label("Application Button").click();
     h.run_steps(3);
-    // Menu buttons carry their shortcut in their name ("Save As... Ctrl+Shift+S").
-    let menu_item = |h: &Harness<'_, CadApp>, label: &str| {
-        let bottom = row_bottom(h);
-        h.query_all_by_label_contains(label).filter(|n| n.rect().min.y > bottom).map(|n| n.rect()).next()
-    };
-    for label in ["New Drawing...", "Open...", "Close All", "Save As...", "Batch Publish..."] {
-        assert!(menu_item(&h, label).is_some(), "{label} in the menu");
-    }
-    let bottom = row_bottom(&h);
-    h.query_all_by_label_contains("Save As...").find(|n| n.rect().min.y > bottom).unwrap().click();
-    h.run_steps(3);
-    assert!(menu_item(&h, "New Drawing...").is_none(), "the menu closes");
+    let menu = h.get_by_label("Application Menu").rect();
+    assert!(menu.top() >= row_bottom(&h) - 4.0, "under the title row: {menu:?}");
+    // The File menu's entries are no longer listed there (tests/appmenu.rs covers the menu).
+    assert!(h.query_all_by_label_contains("Batch Publish...").next().is_none());
 }
 
 /// `CRAFT_UI_VISUAL_DIR=/dir cargo test -p asenacad-ui-egui --test titlerow title_row_visuals`

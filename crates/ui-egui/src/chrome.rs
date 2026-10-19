@@ -9,6 +9,7 @@ use crate::icons::{self, Icon};
 use crate::theme::Tokens;
 
 pub mod annoscale;
+pub mod appmenu;
 pub mod layouts;
 pub mod qat;
 pub mod statusbar;

@@ -77,6 +77,7 @@ fn missing_commands_menus_tools_and_snap_labels(language: &str) -> Vec<String> {
     sources.extend(asenacad_engine::snap::mode::ALL.iter().map(|(_, name)| *name));
     sources.extend(crate::ribbon::model::labels());
     sources.extend(crate::chrome::qat::labels());
+    sources.extend(crate::chrome::appmenu::labels());
     sources.extend(crate::chrome::statusbar::labels());
     sources.extend(crate::cmdbar::labels());
     sources.extend(crate::navbar::labels());
@@ -125,6 +126,9 @@ fn missing_marked_ui_literals(language: &str) -> BTreeSet<String> {
         include_str!("../ribbon/layout.rs"),
         include_str!("../ribbon/slideout.rs"),
         include_str!("../chrome/titlerow.rs"),
+        include_str!("../chrome/appmenu/mod.rs"),
+        include_str!("../chrome/appmenu/pane.rs"),
+        include_str!("../chrome/appmenu/documents.rs"),
         include_str!("../chrome/qat.rs"),
         include_str!("../chrome/layouts.rs"),
         include_str!("../chrome/statusbar.rs"),
