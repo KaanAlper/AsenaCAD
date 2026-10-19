@@ -1,6 +1,6 @@
 # UI parity
 
-> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-19 · **Change:** minor (Windows baseline: the Application menu, the Properties palette and the Layer Properties Manager) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0); the Windows baseline section: Autodesk AutoCAD 2026 (Windows)
+> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-19 · **Change:** minor (upstream commits cherry-picked: selection cycling, status bar toggles keep the command, Command Aliases dialog, menu bar hover; Express Tools: Explode Attributes, Convert to Mtext, Move/Copy/Rotate and Break-line Symbol run their commands) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0); the Windows baseline section: Autodesk AutoCAD 2026 (Windows)
 
 How AsenaCAD's interaction compares with AutoCAD's: point entry, object snaps, tracking, dynamic
 input, grips, selection, the command line, chrome and navigation. A drafter's speed in AutoCAD
@@ -522,6 +522,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | Upstream commits cherry-picked (714111d..0b32c2e); BURST, TXT2MTXT, MOCORO and BREAKLINE leave "Ribbon items without a command" and the Express Tools rows name them; the upstream rows below keep their dates |
 | 2026-10-19 | minor | M1d: the Properties palette (docked at the drawing's left with a title strip, the object list and its three buttons, AutoCAD's groups and rows, read-only values greyed) and the Layer Properties Manager (a palette at the drawing area's top left with a title strip, AutoCAD's toolbar, filter tree with Invert, grid columns and status line) compared with AutoCAD's screenshots and UI Automation reads; two ◐ rows (74 rows: 16 ✅, 58 ◐, 0 ✗) |
 | 2026-10-19 | minor | Windows baseline: the Application menu (M1c) replaces the File menu's entries under the Application button: AutoCAD's size and place, first-level entries and separators, every sub-pane with our own descriptions, Recent and Open Documents, command search, Options and Exit; the ✗ row becomes four ◐ rows (16 ✅, 56 ◐, 0 ✗); its online entries listed as intentionally absent but shown disabled; 19 entries without a command listed (checked by a test) |
 | 2026-10-19 | minor | Side-by-side pass of all nine tabs at 1906 px against AutoCAD's screenshots and UI Automation rectangles: large buttons are at least 38 px wide (not 42), large splits and two-line drop-downs leave room for the ▾ either side of the label (Circle 52 px, Measure 67, Set Location 64), items of one row stand with no gap, a large item and a small column are 1 px apart and two small columns 5 px, panels pad 3 px on the left and 2 px on the right, large items stand 4 px below the panel's top; Insert ▸ Import has AutoCAD's line after PDF Import; a large button's list has 40 px rows with large icons, as wide as its longest entry; the tab row becomes ✅ (16 ✅, 52 ◐, 1 ✗, recounted); differences left: Base's ▾, the icons and swatches in front of some lists, Find Text's search button, Annotation Text Height's ▾ |
@@ -545,12 +546,12 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 | 2026-10-18 | minor | Navigation bar below the ViewCube (Pan, Zoom and its variants, Orbit; NAVBAR) and the drawing window's buttons at the top-right corner |
 | 2026-10-18 | minor | Command line bar as AutoCAD 2026 for Windows: grip, close (COMMANDLINEHIDE), Customize, recent commands, history toggle |
 | 2026-10-18 | minor | Status bar row as AutoCAD 2026 for Windows: layout bar (≡ · Model · layouts · +), separator band, default items in order, ▾ menus, Customization list |
-| 2026-10-13 | minor | Filled-region highlight boundaries are traversed in deterministic coordinate order, fixing dash-phase jumps on CPU hover/selection redraws and GPU highlight rebuilds; CPU dash-position, pixel and GPU mesh regressions |
+| 2026-10-18 | minor | In-window menu bar: once a menu is open, pointing at another title closes it and opens that one (#1567) |
+| 2026-10-16 | minor | ALIASEDIT opens the Command Aliases dialog (#1381) |
 | 2026-10-14 | minor | Selection cycling (#1143): the list and badge of SELECTIONCYCLING, Shift+Space through overlapping objects (#1145) |
 | 2026-10-14 | minor | Hatch Edit dialog adds boundaries from picked points or closed objects and removes selected loops |
 | 2026-10-14 | minor | Holding Shift overrides ortho while it is held (on when ORTHOMODE is off, off when it is on), as in AutoCAD |
-| 2026-10-16 | minor | ALIASEDIT opens the Command Aliases dialog (#1381) |
-| 2026-10-18 | minor | In-window menu bar: once a menu is open, pointing at another title closes it and opens that one (#1567) |
+| 2026-10-13 | minor | Filled-region highlight boundaries are traversed in deterministic coordinate order, fixing dash-phase jumps on CPU hover/selection redraws and GPU highlight rebuilds; CPU dash-position, pixel and GPU mesh regressions |
 | 2026-10-13 | minor | Options ▸ Selection adds Select using two clicks only; PICKDRAG 0 disables drag-window creation/completion, 2 preserves clicks or drag, and the preference survives restart; UI pointer and profile regressions |
 | 2026-10-12 | minor | Selected and hovered objects redrawn in the selection colour (text and arrowheads included); Options ▸ Selection laid out as AutoCAD's: Object grouping, Show grips, grip object limit, selection preview, Visual Effect Settings (selection area, preview filter) |
 | 2026-10-12 | minor | Animation effects (dialog and menu fades, smoothed wheel scrolling and ⌘/Ctrl+wheel zoom) follow the operating system's setting; View ▸ Accessibility ▸ Animation Effects chooses System, On or Off |

@@ -1,6 +1,6 @@
 # File-format parity
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-19 · **Change:** minor (AsenaCAD's own drawing data read only under its `ASENACAD` names) · **Target:** Autodesk AutoCAD 2027
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-19 · **Change:** minor (upstream DWG/DXF fixes cherry-picked: second-layout entities, dimension text positions, unitless DXF, $ANGBASE, orphaned DGN line style components) · **Target:** Autodesk AutoCAD 2027
 
 Every format AutoCAD 2027 reads or writes, with AsenaCAD's support, fidelity and tests. Work
 items are in [gaps.md](gaps.md#file-formats); the weighted score feeds
@@ -138,6 +138,7 @@ our output in AutoCAD black-box.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | Upstream DWG/DXF fixes cherry-picked (714111d..0b32c2e); their dated rows below are upstream's |
 | 2026-10-19 | minor | AsenaCAD's own drawing data (xdata application, XRECORD keys, header snapshots) and plotter/plot style table files are read only under the `ASENACAD`/`asenacad` names AsenaCAD writes; the names CADCraft used are no longer read. The real-file corpus is a separate test-corpus repo (planned) |
 | 2026-10-17 | minor | DWG read: DGN line style components no line style definition reaches are left out before the DXF bridge, with a read note; an 83 MB site plan with 888,483 of them (1.2 GB of DXF, over the limit) now opens (#1482) |
 | 2026-10-12 | minor | PDF output: object transparency plotted as PDF alpha (`/ExtGState` `/ca` `/CA`) when the page setup's or the plot's "Plot transparency" is on; PNG plots blend it, SVG uses `opacity`; plots without it are unchanged byte for byte |

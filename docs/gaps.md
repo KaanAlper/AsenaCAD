@@ -1,6 +1,6 @@
 # Where AsenaCAD falls short of AutoCAD
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-19 · **Change:** minor (U14 restated: the Application menu is built; what it leaves open; U17: Properties palette and Layer Properties Manager leftovers after M1d; S7 added: no release workflow; S1 restated; U14 restated after the side-by-side pass of all nine ribbon tabs; E3 restated; U15: the ribbon's Dimension button; U16: GRIDDISPLAY) · **Target:** Autodesk AutoCAD 2027
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-19 · **Change:** minor (upstream commits cherry-picked: E3 restated, BURST, TXT2MTXT, MOCORO and BREAKLINE exist; U12 and E5: the Command Aliases dialog; F21: MLEDIT Merged Tee) · **Target:** Autodesk AutoCAD 2027
 
 Every known shortfall, one row each, ranked within each section by user impact. This is the work
 list: agents pick from here (top of a section first), and remove or update a row in the same PR
@@ -140,7 +140,7 @@ Detail: [localization-parity.md](localization-parity.md).
 | # | Gap | Est. |
 |---|---|---|
 | E1 | AutoLISP beyond the core (#758 landed the language, `command`, entity lists, selection sets, `get…` input, APPLOAD, `(load)`, `c:` commands and `acad.lsp`/`acaddoc.lsp` at startup): Visual LISP ActiveX (`vlax-`, `vla-`), DCL dialogs, reactors, an APPLOAD dialog with a Startup Suite, UCS-aware `trans` | 30–50 |
-| E3 | Express Tools equivalents: 46 of the Express Tools tab's 49 commands don't exist yet (TXT2MTXT, BREAKLINE, BURST, SUPERHATCH, MOCORO …; [list](ui-parity.md#ribbon-items-without-a-command)); NCOPY, FLATTEN and ALIASEDIT exist | 30–50 |
+| E3 | Express Tools equivalents: 42 of the Express Tools tab's 49 commands don't exist yet (SUPERHATCH, BLOCKREPLACE, MSTRETCH …; [list](ui-parity.md#ribbon-items-without-a-command)); NCOPY, FLATTEN, ALIASEDIT, BURST, TXT2MTXT, MOCORO and BREAKLINE exist (BREAKLINE's Block option takes a block of the drawing, not a `.dwg` file; TXT2MTXT's SEttings are command-line prompts rather than a dialog, without the uniform line spacing option) | 24–40 |
 | E4 | Plug-in API (owner decision: Rust/WASM plug-ins rather than ObjectARX/.NET) | 30–50 |
 | E5 | CUI customisation (the alias editor, ALIASEDIT's Command Aliases dialog, landed, #1381; edits stay for the session) | 13–23 |
 
@@ -156,6 +156,7 @@ Detail: [localization-parity.md](localization-parity.md).
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | Upstream commits cherry-picked (714111d..0b32c2e). E3 restated: BURST, TXT2MTXT, MOCORO and BREAKLINE exist (42 of the Express Tools tab's 49 commands still missing); U12 and E5 narrowed by ALIASEDIT's Command Aliases dialog; the upstream rows below keep their dates |
 | 2026-10-19 | minor | U17 added: what the Properties palette and the Layer Properties Manager still lack after they were laid out as AutoCAD 2026's (M1d) |
 | 2026-10-19 | minor | U14 restated: the Application menu is built (M1c); its unobserved parts, missing orderings and views, and the 19 entries without a command stay listed |
 | 2026-10-19 | minor | S7 added: AsenaCAD has no release workflow of its own (packages, signing, notarization); the shared one was removed. S1 restated: pull requests get packaging lint, Nix evaluation and `cargo test` on FreeBSD and Windows ARM64, not `cargo xtask ci` |
@@ -173,26 +174,26 @@ Detail: [localization-parity.md](localization-parity.md).
 | 2026-10-19 | minor | U14 narrowed: the Insert and Annotate tabs are built (M1b), Insert is a drop-down without a block list; U15 added: the ribbon's Dimension button makes only linear dimensions |
 | 2026-10-18 | minor | U14 added: what the first side-by-side pass of the Windows shell and Home tab against AutoCAD 2026 left open (Application menu, other tabs, caption row, list swatches, Insert gallery, Cut/Copy Clip lists, history echo, Home items without a command) |
 | 2026-10-18 | minor | U12 narrowed: navigation bar, status bar Customization list and command line bar built; Workspace Switching, Annotation Monitor, Clean Screen, SteeringWheels and ShowMotion remain (shown disabled) |
+| 2026-10-17 | minor | AUDITCTL system variable and .adt log generation in AUDIT/RECOVER landed: F4 narrowed (no .adt log removed) |
 | 2026-10-16 | minor | ALIASEDIT typed or from Tools ▸ Customize opens the Command Aliases dialog (user aliases next to the built-in ones; Add, Edit, Remove; OK, Cancel, Apply), #1381: U12 and E5 narrowed |
 | 2026-10-16 | minor | MOCORO (Tools ▸ Express Tools ▸ Move/Copy/Rotate): select objects and a base point once, then Move, Copy, Rotate, Scale, Base and Undo until eXit, one undo step; JSON form `{base, ops}`: E3 narrowed |
 | 2026-10-16 | minor | MLEDIT Merged Tee (MT): the first multiline's outer elements stop at the second one's near side, which opens, and its inner elements run on to the second one's inner element: F21 narrowed, hours unchanged |
 | 2026-10-15 | minor | BURST (Tools ▸ Express Tools ▸ Explode Attributes to Text): block references explode as EXPLODE does, visible attribute values become text with the attribute's style, height, position, layer and colour, invisible attributes and the definitions go: E3 narrowed |
-| 2026-10-13 | minor | Stabilized filled-object highlight dash anchors by canonicalizing boundary traversal order; renderer, CPU pointer-frame and GPU rebuild tests cover the fix (U6) |
-| 2026-10-14 | minor | HATCHEDIT adds boundary loops from internal points or closed objects and removes selected loops, in the dialog, command line and JSON command: F13 narrowed |
 | 2026-10-15 | minor | `entities` / MCP `query_entities` accept `selected:true`, combined with existing filters and paging; selection, drawing and undo/redo stay unchanged. No parity estimate change. |
 | 2026-10-15 | minor | BREAKLINE (Tools ▸ Express Tools ▸ Break-line Symbol): one polyline between two points with a break symbol, Block/Size/Extension options, size times DIMSCALE: E3 narrowed |
 | 2026-10-15 | minor | TXT2MTXT (Tools ▸ Express Tools ▸ Convert Text to Mtext): selected TEXT, and MTEXT, combined into one MTEXT top-down or in selection order with optional word wrap, or one MTEXT per TEXT; SEttings remembered for the session: E3 narrowed |
+| 2026-10-14 | minor | HATCHEDIT adds boundary loops from internal points or closed objects and removes selected loops, in the dialog, command line and JSON command: F13 narrowed |
+| 2026-10-13 | minor | Stabilized filled-object highlight dash anchors by canonicalizing boundary traversal order; renderer, CPU pointer-frame and GPU rebuild tests cover the fix (U6) |
 | 2026-10-13 | minor | Selection window gesture preference (PICKDRAG 0/2) added to Options ▸ Selection and saved in the profile (U6), with Portuguese and Ukrainian labels |
+| 2026-10-13 | minor | STRETCH takes crossing and window polygons (CP, WP), BOX and a fence (F), typed and as JSON (`polygon`, `fence`): F1 narrowed |
+| 2026-10-13 | minor | F3: opening a dynamic block's own drawing (authoring elements in model space) offers the Block Editor on `<Current Drawing>`, as AutoCAD does |
 | 2026-10-12 | minor | Object transparency (entity, ByLayer, ByBlock) is drawn: on screen (TRANSPARENCYDISPLAY, on by default), in PNG/SVG exports, and in plots when the page setup's "Plot transparency" is on (PDF alpha, PNG blending, SVG opacity; PLOTTRANSPARENCYOVERRIDE): F14 narrowed |
 | 2026-10-12 | minor | Hatch and Gradient dialog (HATCH, GRADIENT; HPDLGMODE) and Hatch Edit dialog (HATCHEDIT, right-click, double-click a hatch): F13 narrowed to Preview, Inherit Properties and boundary add/remove in edit mode |
 | 2026-10-12 | minor | A bare system variable name typed at the command line (ORTHOMODE, GRIDMODE…) runs SETVAR on that variable, as in AutoCAD; U10 narrowed |
-| 2026-10-13 | minor | STRETCH takes crossing and window polygons (CP, WP), BOX and a fence (F), typed and as JSON (`polygon`, `fence`): F1 narrowed |
 | 2026-10-12 | minor | Property-based and hostile-input tests for geometry numerics landed (deterministic xorshift generator, no new dependency; known answers at 1e6–1e7 coordinates): S6 removed |
 | 2026-10-12 | trivial | F13: HATCHEDIT refuses a bad scale or angle before editing (#724) |
 | 2026-10-12 | minor | F3: dynamic block references show their grips (distance arrows, position squares, visibility/lookup lists, per visibility state) and drag them (`blocks.reference.grips`, `blocks.reference.grip`) |
-| 2026-10-17 | minor | AUDITCTL system variable and .adt log generation in AUDIT/RECOVER landed: F4 narrowed (no .adt log removed) |
 | 2026-10-12 | minor | Multiline attributes read, drawn and saved (they lost their text before): F17 narrowed to creating them |
-| 2026-10-13 | minor | F3: opening a dynamic block's own drawing (authoring elements in model space) offers the Block Editor on `<Current Drawing>`, as AutoCAD does |
 | 2026-10-12 | minor | Edit Block Definition dialog (block list, preview, description; a new name starts a new block): F3 text updated, hours unchanged |
 | 2026-10-12 | minor | Block Editor (BEDIT, BSAVE, BSAVEAS, BCLOSE) for static blocks landed: rows 4 (65–100 → 55–90 h) and F3 (50–75 → 40–65 h) narrowed to REFEDIT and dynamic blocks |
 | 2026-10-12 | minor | In-place MTEXT editor with formatting toolbar and indent/tab ruler landed (#532): F9 narrowed to the editor leftovers, fields and spell check |
