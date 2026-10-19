@@ -1,6 +1,6 @@
 # UI parity
 
-> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-19 · **Change:** minor (Windows baseline: the Application menu) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0); the Windows baseline section: Autodesk AutoCAD 2026 (Windows)
+> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-19 · **Change:** minor (Windows baseline: the Application menu, the Properties palette and the Layer Properties Manager) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0); the Windows baseline section: Autodesk AutoCAD 2026 (Windows)
 
 How AsenaCAD's interaction compares with AutoCAD's: point entry, object snaps, tracking, dynamic
 input, grips, selection, the command line, chrome and navigation. A drafter's speed in AutoCAD
@@ -15,7 +15,7 @@ ignored; there are no context menus. Remaining: **≈ 110–170 Opus 5.5 hours**
 
 ## Windows AutoCAD 2026 baseline
 
-> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** minor (the Application menu) · **Target:** Autodesk AutoCAD 2026 (Windows)
+> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** minor (the Application menu; M1d: the Properties palette and the Layer Properties Manager) · **Target:** Autodesk AutoCAD 2026 (Windows)
 
 The rest of this doc still measures against AutoCAD 2027 for Mac; this section is the first part
 re-measured against the Windows target (milestone M1a: title row, ribbon, document tabs and the
@@ -39,8 +39,12 @@ of AutoCAD's and panels are within 6 px of AutoCAD's widths, except Home ▸ Cli
 says why), Home ▸ Draw (8 px narrower), and View ▸ Model Viewports and Output ▸ Export to
 DWF/PDF (7 and 10 px narrower: AutoCAD leaves 4–5 px gaps there where its other panels leave
 none or 1 px). Our font is not AutoCAD's, so labels differ by a pixel or two.
+The Properties palette and the Layer Properties Manager (M1d) were compared the same way: a
+screenshot of each opened on an empty drawing at 1906 × 1026 and a UI Automation read of each
+(control names, order and rectangles; the property grid itself is drawn by AutoCAD and isn't in
+the read, so its rows come from the screenshot), against AsenaCAD rendered by the headless harness.
 
-**Measured: 72 rows, 16 ✅, 56 ◐, 0 ✗.**
+**Measured: 74 rows, 16 ✅, 58 ◐, 0 ✗.**
 
 | Element | Status | AutoCAD 2026 (Windows) | AsenaCAD and the differences |
 |---|---|---|---|
@@ -116,6 +120,8 @@ none or 1 px). Our font is not AutoCAD's, so labels differ by a pixel or two.
 | Application menu sub-panes | ◐ | Hovering or clicking a ▸ covers the right pane with a framed list: a heading line, then entries with a 32 px icon, a bold label and a short description; Save Layout as a Drawing is disabled in model space; a ▾ scrolls a long list; Sample Files and Recover have lists of their own | Same entries in the same order with our own headings and descriptions; online entries and entries whose command AsenaCAD lacks are disabled (lists below). Save As ▸ Drawing and Drawing Template open the save dialog with .dwg and .dwt suggested; Sample Files lists our sample drawing; Recover's own list (Recover, Recover with Xrefs) was not observed and is our reading; ours goes back with a ◂ |
 | Application menu documents | ◐ | Recent Documents by default, two radio icons switch to Open Documents; an "ordered by" drop-down ("By Ordered List") and a view drop-down; Open Documents keeps only the view button | Same controls in the same places. Recent Documents come from the recent-files list, ordered By Ordered List (most recent first) or By Type; the view is a list or larger icons. AutoCAD's other orderings and views were not observed and are not built; documents can't be pinned. Clicking a document opens it, or switches to it when it is open |
 | Application menu search | ◐ | "Search Commands" box with a magnifier that is disabled until text is typed; typing lists matching commands | Same box and button. Matches command names, aliases and labels and lists them over the right pane; a result, Enter or the button starts the command. AutoCAD's result layout was not observed |
+| Properties palette | ◐ | PROPERTIES (Ctrl+1) docks it at the drawing's left, about 270 wide, with a vertical title strip (Close, Auto-hide, menu; the name written upwards). Top: the object list ("No selection" or the selected types with counts) and three buttons: Toggle value of PICKADD Sysvar, Select Objects, Quick Select. Nothing selected: collapsible General (Color, Layer, Linetype, Linetype scale, Lineweight, Transparency, Thickness), 3D Visualization (Material), Plot style (Plot style, Plot style table, Plot table attached to, Plot table type), View (Center X, Y, Z, Height, Width), Misc (Annotation scale, UCS icon On, UCS icon at origin, …); read-only values greyed | Same place, width, strip, top row, groups, rows and order; the three buttons run PICKADD, SELECT and QSELECT; read-only values are greyed; with a selection, General then the object's own groups under AutoCAD's names (Geometry, Text, Pattern, Misc, Custom). Differences: our docking area keeps a tab with the palette's name above it; Auto-hide is disabled and the strip's menu has only Close; new objects' transparency, materials and model space page setups aren't modelled, so Transparency, Material and Plot style table (in model space) are greyed; the UCS icon is never drawn at the origin, so UCS icon at origin is a greyed No; Misc stops there (no UCS per viewport, UCS Name: there is no UCS yet); selected objects show fewer rows than AutoCAD (no Z coordinates, Hyperlink, Plot style, Thickness or Material rows) |
+| Layer Properties Manager | ◐ | LAYER opens it at the drawing area's top left, 650 × 350, with a vertical title strip. Top row: "Current layer: …" and a "Search for layer" box with a magnifier. Toolbar: New Property Filter, New Group Filter, Layer States Manager; New Layer, New Layer VP Frozen in All Viewports, Delete Layer, Set Current above the grid; Refresh, a greyed button and Settings at the right. Left: the Filters tree (All ▸ All Used Layers) with « and Invert. Grid: Status, Name, On, Freeze, Lock, Plot, Color, Linetype, Lineweight, Transparency, Plot Style (layouts only), New VP Freeze, Description. Status line "All: n layers displayed of m total layers" | Same place, size, strip, top row, toolbar order and positions, filter tree, Invert, column order, names and widths, and status line. The search box filters the grid (`*` and `?` work); clicks toggle On, Freeze, Lock, Plot and New VP Freeze; Color, Linetype and Lineweight open pickers; double-click renames a layer or edits its description; Status shows the current layer's check and double-click makes a layer current. New Layer, Delete Layer and Set Current run their commands; Refresh rescans which layers are used. Differences: New Property Filter, New Group Filter, New Layer VP Frozen in All Viewports and Settings are disabled (no command yet), so the tree has only All and All Used Layers; Layer States Manager opens a small list (save, restore, delete, rename) rather than AutoCAD's dialog; the greyed button between Refresh and Settings wasn't identified and its place is left empty; the second « beside Invert isn't built; Auto-hide is disabled; one row is selected at a time; columns can't be resized, moved or hidden; Transparency is edited in its cell and the colour, linetype and lineweight pickers open in place (AutoCAD opens dialogs); inside a layout viewport only VP Freeze and VP Color are added (after New VP Freeze; their place there wasn't observed) |
 
 The ZOOM prompt now has AutoCAD's comma: "Specify corner of window, enter a scale factor (nX or
 nXP), or [All/Center/…] <real time>:".
@@ -475,8 +481,8 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 | Menu bar | 11 menus, 491 leaf items | same 11 menus; 245/491 items covered (233 by `cargo xtask parity`, which counts engine commands only, plus 12 UI-only items: see [parity-checklist.md](parity-checklist.md)) |
 | Tool Bar, File tabs, Start tab, layout tabs | yes | yes |
 | Tool Sets palette (Drafting, Modeling, … with flyouts) | yes | yes for 2D groups |
-| Properties Inspector, Quick Properties | yes | yes (every control acts or is visibly unavailable, #182); block references show read-only Position X/Y/Z from their stored insertion point; coordinate editing is still missing |
-| Layer Properties Manager (filters, states, VP overrides) | yes | yes |
+| Properties Inspector, Quick Properties | yes | yes (every control acts or is visibly unavailable, #182); block references show read-only Position X/Y/Z from their stored insertion point; coordinate editing is still missing. The Properties palette is laid out as AutoCAD's for Windows: see [Windows baseline](#windows-autocad-2026-baseline) |
+| Layer Properties Manager (filters, states, VP overrides) | yes | yes; laid out as AutoCAD's for Windows: see [Windows baseline](#windows-autocad-2026-baseline) |
 | Blocks palette, Content | yes | Blocks window (click to insert, #28) |
 | Status bar toggles | ~25 | the Windows status bar, its ▾ menus and Customization list: see [Windows baseline](#windows-autocad-2026-baseline) |
 | ViewCube | interactive 3D | clickable for 2D (Top/Home → extents); dragging does nothing (#7) |
@@ -519,6 +525,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | M1d: the Properties palette (docked at the drawing's left with a title strip, the object list and its three buttons, AutoCAD's groups and rows, read-only values greyed) and the Layer Properties Manager (a palette at the drawing area's top left with a title strip, AutoCAD's toolbar, filter tree with Invert, grid columns and status line) compared with AutoCAD's screenshots and UI Automation reads; two ◐ rows (74 rows: 16 ✅, 58 ◐, 0 ✗) |
 | 2026-10-19 | minor | Windows baseline: the Application menu (M1c) replaces the File menu's entries under the Application button: AutoCAD's size and place, first-level entries and separators, every sub-pane with our own descriptions, Recent and Open Documents, command search, Options and Exit; the ✗ row becomes four ◐ rows (16 ✅, 56 ◐, 0 ✗); its online entries listed as intentionally absent but shown disabled; 19 entries without a command listed (checked by a test) |
 | 2026-10-19 | minor | Side-by-side pass of all nine tabs at 1906 px against AutoCAD's screenshots and UI Automation rectangles: large buttons are at least 38 px wide (not 42), large splits and two-line drop-downs leave room for the ▾ either side of the label (Circle 52 px, Measure 67, Set Location 64), items of one row stand with no gap, a large item and a small column are 1 px apart and two small columns 5 px, panels pad 3 px on the left and 2 px on the right, large items stand 4 px below the panel's top; Insert ▸ Import has AutoCAD's line after PDF Import; a large button's list has 40 px rows with large icons, as wide as its longest entry; the tab row becomes ✅ (16 ✅, 52 ◐, 1 ✗, recounted); differences left: Base's ▾, the icons and swatches in front of some lists, Find Text's search button, Annotation Text Height's ▾ |
 | 2026-10-19 | minor | Output ▸ Plot drops to ◐: View Details has no command |

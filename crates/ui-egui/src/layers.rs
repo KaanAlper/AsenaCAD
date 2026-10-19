@@ -1,26 +1,48 @@
-//! The Layer Properties Manager (LAYER): filter tree, layer table with inline editing, colour /
-//! linetype / lineweight pickers, layer states and, inside a layout viewport, the VP Freeze and
-//! VP Color columns. Every change runs an engine command (`layer.*`, `layerstate.*`, `vplayer`,
-//! `linetype`).
+//! The Layer Properties Manager (LAYER), laid out as AutoCAD 2026's palette: the title strip on
+//! its left edge; "Current layer:" and the layer search box; the toolbar (layer filters and layer
+//! states, the new / delete / set-current layer tools, Refresh and Settings); the filter tree with
+//! Invert; the layer grid ([`grid`]) and the status line. It opens at the drawing area's top
+//! left, 650 × 350, and keeps where it was moved and how it was sized. Every change runs an
+//! engine command (`layer.*`, `layerstate.*`, `vplayer`, `linetype`).
 
-use asenacad_color::{Color, aci_rgb};
-use asenacad_doc::{Handle, Layer, Lineweight};
-use egui::{Color32, Rect, RichText, Sense, Stroke, pos2, vec2};
+use asenacad_doc::{Handle, Layer};
+use egui::{Id, Pos2, Rect, RichText, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::{Value, json};
 
 use crate::CadApp;
 use crate::icons::{self, Icon};
+use crate::palettes::strip;
 use crate::theme::Tokens;
 
-/// Dialog-local UI state (kept in egui memory between frames).
+mod grid;
+mod pickers;
+
+pub use pickers::{color_button, color_button_sized, color_palette, swatch};
+
+/// The palette's size when it first opens (AutoCAD's).
+pub const DEFAULT_SIZE: egui::Vec2 = egui::vec2(650.0, 350.0);
+/// The smallest size it can be dragged to.
+const MIN_SIZE: egui::Vec2 = egui::vec2(420.0, 220.0);
+/// The filter tree's width.
+const TREE_W: f32 = 95.0;
+/// A toolbar button's width and height.
+const TOOL: egui::Vec2 = egui::vec2(23.0, 25.0);
+
+/// Palette-local UI state (kept in egui memory between frames).
 #[derive(Clone, Debug, Default)]
-struct LpmState {
+pub(crate) struct LpmState {
     /// 0 = All, 1 = All Used Layers.
     filter: u8,
+    /// Invert: show the layers the filter leaves out.
+    invert: bool,
+    /// The filter tree folded away («).
+    tree_collapsed: bool,
     search: String,
     selected: Option<String>,
     /// (layer, buffer) while renaming.
     renaming: Option<(String, String)>,
+    /// The rename has just started: select the whole name.
+    rename_fresh: bool,
     /// (layer, buffer) while editing the description.
     describing: Option<(String, String)>,
     sort_desc: bool,
@@ -28,199 +50,81 @@ struct LpmState {
     state_sel: Option<String>,
 }
 
-fn rgb32(c: Color) -> Color32 {
-    let r = c.resolve(Color::Index(7), Color::Index(7));
-    Color32::from_rgb(r.0, r.1, r.2)
-}
-
-/// A colour swatch.
-pub fn swatch(p: &egui::Painter, r: Rect, c: Color) {
-    p.rect_filled(r, 1.0, rgb32(c));
-    p.rect_stroke(r, 1.0, Stroke::new(1.0, Color32::from_gray(25)), egui::StrokeKind::Inside);
-}
-
-/// A colour button (swatch + name) that opens the Select Color popup: the AutoCAD Color Index
-/// palette and a true-colour editor. Returns the picked colour. `by` adds ByLayer/ByBlock.
-pub fn color_button(ui: &mut egui::Ui, id: egui::Id, current: Color, by: bool, width: f32) -> Option<Color> {
-    let t = Tokens::get();
-    let (rect, resp) = ui.allocate_exact_size(vec2(width, 20.0), Sense::click());
-    let p = ui.painter();
-    if resp.hovered() {
-        p.rect_filled(rect, 2.0, t.control_hover.gamma_multiply(0.5));
+/// Lower-case names of layers with objects on them, worked out once per drawing revision (and
+/// again on Refresh).
+fn used_layers(ctx: &egui::Context, st: &asenacad_engine::DocState) -> std::collections::HashSet<String> {
+    let id = Id::new(("lpm-used", st.uid, st.revision));
+    if let Some(set) = ctx.data(|d| d.get_temp::<std::sync::Arc<std::collections::HashSet<String>>>(id)) {
+        return (*set).clone();
     }
-    swatch(p, Rect::from_min_size(pos2(rect.left() + 3.0, rect.center().y - 6.0), vec2(12.0, 12.0)), current);
-    p.text(pos2(rect.left() + 20.0, rect.center().y), egui::Align2::LEFT_CENTER, crate::i18n::t(&current.name()), crate::theme::body(), t.text);
-    let mut out = None;
-    egui::Popup::from_toggle_button_response(&resp).id(id).width(300.0).close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside).show(|ui| {
-        out = color_palette(ui, id, current, by);
-        if out.is_some() {
-            ui.close();
-        }
-    });
-    out
-}
-
-/// The palette body (index colours + true colour).
-pub fn color_palette(ui: &mut egui::Ui, id: egui::Id, current: Color, by: bool) -> Option<Color> {
-    let t = Tokens::get();
-    let tab_id = id.with("tab");
-    let mut tab = ui.data_mut(|d| d.get_temp::<u8>(tab_id)).unwrap_or(if matches!(current, Color::True(_)) { 1 } else { 0 });
-    let mut out = None;
-    ui.horizontal(|ui| {
-        for (i, l) in ["Index Color", "True Color"].iter().enumerate() {
-            if ui.selectable_label(tab == i as u8, crate::i18n::t(l)).clicked() {
-                tab = i as u8;
-            }
-        }
-    });
-    ui.data_mut(|d| d.insert_temp(tab_id, tab));
-    ui.separator();
-    let cell = |ui: &mut egui::Ui, i: u8, size: f32, out: &mut Option<Color>| {
-        let (r, resp) = ui.allocate_exact_size(vec2(size, size), Sense::click());
-        let c = aci_rgb(i);
-        ui.painter().rect_filled(r.shrink(0.5), 0.0, Color32::from_rgb(c.0, c.1, c.2));
-        let sel = current == Color::Index(i);
-        if sel || resp.hovered() {
-            ui.painter().rect_stroke(r, 0.0, Stroke::new(if sel { 2.0 } else { 1.0 }, Color32::WHITE), egui::StrokeKind::Inside);
-        }
-        if resp.on_hover_text(crate::tf!("Index color: {index}", index = i)).clicked() {
-            *out = Some(Color::Index(i));
-        }
-    };
-    if tab == 0 {
-        ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
-        // The 240 graded colours: 24 hues × 10 shades.
-        for shade in [0u8, 2, 4, 6, 8, 1, 3, 5, 7, 9] {
-            ui.horizontal(|ui| {
-                for hue in 0..24u8 {
-                    cell(ui, 10 + hue * 10 + shade, 11.0, &mut out);
-                }
-            });
-        }
-        ui.add_space(6.0);
-        ui.horizontal(|ui| {
-            for i in 1..=9u8 {
-                cell(ui, i, 18.0, &mut out);
-                ui.add_space(2.0);
-            }
-            ui.add_space(10.0);
-            for i in 250..=255u8 {
-                cell(ui, i, 18.0, &mut out);
-                ui.add_space(2.0);
-            }
-        });
-        ui.spacing_mut().item_spacing = vec2(6.0, 4.0);
-        ui.add_space(6.0);
-        if by {
-            ui.horizontal(|ui| {
-                if ui.button(crate::tl!("ByLayer")).clicked() {
-                    out = Some(Color::ByLayer);
-                }
-                if ui.button(crate::tl!("ByBlock")).clicked() {
-                    out = Some(Color::ByBlock);
-                }
-            });
-        }
-        ui.label(RichText::new(crate::tf!("Current: {color}", color = crate::i18n::t(&current.name()))).small().color(t.text_dim));
-    } else {
-        let rid = id.with("rgb");
-        let start = current.resolve(Color::Index(7), Color::Index(7));
-        let mut c = ui.data_mut(|d| d.get_temp::<[u8; 3]>(rid)).unwrap_or([start.0, start.1, start.2]);
-        let mut c32 = Color32::from_rgb(c[0], c[1], c[2]);
-        egui::color_picker::color_picker_color32(ui, &mut c32, egui::color_picker::Alpha::Opaque);
-        c = [c32.r(), c32.g(), c32.b()];
-        ui.horizontal(|ui| {
-            for (i, l) in ["R", "G", "B"].iter().enumerate() {
-                ui.label(*l);
-                if let Some(v) = c.get_mut(i) {
-                    ui.add(egui::DragValue::new(v).range(0..=255));
-                }
-            }
-        });
-        ui.data_mut(|d| d.insert_temp(rid, c));
-        if ui.button(crate::tl!("Apply true color")).clicked() {
-            out = Some(Color::True(asenacad_color::Rgb(c[0], c[1], c[2])));
-            ui.data_mut(|d| d.remove::<[u8; 3]>(rid));
+    let d = &st.doc;
+    let mut set = std::collections::HashSet::new();
+    let ents = d.model.iter().chain(d.layouts.iter().flat_map(|l| l.entities.iter())).chain(d.blocks.values().flat_map(|b| b.entities.iter()));
+    for e in ents.take(5_000_000) {
+        if !set.contains(&e.common.layer.to_ascii_lowercase()) {
+            set.insert(e.common.layer.to_ascii_lowercase());
         }
     }
-    out
+    ctx.data_mut(|d| d.insert_temp(id, std::sync::Arc::new(set.clone())));
+    set
 }
 
-/// A small horizontal bar showing a lineweight.
-fn lw_sample(p: &egui::Painter, r: Rect, lw: Lineweight, c: Color32) {
-    let w = match lw {
-        Lineweight::Mm100(v) => (f32::from(v) / 100.0 * 3.0).clamp(1.0, 7.0),
-        _ => 1.0,
-    };
-    p.line_segment([pos2(r.left(), r.center().y), pos2(r.right(), r.center().y)], Stroke::new(w, c));
-}
-
-/// A linetype preview drawn from its own dash pattern.
-fn lt_sample(p: &egui::Painter, r: Rect, lt: Option<&asenacad_doc::Linetype>, c: Color32) {
-    let y = r.center().y;
-    let Some(lt) = lt.filter(|l| !l.pattern.is_empty() && l.pattern.iter().any(|e| e.length.abs() > 1e-9)) else {
-        p.line_segment([pos2(r.left(), y), pos2(r.right(), y)], Stroke::new(1.0, c));
-        return;
-    };
-    let total: f64 = lt.pattern.iter().map(|e| e.length.abs()).sum::<f64>().max(1e-9);
-    let k = f64::from(r.width()) / 2.0 / total;
-    let mut x = f64::from(r.left());
-    let mut guard = 0;
-    while x < f64::from(r.right()) && guard < 200 {
-        for e in &lt.pattern {
-            let l = e.length.abs() * k;
-            let x1 = (x + l).min(f64::from(r.right()));
-            if e.length > 0.0 {
-                p.line_segment([pos2(x as f32, y), pos2(x1 as f32, y)], Stroke::new(1.0, c));
-            } else if e.length == 0.0 {
-                p.circle_filled(pos2(x as f32, y), 0.8, c);
-            }
-            x = x1.max(x + 1.0);
-            guard += 1;
-        }
-    }
-}
-
-/// Status column: a green check for the current layer, a sheet for the others.
-fn status_icon(p: &egui::Painter, r: Rect, current: bool, used: bool) {
-    if current {
-        let g = Color32::from_rgb(0x4c, 0xc2, 0x5a);
-        p.line_segment([pos2(r.left() + 3.0, r.center().y), pos2(r.left() + 7.0, r.bottom() - 4.0)], Stroke::new(2.0, g));
-        p.line_segment([pos2(r.left() + 7.0, r.bottom() - 4.0), pos2(r.right() - 3.0, r.top() + 3.0)], Stroke::new(2.0, g));
-    } else {
-        let t = Tokens::get();
-        let c = if used { t.icon } else { t.text_faint };
-        let pts = vec![
-            pos2(r.left() + 2.0, r.center().y + 1.0),
-            pos2(r.center().x, r.top() + 4.0),
-            pos2(r.right() - 2.0, r.center().y - 1.0),
-            pos2(r.center().x, r.bottom() - 3.0),
-        ];
-        p.add(egui::Shape::closed_line(pts, Stroke::new(1.2, c)));
-    }
+/// Forget the used-layer scan (Refresh).
+fn refresh(ctx: &egui::Context, st: &asenacad_engine::DocState) {
+    ctx.data_mut(|d| d.remove::<std::sync::Arc<std::collections::HashSet<String>>>(Id::new(("lpm-used", st.uid, st.revision))));
 }
 
 fn natural_lower(s: &str) -> String {
     s.to_lowercase()
 }
 
-/// The Layer Properties Manager window.
+/// The filter's name in the tree and the status line.
+fn filter_name(filter: u8) -> &'static str {
+    if filter == 1 { "All Used Layers" } else { "All" }
+}
+
+/// Where the palette is: where it was left, else 650 × 350 at the drawing area's top left.
+fn placement(app: &CadApp, ctx: &egui::Context) -> Rect {
+    let saved = ctx.data_mut(|d| d.get_persisted::<[f32; 4]>(Id::new("lpm_rect")));
+    let screen = ctx.content_rect();
+    let rect = match saved {
+        Some([x, y, w, h]) if [x, y, w, h].iter().all(|v| v.is_finite()) => Rect::from_min_size(pos2(x, y), vec2(w, h).max(MIN_SIZE)),
+        _ => {
+            let origin = app.canvas.rect.map_or(screen.min + vec2(24.0, 120.0), |r| r.min + vec2(4.0, 4.0));
+            Rect::from_min_size(origin, DEFAULT_SIZE)
+        }
+    };
+    // Keep the title strip on the screen.
+    let min = screen.min;
+    let max = (screen.max - vec2(strip::WIDTH * 2.0, 40.0)).max(min);
+    rect.translate(rect.min.clamp(min, max) - rect.min)
+}
+
+/// The Layer Properties Manager palette.
 pub fn dialog(app: &mut CadApp, ctx: &egui::Context, open: &mut bool) {
     let t = Tokens::get();
-    let sid = egui::Id::new("lpm_state");
+    let sid = Id::new("lpm_state");
     let mut st: LpmState = ctx.data_mut(|d| d.get_temp(sid)).unwrap_or_default();
     let mut actions: Vec<(&str, Value)> = Vec::new();
+    let mut rect = placement(app, ctx);
+    let paper = app.session.layout_space().is_paper();
     let Ok(dst) = app.session.state() else {
         *open = false;
         return;
     };
     let d = &dst.doc;
     let cur = d.header.str("CLAYER", "0");
-    let used = used_layers(d);
+    let used = used_layers(ctx, dst);
     let vp: Option<(Handle, asenacad_doc::Viewport)> = dst.active_viewport();
     let linetypes: Vec<asenacad_doc::Linetype> = d.linetypes.clone();
     let library: Vec<String> = asenacad_doc::library::standard_linetypes().into_iter().map(|l| l.name).filter(|n| d.linetype(n).is_none()).collect();
     let states: Vec<String> = d.layer_states.iter().map(|s| s.name.clone()).collect();
+    // Named plot styles of the current layout's table (a colour-dependent table has none).
+    let layout_table =
+        app.session.layout_space().layout().and_then(|n| d.layout(n)).and_then(|l| asenacad_doc::plot_style_table(d, &l.page.plot_style_table));
+    let plot_styles: Option<Vec<String>> = layout_table
+        .filter(|t| !t.is_color_dependent())
+        .map(|t| ["ByLayer", "ByBlock"].map(String::from).into_iter().chain(t.styles.iter().map(|s| s.name.clone())).collect());
     let mut layers: Vec<Layer> = d.layers.clone();
     layers.sort_by_key(|l| natural_lower(&l.name));
     if st.sort_desc {
@@ -230,451 +134,289 @@ pub fn dialog(app: &mut CadApp, ctx: &egui::Context, open: &mut bool) {
     let q = st.search.to_lowercase();
     let shown: Vec<Layer> = layers
         .into_iter()
-        .filter(|l| st.filter == 0 || used.contains(&l.name.to_ascii_lowercase()))
+        .filter(|l| {
+            let in_filter = st.filter == 0 || used.contains(&l.name.to_ascii_lowercase());
+            in_filter != st.invert
+        })
         .filter(|l| q.is_empty() || crate_wild(&q, &l.name.to_lowercase()))
         .collect();
-    let title = match &vp {
-        Some(_) => "Layer Properties Manager — current viewport",
-        None => "Layer Properties Manager",
-    };
-    egui::Window::new(crate::i18n::t(title))
-        .id(egui::Id::new("lpm_window"))
-        .open(open)
-        .default_size(vec2(1180.0, 440.0))
-        .min_width(640.0)
-        .resizable(true)
-        .show(ctx, |ui| {
-            // ----- tool row -----
-            ui.horizontal(|ui| {
-                if icons::button(ui, Icon::Plus, 24.0, "New Layer", false).clicked() {
-                    let mut n = 1;
-                    while d.layer(&format!("Layer{n}")).is_some() {
-                        n += 1;
-                    }
-                    let name = format!("Layer{n}");
-                    actions.push(("layer.new", json!({ "name": name })));
-                    st.renaming = Some((name.clone(), name.clone()));
-                    st.selected = Some(name);
-                }
-                if icons::button(ui, Icon::Close, 24.0, "Delete Layer", false).clicked()
-                    && let Some(s) = &st.selected
-                {
-                    actions.push(("layer.delete", json!({ "name": s })));
-                }
-                if icons::button(ui, Icon::MakeCurrent, 24.0, "Set Current", false).clicked()
-                    && let Some(s) = &st.selected
-                {
-                    actions.push(("layer.current", json!({ "name": s })));
-                }
-                ui.separator();
-                // Layer states.
-                ui.label(crate::tl!("Layer State"));
-                let label = st.state_sel.clone().unwrap_or_else(|| crate::tl!("Unsaved Layer State").into());
-                egui::ComboBox::from_id_salt("lpm_states").selected_text(label).width(170.0).show_ui(ui, |ui| {
-                    for s in &states {
-                        if ui.selectable_label(st.state_sel.as_deref() == Some(s), s).clicked() {
-                            st.state_sel = Some(s.clone());
+    if st.selected.is_none() {
+        st.selected = Some(cur.clone());
+    }
+    let cols = grid::columns(paper, vp.is_some());
+    let gctx = grid::Ctx { cur: &cur, used: &used, vp: vp.as_ref(), linetypes: &linetypes, library: &library, plot_styles: plot_styles.as_deref() };
+    let mut moved = egui::Vec2::ZERO;
+    let mut resized = egui::Vec2::ZERO;
+    let mut do_refresh = false;
+    let screen = ctx.content_rect();
+    egui::Area::new(Id::new("lpm_window")).order(egui::Order::Middle).fixed_pos(rect.min).movable(false).constrain_to(screen).show(ctx, |ui| {
+        ui.set_min_size(rect.size());
+        ui.set_max_size(rect.size());
+        let pane = Rect::from_min_size(ui.min_rect().min, rect.size());
+        ui.allocate_rect(pane, Sense::hover());
+        ui.painter().rect_filled(pane, 0.0, t.panel);
+        ui.painter().rect_stroke(pane, 0.0, Stroke::new(1.0, t.border), egui::StrokeKind::Inside);
+        let strip_rect = Rect::from_min_max(pane.min, pos2(pane.left() + strip::WIDTH, pane.bottom()));
+        let s = strip::show(ui, strip_rect, Id::new("lpm-strip"), "Layer Properties Manager", Icon::LayerProps, |ui| {
+            ui.button(crate::tl!("Close")).clicked()
+        });
+        if s.close {
+            *open = false;
+        }
+        if s.drag.dragged() {
+            moved = s.drag.drag_delta();
+        }
+        // The palette's body: AutoCAD leaves a 3-point margin right of the strip, 6 above.
+        let body = Rect::from_min_max(pos2(strip_rect.right() + 3.0, pane.top() + 6.0), pane.max - vec2(3.0, 6.0));
+        let tree_w = if st.tree_collapsed { 22.0 } else { TREE_W };
+        let grid_left = body.left() + tree_w + 4.0;
+        top_row(ui, body, &cur, &mut st);
+        toolbar(ui, body, grid_left, &states, &d.layers, &mut st, &mut actions, &mut do_refresh);
+        let split = Rect::from_min_max(pos2(body.left(), body.top() + 52.0), pos2(body.right(), body.bottom() - 33.0));
+        filters(ui, Rect::from_min_max(split.min, pos2(body.left() + tree_w, split.bottom())), vp.as_ref().map(|(h, _)| *h), &mut st);
+        let grid_rect = Rect::from_min_max(pos2(grid_left, split.top()), split.max);
+        ui.painter().rect_filled(grid_rect, 0.0, t.list_bg);
+        strip::place(ui, grid_rect, |ui| {
+            ui.set_clip_rect(grid_rect.intersect(ui.clip_rect()));
+            ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
+            egui::ScrollArea::horizontal().id_salt("lpm_table_h").auto_shrink([false, false]).show(ui, |ui| {
+                grid::header(ui, &cols, &mut st);
+                egui::ScrollArea::vertical()
+                    .id_salt("lpm_table")
+                    .auto_shrink([false, false])
+                    .max_height(grid_rect.height() - grid::HEADER_H - 14.0)
+                    .show(ui, |ui| {
+                        for l in &shown {
+                            grid::row(ui, l, &cols, &gctx, &mut st, &mut actions);
                         }
-                    }
-                    if states.is_empty() {
-                        ui.label(RichText::new(crate::tl!("No saved layer states")).color(t.text_dim));
-                    }
-                });
-                let has = st.state_sel.is_some();
-                if ui.add_enabled(has, egui::Button::new(crate::tl!("Restore"))).clicked()
-                    && let Some(s) = &st.state_sel
-                {
-                    actions.push(("layerstate.restore", json!({ "name": s })));
-                }
-                if ui.add_enabled(has, egui::Button::new(crate::tl!("Delete"))).clicked()
-                    && let Some(s) = st.state_sel.take()
-                {
-                    actions.push(("layerstate.delete", json!({ "name": s })));
-                }
-                ui.add(egui::TextEdit::singleline(&mut st.state_name).hint_text(crate::tl!("New state name")).desired_width(120.0));
-                if ui.add_enabled(!st.state_name.trim().is_empty(), egui::Button::new(crate::tl!("Save State"))).clicked() {
-                    let n = st.state_name.trim().to_string();
-                    actions.push(("layerstate.save", json!({ "name": n })));
-                    st.state_sel = Some(n);
-                    st.state_name.clear();
-                }
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    ui.add(egui::TextEdit::singleline(&mut st.search).hint_text(crate::tl!("Search for layer")).desired_width(160.0));
-                    icons::paint(
-                        ui.painter(),
-                        Rect::from_center_size(ui.cursor().right_center() - vec2(8.0, 0.0), vec2(14.0, 14.0)),
-                        Icon::Search,
-                        false,
-                    );
-                    ui.add_space(18.0);
-                });
-            });
-            ui.separator();
-            // A fixed-height table: the window keeps its size instead of growing to the screen.
-            let avail = 330.0;
-            ui.horizontal_top(|ui| {
-                // Cap the row: the vertical separator below takes all the height it is offered, and a
-                // resizable window offers its whole previous height, so the window grew every frame (#29).
-                ui.set_max_height(avail);
-                // ----- filter tree -----
-                ui.allocate_ui_with_layout(vec2(150.0, avail), egui::Layout::top_down(egui::Align::Min), |ui| {
-                    ui.set_min_width(150.0);
-                    ui.label(RichText::new(crate::tl!("Filters")).small().color(t.text_dim));
-                    for (i, l) in ["All", "All Used Layers"].iter().enumerate() {
-                        ui.horizontal(|ui| {
-                            ui.add_space(if i == 0 { 0.0 } else { 14.0 });
-                            if ui.selectable_label(st.filter == i as u8, crate::i18n::t(l)).clicked() {
-                                st.filter = i as u8;
-                            }
-                        });
-                    }
-                    ui.add_space(8.0);
-                    if let Some((h, _)) = &vp {
-                        ui.label(RichText::new(crate::tf!("Viewport {id}", id = h.hex())).small().color(t.text_dim));
-                    }
-                });
-                ui.separator();
-                // ----- the table -----
-                ui.vertical(|ui| {
-                    egui::ScrollArea::both().id_salt("lpm_table").auto_shrink([false, false]).max_height(avail).show(ui, |ui| {
-                        let mut cols: Vec<&str> =
-                            vec!["Status", "Name", "On", "Freeze", "Lock", "Plot", "Color", "Linetype", "Lineweight", "Transparency"];
-                        if vp.is_some() {
-                            cols.extend(["VP Freeze", "VP Color"]);
-                        }
-                        cols.extend(["New VP Freeze", "Description"]);
-                        egui::Grid::new("lpm_grid").striped(true).num_columns(cols.len()).spacing(vec2(10.0, 3.0)).min_row_height(22.0).show(
-                            ui,
-                            |ui| {
-                                for h in &cols {
-                                    if *h == "Name" {
-                                        let arrow = if st.sort_desc { " ▼" } else { " ▲" };
-                                        if ui
-                                            .add(
-                                                egui::Label::new(RichText::new(format!("{}{arrow}", crate::tl!("Name"))).strong())
-                                                    .sense(Sense::click()),
-                                            )
-                                            .clicked()
-                                        {
-                                            st.sort_desc = !st.sort_desc;
-                                        }
-                                    } else {
-                                        ui.label(RichText::new(crate::i18n::t(h)).strong());
-                                    }
-                                }
-                                ui.end_row();
-                                for l in &shown {
-                                    row(ui, l, &cur, &used, vp.as_ref(), &linetypes, &library, &mut st, &mut actions);
-                                    ui.end_row();
-                                }
-                            },
-                        );
                     });
-                });
-            });
-            ui.separator();
-            ui.horizontal(|ui| {
-                ui.label(
-                    RichText::new(crate::tf!(
-                        "Layers displayed: {shown} of {total}.   Current layer: {layer}",
-                        shown = shown.len(),
-                        total = total,
-                        layer = cur
-                    ))
-                    .small()
-                    .color(t.text_dim),
-                );
             });
         });
+        // The status line.
+        let status = crate::tf!(
+            "{filter}: {shown} layers displayed of {total} total layers",
+            filter = crate::i18n::t(filter_name(st.filter)),
+            shown = shown.len(),
+            total = total
+        );
+        let line = Rect::from_min_size(pos2(body.left() + 1.0, body.bottom() - 19.0), vec2(body.width() - 16.0, 17.0));
+        strip::place(ui, line, |ui| ui.label(RichText::new(status).color(t.text)));
+        // The size grip at the bottom-right corner.
+        let corner = Rect::from_min_max(pane.max - vec2(12.0, 12.0), pane.max);
+        let grip = ui.interact(corner, Id::new("lpm-resize"), Sense::drag()).on_hover_cursor(egui::CursorIcon::ResizeNwSe);
+        for k in [4.0, 8.0] {
+            ui.painter().line_segment(
+                [pos2(corner.right() - k, corner.bottom() - 1.0), pos2(corner.right() - 1.0, corner.bottom() - k)],
+                Stroke::new(1.0, t.text_faint),
+            );
+        }
+        if grip.dragged() {
+            resized = grip.drag_delta();
+        }
+    });
+    if moved != egui::Vec2::ZERO || resized != egui::Vec2::ZERO {
+        rect = Rect::from_min_size(rect.min + moved, (rect.size() + resized).max(MIN_SIZE));
+        ctx.data_mut(|d| d.insert_persisted(Id::new("lpm_rect"), [rect.left(), rect.top(), rect.width(), rect.height()]));
+    }
+    if do_refresh {
+        refresh(ctx, dst);
+    }
     ctx.data_mut(|dd| dd.insert_temp(sid, st));
     for (c, p) in actions {
         let _ = app.run(c, p);
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn row(
-    ui: &mut egui::Ui,
-    l: &Layer,
-    cur: &str,
-    used: &std::collections::HashSet<String>,
-    vp: Option<&(Handle, asenacad_doc::Viewport)>,
-    linetypes: &[asenacad_doc::Linetype],
-    library: &[String],
-    st: &mut LpmState,
-    actions: &mut Vec<(&'static str, Value)>,
-) {
+/// "Current layer: <name>" at the left, the search box (with its magnifier) at the right.
+fn top_row(ui: &mut Ui, body: Rect, cur: &str, st: &mut LpmState) {
     let t = Tokens::get();
-    let name = l.name.clone();
-    let current = name.eq_ignore_ascii_case(cur);
-    let is_used = used.contains(&name.to_ascii_lowercase());
-    let selected = st.selected.as_deref().is_some_and(|s| s.eq_ignore_ascii_case(&name));
-    // Status.
-    let (sr, sresp) = ui.allocate_exact_size(vec2(22.0, 20.0), Sense::click());
-    if selected {
-        ui.painter().rect_filled(sr, 2.0, t.accent.gamma_multiply(0.35));
-    }
-    status_icon(ui.painter(), sr.shrink(2.0), current, is_used);
-    let tip = if current {
-        "Current layer"
-    } else if is_used {
-        "Layer contains objects (double-click to make current)"
-    } else {
-        "Layer is empty (double-click to make current)"
-    };
-    if sresp.on_hover_text(crate::i18n::t(tip)).double_clicked() {
-        actions.push(("layer.current", json!({ "name": name })));
-    }
-    // Name (double-click or F2-style rename).
-    match st.renaming.clone() {
-        Some((n, mut buf)) if n.eq_ignore_ascii_case(&name) => {
-            let r = ui.add(egui::TextEdit::singleline(&mut buf).desired_width(150.0).id(egui::Id::new(("lpm_rename", &name))));
-            if !r.has_focus() && !r.lost_focus() {
-                r.request_focus();
-            }
-            if r.lost_focus() {
-                let cancel = ui.input(|i| i.key_pressed(egui::Key::Escape));
-                if !cancel && buf.trim() != name && !buf.trim().is_empty() {
-                    actions.push(("layer.set", json!({ "name": name, "newName": buf.trim() })));
-                    st.selected = Some(buf.trim().to_string());
-                }
-                st.renaming = None;
-            } else {
-                st.renaming = Some((n, buf));
-            }
-        }
-        _ => {
-            let (nr, r) = ui.allocate_exact_size(vec2(150.0, 20.0), Sense::click());
-            if selected {
-                ui.painter().rect_filled(nr, 2.0, t.accent.gamma_multiply(0.45));
-            } else if r.hovered() {
-                ui.painter().rect_filled(nr, 2.0, t.control_hover.gamma_multiply(0.5));
-            }
-            ui.painter().text(pos2(nr.left() + 4.0, nr.center().y), egui::Align2::LEFT_CENTER, &name, crate::theme::body(), t.text);
-            if r.clicked() {
-                st.selected = Some(name.clone());
-            }
-            if r.double_clicked() && name != "0" && !name.eq_ignore_ascii_case("Defpoints") {
-                st.renaming = Some((name.clone(), name.clone()));
-            }
-            r.context_menu(|ui| {
-                if ui.button(crate::tl!("Set Current")).clicked() {
-                    actions.push(("layer.current", json!({ "name": name })));
-                    ui.close();
-                }
-                if ui.button(crate::tl!("Rename Layer")).clicked() {
-                    st.renaming = Some((name.clone(), name.clone()));
-                    ui.close();
-                }
-                if ui.button(crate::tl!("Delete Layer")).clicked() {
-                    actions.push(("layer.delete", json!({ "name": name })));
-                    ui.close();
-                }
-            });
-        }
-    }
-    // On / Freeze / Lock / Plot.
-    if icons::button(ui, if l.on { Icon::Bulb } else { Icon::BulbOff }, 20.0, "On/Off", false).clicked() {
-        actions.push(("layer.set", json!({ "name": name, "on": !l.on })));
-    }
-    if icons::button(ui, if l.frozen { Icon::Snowflake } else { Icon::Sun }, 20.0, "Freeze/Thaw in all viewports", false).clicked() {
-        actions.push(("layer.set", json!({ "name": name, "frozen": !l.frozen })));
-    }
-    if icons::button(ui, if l.locked { Icon::Lock } else { Icon::Unlock }, 20.0, "Lock/Unlock", false).clicked() {
-        actions.push(("layer.set", json!({ "name": name, "locked": !l.locked })));
-    }
-    let pr = icons::button(ui, Icon::Plot, 20.0, if l.plot { "Plot (click: do not plot)" } else { "Do not plot (click: plot)" }, false);
-    if !l.plot {
-        let r = pr.rect.shrink(3.0);
-        ui.painter().line_segment([r.left_bottom(), r.right_top()], Stroke::new(1.6, Color32::from_rgb(0xe0, 0x50, 0x50)));
-    }
-    if pr.clicked() {
-        actions.push(("layer.set", json!({ "name": name, "plot": !l.plot })));
-    }
-    // Color.
-    if let Some(c) = color_button(ui, egui::Id::new(("lpm_color", &name)), l.color, false, 96.0) {
-        actions.push(("layer.set", json!({ "name": name, "color": c.name() })));
-    }
-    // Linetype.
-    let lt_resp = ui
-        .allocate_ui(vec2(130.0, 20.0), |ui| {
-            let (r, resp) = ui.allocate_exact_size(vec2(130.0, 20.0), Sense::click());
-            if resp.hovered() {
-                ui.painter().rect_filled(r, 2.0, t.control_hover.gamma_multiply(0.5));
-            }
-            lt_sample(
-                ui.painter(),
-                Rect::from_min_size(pos2(r.left() + 3.0, r.top()), vec2(30.0, r.height())),
-                linetypes.iter().find(|x| x.name.eq_ignore_ascii_case(&l.linetype)),
-                t.text,
-            );
-            ui.painter().text(pos2(r.left() + 38.0, r.center().y), egui::Align2::LEFT_CENTER, &l.linetype, crate::theme::body(), t.text);
-            resp
-        })
-        .inner;
-    egui::Popup::from_toggle_button_response(&lt_resp)
-        .id(egui::Id::new(("lpm_lt", &name)))
-        .width(240.0)
-        .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
-        .show(|ui| {
-            ui.label(RichText::new(crate::tl!("Loaded linetypes")).small().color(t.text_dim));
-            for lt in linetypes.iter().filter(|x| !["bylayer", "byblock"].contains(&x.name.to_ascii_lowercase().as_str())) {
-                let (r, resp) = ui.allocate_exact_size(vec2(230.0, 20.0), Sense::click());
-                if resp.hovered() || lt.name.eq_ignore_ascii_case(&l.linetype) {
-                    ui.painter().rect_filled(r, 2.0, t.accent.gamma_multiply(if resp.hovered() { 0.6 } else { 0.3 }));
-                }
-                lt_sample(ui.painter(), Rect::from_min_size(pos2(r.left() + 4.0, r.top()), vec2(50.0, r.height())), Some(lt), t.text);
-                ui.painter().text(pos2(r.left() + 62.0, r.center().y), egui::Align2::LEFT_CENTER, &lt.name, crate::theme::body(), t.text);
-                if resp.on_hover_text(&lt.description).clicked() {
-                    actions.push(("layer.set", json!({ "name": name, "linetype": lt.name })));
-                    ui.close();
-                }
-            }
-            if !library.is_empty() {
-                ui.separator();
-                ui.menu_button("Load...", |ui| {
-                    egui::ScrollArea::vertical().max_height(300.0).show(ui, |ui| {
-                        for n in library {
-                            if ui.button(n).clicked() {
-                                actions.push(("linetype", json!({ "load": n })));
-                                actions.push(("layer.set", json!({ "name": name, "linetype": n })));
-                                ui.close();
-                            }
-                        }
-                    });
-                    ui.separator();
-                    if ui.button(crate::tl!("Load all")).clicked() {
-                        actions.push(("linetype", json!({ "load": "*" })));
-                        ui.close();
-                    }
-                });
-            }
-        });
-    // Lineweight.
-    let lw_resp = ui
-        .allocate_ui(vec2(100.0, 20.0), |ui| {
-            let (r, resp) = ui.allocate_exact_size(vec2(100.0, 20.0), Sense::click());
-            if resp.hovered() {
-                ui.painter().rect_filled(r, 2.0, t.control_hover.gamma_multiply(0.5));
-            }
-            lw_sample(ui.painter(), Rect::from_min_size(pos2(r.left() + 3.0, r.top()), vec2(22.0, r.height())), l.lineweight, t.text);
-            ui.painter().text(
-                pos2(r.left() + 30.0, r.center().y),
-                egui::Align2::LEFT_CENTER,
-                crate::i18n::t(&l.lineweight.name()),
-                crate::theme::body(),
-                t.text,
-            );
-            resp
-        })
-        .inner;
-    egui::Popup::from_toggle_button_response(&lw_resp)
-        .id(egui::Id::new(("lpm_lw", &name)))
-        .width(170.0)
-        .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
-        .show(|ui| {
-            egui::ScrollArea::vertical().max_height(320.0).show(ui, |ui| {
-                let opts = std::iter::once(Lineweight::Default).chain(Lineweight::STANDARD.iter().map(|v| Lineweight::Mm100(*v)));
-                for lw in opts {
-                    let (r, resp) = ui.allocate_exact_size(vec2(160.0, 20.0), Sense::click());
-                    if resp.hovered() || lw == l.lineweight {
-                        ui.painter().rect_filled(r, 2.0, t.accent.gamma_multiply(if resp.hovered() { 0.6 } else { 0.3 }));
-                    }
-                    lw_sample(ui.painter(), Rect::from_min_size(pos2(r.left() + 4.0, r.top()), vec2(40.0, r.height())), lw, t.text);
-                    ui.painter().text(
-                        pos2(r.left() + 52.0, r.center().y),
-                        egui::Align2::LEFT_CENTER,
-                        crate::i18n::t(&lw.name()),
-                        crate::theme::body(),
-                        t.text,
-                    );
-                    if resp.clicked() {
-                        let v = match lw {
-                            Lineweight::Mm100(v) => json!(f64::from(v) / 100.0),
-                            _ => json!("Default"),
-                        };
-                        actions.push(("layer.set", json!({ "name": name, "lineweight": v })));
-                        ui.close();
-                    }
-                }
-            });
-        });
-    // Transparency (commits when the drag or edit ends).
-    let tid = egui::Id::new(("lpm_tr", &name));
-    let mut tr = ui.data_mut(|d| d.get_temp::<u8>(tid)).unwrap_or(l.transparency);
-    let r = ui.add(egui::DragValue::new(&mut tr).range(0..=90).speed(0.5));
-    if r.dragged() || r.has_focus() {
-        ui.data_mut(|d| d.insert_temp(tid, tr));
-    }
-    if (r.drag_stopped() || r.lost_focus()) && tr != l.transparency {
-        actions.push(("layer.set", json!({ "name": name, "transparency": tr })));
-        ui.data_mut(|d| d.remove::<u8>(tid));
-    } else if !r.dragged() && !r.has_focus() {
-        ui.data_mut(|d| d.remove::<u8>(tid));
-    }
-    // VP Freeze / VP Color (inside a layout viewport).
-    if let Some((h, v)) = vp {
-        let vf = v.frozen_layers.iter().any(|f| f.eq_ignore_ascii_case(&name));
-        if icons::button(ui, if vf { Icon::Snowflake } else { Icon::Sun }, 20.0, "Freeze/Thaw in the current viewport", false).clicked() {
-            let key = if vf { "thaw" } else { "freeze" };
-            actions.push(("vplayer", json!({ "handle": h.hex(), key: [name] })));
-        }
-        let vc = v.layer_colors.iter().find(|(n, _)| n.eq_ignore_ascii_case(&name)).map(|(_, c)| *c);
-        ui.horizontal(|ui| {
-            if let Some(c) = color_button(ui, egui::Id::new(("lpm_vpcolor", &name)), vc.unwrap_or(l.color), false, 96.0) {
-                actions.push(("vplayer", json!({ "handle": h.hex(), "colors": { name.clone(): c.name() } })));
-            }
-            if vc.is_some() && ui.small_button("×").on_hover_text(crate::tl!("Remove the viewport override")).clicked() {
-                actions.push(("vplayer", json!({ "handle": h.hex(), "colors": { name.clone(): Value::Null } })));
-            }
-        });
-    }
-    // New VP Freeze.
-    let nvf = icons::button(ui, if l.vp_freeze_new { Icon::Snowflake } else { Icon::Sun }, 20.0, "Freeze in new viewports", false);
-    {
-        // A small "new" mark distinguishes it from the Freeze column.
-        let r = nvf.rect;
-        ui.painter().rect_filled(Rect::from_min_size(r.right_bottom() - vec2(7.0, 7.0), vec2(6.0, 6.0)), 1.0, t.icon_accent);
-    }
-    if nvf.clicked() {
-        actions.push(("layer.set", json!({ "name": name, "newVpFreeze": !l.vp_freeze_new })));
-    }
-    // Description (double-click to edit).
-    match st.describing.clone() {
-        Some((n, mut buf)) if n.eq_ignore_ascii_case(&name) => {
-            let r = ui.add(egui::TextEdit::singleline(&mut buf).desired_width(200.0).id(egui::Id::new(("lpm_desc", &name))));
-            if !r.has_focus() && !r.lost_focus() {
-                r.request_focus();
-            }
-            if r.lost_focus() {
-                if !ui.input(|i| i.key_pressed(egui::Key::Escape)) && buf != l.description {
-                    actions.push(("layer.set", json!({ "name": name, "description": buf })));
-                }
-                st.describing = None;
-            } else {
-                st.describing = Some((n, buf));
-            }
-        }
-        _ => {
-            let text = if l.description.is_empty() { RichText::new("—").color(t.text_faint) } else { RichText::new(&l.description) };
-            let r = ui.add_sized([200.0, 20.0], egui::Label::new(text).sense(Sense::click()).truncate());
-            if r.on_hover_text(crate::tl!("Double-click to edit the description")).double_clicked() {
-                st.describing = Some((name.clone(), l.description.clone()));
-            }
-        }
-    }
+    let label = Rect::from_min_size(body.min + vec2(2.0, 5.0), vec2(body.width() - 140.0, 17.0));
+    strip::place(ui, label, |ui| ui.label(RichText::new(crate::tf!("Current layer: {layer}", layer = cur)).color(t.text)));
+    let search = Rect::from_min_max(pos2(body.right() - 125.0, body.top() + 3.0), pos2(body.right(), body.top() + 21.0));
+    strip::place(ui, search, |ui| {
+        ui.add_sized(
+            search.size(),
+            egui::TextEdit::singleline(&mut st.search).hint_text(crate::tl!("Search for layer")).margin(vec2(4.0, 1.0)).id(Id::new("lpm-search")),
+        );
+    });
+    icons::paint(ui.painter(), Rect::from_center_size(pos2(search.right() - 9.0, search.center().y), vec2(13.0, 13.0)), Icon::Search, false);
 }
 
-/// Lower-case names of layers with objects on them.
-fn used_layers(d: &asenacad_doc::Drawing) -> std::collections::HashSet<String> {
-    let mut set = std::collections::HashSet::new();
-    let ents = d.model.iter().chain(d.layouts.iter().flat_map(|l| l.entities.iter())).chain(d.blocks.values().flat_map(|b| b.entities.iter()));
-    for e in ents.take(5_000_000) {
-        if !set.contains(&e.common.layer.to_ascii_lowercase()) {
-            set.insert(e.common.layer.to_ascii_lowercase());
+/// One toolbar button at `x`; true when clicked.
+fn tool(ui: &mut Ui, at: Pos2, icon: Icon, label: &str, enabled: bool) -> bool {
+    let mut clicked = false;
+    strip::place(ui, Rect::from_min_size(at, TOOL), |ui| {
+        ui.add_enabled_ui(enabled, |ui| {
+            clicked = icons::button(ui, icon, TOOL.x - 1.0, label, false).clicked();
+        });
+    });
+    clicked
+}
+
+/// The toolbar, in AutoCAD's three groups: the filter tree's (New Property Filter, New Group
+/// Filter | Layer States Manager), the grid's (New Layer, New Layer VP Frozen in All Viewports,
+/// Delete Layer, Set Current) above the grid, and Refresh … Settings at the right.
+#[allow(clippy::too_many_arguments)]
+fn toolbar(
+    ui: &mut Ui,
+    body: Rect,
+    grid_left: f32,
+    states: &[String],
+    layers: &[Layer],
+    st: &mut LpmState,
+    actions: &mut Vec<(&'static str, Value)>,
+    refresh: &mut bool,
+) {
+    let t = Tokens::get();
+    let y = body.top() + 28.0;
+    // Layer filters aren't modelled yet: both New filter buttons are disabled.
+    tool(ui, pos2(body.left(), y), Icon::PropertyFilter, "New Property Filter", false);
+    tool(ui, pos2(body.left() + TOOL.x, y), Icon::GroupFilter, "New Group Filter", false);
+    let sep = body.left() + 2.0 * TOOL.x + 3.0;
+    ui.painter().line_segment([pos2(sep, y + 4.0), pos2(sep, y + TOOL.y - 4.0)], Stroke::new(1.0, t.border));
+    let states_at = pos2(body.left() + 2.0 * TOOL.x + 6.0, y);
+    let states_clicked = tool(ui, states_at, Icon::LayerStates, "Layer States Manager", true);
+    let states_id = Id::new("lpm-states");
+    if states_clicked {
+        egui::Popup::toggle_id(ui.ctx(), states_id);
+    }
+    let anchor = Rect::from_min_size(states_at, TOOL);
+    egui::Popup::new(states_id, ui.ctx().clone(), anchor, ui.layer_id())
+        .open_memory(None)
+        .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
+        .width(260.0)
+        .show(|ui| layer_states(ui, states, st, actions));
+    // The grid's tools, above the grid.
+    if tool(ui, pos2(grid_left, y), Icon::LayerNew, "New Layer", true) {
+        let mut n = 1;
+        while layers.iter().any(|l| l.name.eq_ignore_ascii_case(&format!("Layer{n}"))) && n < 100_000 {
+            n += 1;
+        }
+        let name = format!("Layer{n}");
+        actions.push(("layer.new", json!({ "name": name })));
+        st.renaming = Some((name.clone(), name.clone()));
+        st.rename_fresh = true;
+        st.selected = Some(name);
+    }
+    // Freezing a new layer in every layout viewport has no single command yet.
+    tool(ui, pos2(grid_left + TOOL.x, y), Icon::LayerNewVpFrozen, "New Layer VP Frozen in All Viewports", false);
+    let has = st.selected.is_some();
+    if tool(ui, pos2(grid_left + 2.0 * TOOL.x, y), Icon::LayerDelete, "Delete Layer", has)
+        && let Some(s) = &st.selected
+    {
+        actions.push(("layer.delete", json!({ "name": s })));
+    }
+    if tool(ui, pos2(grid_left + 3.0 * TOOL.x, y), Icon::MakeCurrent, "Set Current", has)
+        && let Some(s) = &st.selected
+    {
+        actions.push(("layer.current", json!({ "name": s })));
+    }
+    // Refresh and Settings at the right end (AutoCAD has a third, greyed button between them
+    // that was not identified; its place is left empty).
+    let right = body.right() - 3.0 * TOOL.x - 4.0;
+    if tool(ui, pos2(right, y), Icon::Refresh, "Refresh", true) {
+        *refresh = true;
+    }
+    tool(ui, pos2(right + 2.0 * TOOL.x, y), Icon::Gear, "Settings", false);
+}
+
+/// The Layer States Manager: the saved states, Restore, Delete, Rename, and a new state's name.
+fn layer_states(ui: &mut Ui, states: &[String], st: &mut LpmState, actions: &mut Vec<(&'static str, Value)>) {
+    let t = Tokens::get();
+    ui.label(RichText::new(crate::tl!("Layer States Manager")).strong());
+    egui::ScrollArea::vertical().max_height(160.0).show(ui, |ui| {
+        for s in states {
+            if ui.selectable_label(st.state_sel.as_deref() == Some(s), s).clicked() {
+                st.state_sel = Some(s.clone());
+            }
+        }
+        if states.is_empty() {
+            ui.label(RichText::new(crate::tl!("No saved layer states")).color(t.text_dim));
+        }
+    });
+    ui.separator();
+    ui.add(egui::TextEdit::singleline(&mut st.state_name).hint_text(crate::tl!("New state name")).desired_width(240.0));
+    ui.horizontal(|ui| {
+        let named = !st.state_name.trim().is_empty();
+        if ui.add_enabled(named, egui::Button::new(crate::tl!("Save State"))).clicked() {
+            let n = st.state_name.trim().to_string();
+            actions.push(("layerstate.save", json!({ "name": n })));
+            st.state_sel = Some(n);
+            st.state_name.clear();
+        }
+        let has = st.state_sel.is_some();
+        if ui.add_enabled(has, egui::Button::new(crate::tl!("Restore"))).clicked()
+            && let Some(s) = &st.state_sel
+        {
+            actions.push(("layerstate.restore", json!({ "name": s })));
+        }
+        if ui.add_enabled(has, egui::Button::new(crate::tl!("Delete"))).clicked()
+            && let Some(s) = st.state_sel.take()
+        {
+            actions.push(("layerstate.delete", json!({ "name": s })));
+        }
+        if ui.add_enabled(has && named, egui::Button::new(crate::tl!("Rename"))).clicked()
+            && let Some(s) = st.state_sel.take()
+        {
+            let to = st.state_name.trim().to_string();
+            actions.push(("layerstate.rename", json!({ "from": s, "to": to })));
+            st.state_sel = Some(to);
+            st.state_name.clear();
+        }
+    });
+}
+
+/// The filter tree (All ▸ All Used Layers) with its « fold button and Invert below it.
+fn filters(ui: &mut Ui, rect: Rect, viewport: Option<Handle>, st: &mut LpmState) {
+    let t = Tokens::get();
+    ui.painter().rect_filled(rect, 0.0, t.list_bg);
+    if st.tree_collapsed {
+        let at = pos2(rect.left(), rect.top() + 1.0);
+        strip::place(ui, Rect::from_min_size(at, vec2(22.0, 22.0)), |ui| {
+            if icons::button(ui, Icon::DoubleChevronRight, 20.0, "Expand the filter tree", false).clicked() {
+                st.tree_collapsed = false;
+            }
+        });
+        return;
+    }
+    ui.painter().text(pos2(rect.left() + 4.0, rect.top() + 14.0), egui::Align2::LEFT_CENTER, crate::tl!("Filters"), crate::theme::body(), t.text);
+    strip::place(ui, Rect::from_min_size(pos2(rect.left() + 68.0, rect.top() + 1.0), vec2(26.0, 25.0)), |ui| {
+        if icons::button(ui, Icon::DoubleChevronLeft, 22.0, "Collapse the filter tree", false).clicked() {
+            st.tree_collapsed = true;
+        }
+    });
+    ui.painter().line_segment([pos2(rect.left(), rect.top() + 29.0), pos2(rect.right(), rect.top() + 29.0)], Stroke::new(1.0, t.border));
+    for (i, indent) in [(0u8, 6.0), (1, 24.0)] {
+        let row = Rect::from_min_size(pos2(rect.left() + indent, rect.top() + 33.0 + f32::from(i) * 18.0), vec2(rect.width() - indent - 2.0, 18.0));
+        let resp = ui.interact(row, Id::new(("lpm-filter", i)), Sense::click());
+        let name = crate::i18n::t(filter_name(i));
+        if st.filter == i {
+            ui.painter().rect_filled(row, 2.0, t.accent.gamma_multiply(0.45));
+        } else if resp.hovered() {
+            ui.painter().rect_filled(row, 2.0, t.control_hover.gamma_multiply(0.5));
+        }
+        icons::paint(ui.painter(), Rect::from_min_size(row.min + vec2(1.0, 2.0), vec2(14.0, 14.0)), Icon::LayerProps, false);
+        let g = pickers::elided(ui, name, row.width() - 20.0, t.text);
+        ui.painter().galley(pos2(row.left() + 18.0, row.center().y - g.size().y / 2.0), g, t.text);
+        resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::SelectableLabel, true, st.filter == i, name));
+        if resp.clicked() {
+            st.filter = i;
         }
     }
-    set
+    if let Some(h) = viewport {
+        ui.painter().text(
+            pos2(rect.left() + 6.0, rect.top() + 33.0 + 2.0 * 18.0 + 10.0),
+            egui::Align2::LEFT_CENTER,
+            crate::tf!("Viewport {id}", id = h.hex()),
+            crate::theme::small(),
+            t.text_dim,
+        );
+    }
+    let foot = Rect::from_min_max(pos2(rect.left(), rect.bottom() - 25.0), rect.max);
+    ui.painter().line_segment([foot.left_top(), foot.right_top()], Stroke::new(1.0, t.border));
+    strip::place(ui, foot.shrink2(vec2(5.0, 2.0)), |ui| {
+        ui.checkbox(&mut st.invert, crate::tl!("Invert"));
+    });
 }
 
 /// Layer search: plain text matches anywhere; `*` / `?` are wildcards.
@@ -723,7 +465,7 @@ mod tests {
         assert!(!crate_wild("x*", "walls"));
     }
 
-    /// Issue #29: just opening the dialog must not grow its window frame after frame.
+    /// Issue #29: just opening the palette must not grow it frame after frame.
     #[test]
     fn dialog_keeps_its_height() {
         let mut session = asenacad_engine::Session::new();
@@ -739,10 +481,9 @@ mod tests {
                 dialog(&mut app, ui.ctx(), &mut open);
             });
             out.textures_delta.clear();
-            let id = egui::LayerId::new(egui::Order::Middle, egui::Id::new("lpm_window"));
-            heights.push(ctx.memory(|m| m.area_rect(id.id)).map_or(0.0, |r| r.height()));
+            heights.push(ctx.memory(|m| m.area_rect(Id::new("lpm_window"))).map_or(0.0, |r| r.height()));
         }
         let (first, last) = (heights[5], heights[29]);
-        assert!(first > 0.0 && first < 700.0 && (last - first).abs() < 0.5, "window height drifted: {heights:?}");
+        assert!(first > 0.0 && (first - DEFAULT_SIZE.y).abs() < 0.5 && (last - first).abs() < 0.5, "palette height drifted: {heights:?}");
     }
 }

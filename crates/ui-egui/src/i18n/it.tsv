@@ -1248,3 +1248,8 @@ menu	Modify	Edita
 	Collaborate	Collabora
 	Express Tools	Strumenti rapidi
 	File Tabs	Schede dei file
+	Current layer: {layer}	Current layer: {layer}
+	Invert	Invert
+	Layer States Manager	Layer States Manager
+	Rename	Rename
+	{filter}: {shown} layers displayed of {total} total layers	{filter}: {shown} layers displayed of {total} total layers
