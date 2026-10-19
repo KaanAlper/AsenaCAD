@@ -223,12 +223,13 @@ fn home_collapses_at_autocads_window_widths_whatever_the_display_scale() {
         if scale == 1.0 {
             continue;
         }
-        // In points, the layout is the same at any display scale.
+        // In points, the layout is the same at any display scale: less than a pixel apart
+        // (text widths never depend on the scale; see `large_label_width`).
         let reference = |w: f32, rects: &[Rect]| {
             let base = panel_rects(&window(w, 1000.0, 1.0));
             for (i, (a, b)) in base.iter().zip(rects).enumerate() {
                 assert!(
-                    (a.left() - b.left()).abs() <= 1.5 && (a.width() - b.width()).abs() <= 1.5,
+                    (a.left() - b.left()).abs() <= 0.5 && (a.width() - b.width()).abs() <= 0.5,
                     "{}: {a:?} at 1.0 vs {b:?} at {scale}",
                     HOME.panels[i].label
                 );
