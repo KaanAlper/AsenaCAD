@@ -72,10 +72,13 @@ use it with synthetic drawings, take screenshots and command-line logs. Details:
 - **The UI is thin**: panels read engine state and act through `app.run(id, params)` /
   `app.start(id)` / `app.cmdline(text)`. Colours come from `theme::Tokens`.
 - **Rust only**, never break wasm (`cargo xtask wasm`).
-- Library crates keep their upstream names (`cadcraft-geom` … `cadcraft-mcp`) and upper-case
-  `CADCRAFT*` identifiers (env vars, DXF xdata names) stay as they are: this keeps upstream
-  cherry-picks clean and drawings compatible. Product, apps and app id are AsenaCAD
-  (`asenacad`, `asenacad-cli`, `asenacad-web`, `io.github.kaanalper.asenacad`).
+- Library crates are `asenacad-*` (`asenacad-geom` … `asenacad-mcp`, `asenacad_*` in paths;
+  their directories under `crates/` have no prefix). Environment variables and the names AsenaCAD
+  persists in drawings and files are `ASENACAD_*` (xdata application `ASENACAD`, XRECORD keys,
+  header snapshots; plot file markers `asenacad*`). Legacy `CADCRAFT*` drawing data (saved before
+  the rename, or by CADCraft) is still read and is saved under the new names only: keep that
+  working (`crates/io/src/dxf_ext.rs`). Product, apps and app id are AsenaCAD (`asenacad`,
+  `asenacad-cli`, `asenacad-web`, `io.github.kaanalper.asenacad`).
 
 ## The parity loop
 Every feature is done the same way (details in
