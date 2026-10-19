@@ -60,7 +60,16 @@ public static class AcadShot {
 [AcadShot]::SetProcessDPIAware() | Out-Null
 $p = Get-Process acad -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
 if (-not $p) { Fail 'no AutoCAD main window (acad.exe not running in the desktop session?)' }
-$h = $p.MainWindowHandle
+# MainWindowHandle can name a floating palette (e.g. the Layer Properties Manager): take AutoCAD's
+# largest visible top-level window, which is its frame.
+$h = $p.MainWindowHandle; $best = 0
+foreach ($w in [AcadShot]::Windows([uint32]$p.Id)) {
+  $q = New-Object AcadShot+RECT
+  if ([AcadShot]::GetWindowRect($w, [ref]$q)) {
+    $a = [int64]($q.R - $q.L) * [int64]($q.B - $q.T)
+    if ($a -gt $best) { $best = $a; $h = $w }
+  }
+}
 if ([AcadShot]::IsIconic($h)) { Fail 'AutoCAD is minimized; restore it first' }
 if (-not [AcadShot]::IsWindowVisible($h)) { Fail 'AutoCAD main window is not visible' }
 $wr = New-Object AcadShot+RECT

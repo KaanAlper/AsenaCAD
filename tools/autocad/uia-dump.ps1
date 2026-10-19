@@ -16,7 +16,15 @@ if (-not $p) {
   [Console]::Error.WriteLine('uia-dump: no AutoCAD main window (acad.exe not running in the desktop session?)')
   exit 3
 }
-$root = [System.Windows.Automation.AutomationElement]::FromHandle($p.MainWindowHandle)
+# MainWindowHandle can name a tooltip or a floating palette: take AutoCAD's largest top-level
+# UI Automation element, which is its frame.
+$pidCond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $p.Id)
+$root = $null; $best = 0
+foreach ($t in [System.Windows.Automation.AutomationElement]::RootElement.FindAll([System.Windows.Automation.TreeScope]::Children, $pidCond)) {
+  $r = $t.Current.BoundingRectangle
+  if (-not $r.IsEmpty -and ($r.Width * $r.Height) -gt $best) { $best = $r.Width * $r.Height; $root = $t }
+}
+if (-not $root) { $root = [System.Windows.Automation.AutomationElement]::FromHandle($p.MainWindowHandle) }
 $walker = [System.Windows.Automation.TreeWalker]::ControlViewWalker
 function Clean([string]$s) { if ($null -eq $s) { '' } else { $s -replace '[\t\r\n]+', ' ' } }
 function Dump($el, [int]$depth, [int]$max) {
