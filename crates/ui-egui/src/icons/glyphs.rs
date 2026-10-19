@@ -13,16 +13,22 @@ pub(super) fn paint_pen(pen: &Pen, icon: Icon) {
     use Icon::*;
     match icon {
         New => {
-            pen.poly(&[(6.0, 3.0), (15.0, 3.0), (19.0, 7.0), (19.0, 21.0), (6.0, 21.0)], true, b);
+            pen.solid(&[(6.0, 3.0), (15.0, 3.0), (19.0, 7.0), (19.0, 21.0), (6.0, 21.0)], b);
             pen.poly(&[(15.0, 3.0), (15.0, 7.0), (19.0, 7.0)], false, b);
         }
         Open => {
+            // The folder's back (tab and body: two convex parts), then its open front flap.
+            pen.fill_rect(3.0, 6.0, 6.0, 2.0, Pen::body(b));
+            pen.fill_rect(3.0, 8.0, 17.0, 11.0, Pen::body(b));
             pen.poly(&[(3.0, 6.0), (9.0, 6.0), (11.0, 8.0), (20.0, 8.0), (20.0, 19.0), (3.0, 19.0)], true, b);
-            pen.poly(&[(3.0, 19.0), (6.0, 11.0), (22.0, 11.0), (20.0, 19.0)], false, b);
+            pen.fill_convex(&[(3.0, 19.0), (6.0, 11.0), (22.0, 11.0), (20.0, 19.0)], pen.bg);
+            pen.solid(&[(3.0, 19.0), (6.0, 11.0), (22.0, 11.0), (20.0, 19.0)], b);
         }
         Save | SaveAs => {
-            pen.poly(&[(4.0, 4.0), (17.0, 4.0), (20.0, 7.0), (20.0, 20.0), (4.0, 20.0)], true, b);
+            pen.solid(&[(4.0, 4.0), (17.0, 4.0), (20.0, 7.0), (20.0, 20.0), (4.0, 20.0)], b);
             pen.rect(8.0, 4.0, 8.0, 5.0, b);
+            // The label: blank paper on the disk.
+            pen.fill_rect(7.0, 13.0, 10.0, 7.0, pen.bg);
             pen.rect(7.0, 13.0, 10.0, 7.0, b);
             if icon == SaveAs {
                 pen.la(15.0, 22.0, 22.0, 15.0);
@@ -38,8 +44,9 @@ pub(super) fn paint_pen(pen: &Pen, icon: Icon) {
             pen.arrow_tip(19.0, 9.0, 1.0, 2.5, b);
         }
         Plot | Preview => {
-            pen.rect(4.0, 9.0, 16.0, 8.0, b);
+            pen.solid_rect(4.0, 9.0, 16.0, 8.0, b);
             pen.rect(7.0, 4.0, 10.0, 5.0, b);
+            pen.fill_rect(7.0, 14.0, 10.0, 7.0, pen.bg);
             pen.rect(7.0, 14.0, 10.0, 7.0, b);
             if icon == Preview {
                 pen.c(17.0, 17.0, 3.0, a);
@@ -47,9 +54,10 @@ pub(super) fn paint_pen(pen: &Pen, icon: Icon) {
             }
         }
         Publish => {
-            pen.rect(3.0, 10.0, 13.0, 7.0, b);
+            pen.solid_rect(3.0, 10.0, 13.0, 7.0, b);
             pen.rect(6.0, 6.0, 7.0, 4.0, b);
-            pen.rect(9.0, 3.0, 12.0, 9.0, a);
+            pen.fill_rect(9.0, 3.0, 12.0, 9.0, pen.bg);
+            pen.solid_rect(9.0, 3.0, 12.0, 9.0, a);
         }
         PageSetup => {
             pen.rect(5.0, 3.0, 12.0, 17.0, b);
@@ -57,7 +65,7 @@ pub(super) fn paint_pen(pen: &Pen, icon: Icon) {
             pen.fill_c(17.0, 17.0, 1.0, a);
         }
         Import | Export => {
-            pen.poly(&[(5.0, 3.0), (14.0, 3.0), (18.0, 7.0), (18.0, 21.0), (5.0, 21.0)], true, b);
+            pen.solid(&[(5.0, 3.0), (14.0, 3.0), (18.0, 7.0), (18.0, 21.0), (5.0, 21.0)], b);
             if icon == Import {
                 pen.la(1.0, 13.0, 11.0, 13.0);
                 pen.arrow_tip(12.0, 13.0, 1.0, 0.0, a);

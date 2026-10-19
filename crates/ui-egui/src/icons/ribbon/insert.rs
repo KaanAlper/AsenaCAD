@@ -11,7 +11,7 @@ impl Pen<'_> {
     /// A sheet with its top-right corner folded, top-left at (x, y).
     pub(super) fn page(&self, x: f32, y: f32, w: f32, h: f32, c: Color32) {
         let f = (w * 0.3).min(5.0);
-        self.poly(&[(x, y), (x + w - f, y), (x + w, y + f), (x + w, y + h), (x, y + h)], true, c);
+        self.solid(&[(x, y), (x + w - f, y), (x + w, y + f), (x + w, y + h), (x, y + h)], c);
         self.poly(&[(x + w - f, y), (x + w - f, y + f), (x + w, y + f)], false, c);
     }
     /// A table of `cols` × `rows` cells, top-left at (x, y), with a filled title row.

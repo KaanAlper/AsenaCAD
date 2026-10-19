@@ -2,6 +2,9 @@
 
 use egui::{Color32, Painter, Pos2, Rect, Stroke, pos2};
 
+/// How much of the outline colour an object's body is filled with.
+const BODY_FILL: f32 = 0.4;
+
 /// Draws on the 24×24 icon grid inside `r`, with the icon's line width and colours.
 pub(super) struct Pen<'a> {
     pub(super) p: &'a Painter,
@@ -31,6 +34,26 @@ impl Pen<'_> {
     }
     pub(super) fn la(&self, x1: f32, y1: f32, x2: f32, y2: f32) {
         self.p.line_segment([self.at(x1, y1), self.at(x2, y2)], self.st(self.acc));
+    }
+    /// The fill of an object's body (a sheet, folder, disk or printer) in outline colour `c`:
+    /// the icons are solid objects, not wire sketches.
+    pub(super) fn body(c: Color32) -> Color32 {
+        c.gamma_multiply(BODY_FILL)
+    }
+    /// A solid object: the convex outline `pts` filled with its body colour, then drawn.
+    pub(super) fn solid(&self, pts: &[(f32, f32)], c: Color32) {
+        self.fill_convex(pts, Self::body(c));
+        self.poly(pts, true, c);
+    }
+    /// Fill the convex outline `pts` with `c`.
+    pub(super) fn fill_convex(&self, pts: &[(f32, f32)], c: Color32) {
+        let v: Vec<Pos2> = pts.iter().map(|(x, y)| self.at(*x, *y)).collect();
+        self.p.add(egui::Shape::convex_polygon(v, c, Stroke::NONE));
+    }
+    /// A solid rectangle, top-left at (x, y).
+    pub(super) fn solid_rect(&self, x: f32, y: f32, w: f32, h: f32, c: Color32) {
+        self.fill_rect(x, y, w, h, Self::body(c));
+        self.rect(x, y, w, h, c);
     }
     pub(super) fn poly(&self, pts: &[(f32, f32)], closed: bool, c: Color32) {
         let mut v: Vec<Pos2> = pts.iter().map(|(x, y)| self.at(*x, *y)).collect();

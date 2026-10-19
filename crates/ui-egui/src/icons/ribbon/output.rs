@@ -25,7 +25,8 @@ impl Pen<'_> {
     /// A small printer, top-left at (x, y), 14 wide.
     pub(super) fn printer(&self, x: f32, y: f32, c: Color32) {
         self.rect(x + 3.0, y, 8.0, 4.0, c);
-        self.rect(x, y + 4.0, 14.0, 7.0, c);
+        self.solid_rect(x, y + 4.0, 14.0, 7.0, c);
+        self.fill_rect(x + 3.0, y + 8.0, 8.0, 5.0, self.bg);
         self.rect(x + 3.0, y + 8.0, 8.0, 5.0, c);
     }
 }
