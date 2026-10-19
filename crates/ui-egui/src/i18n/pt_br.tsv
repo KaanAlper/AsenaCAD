@@ -1260,3 +1260,5 @@
 	Layer States Manager	Layer States Manager
 	Rename	Rename
 	{filter}: {shown} layers displayed of {total} total layers	{filter}: {shown} layers displayed of {total} total layers
+	Select using two clicks only	Selecionar apenas com dois cliques
+	Define each corner of the selection window with a separate click.	Defina cada canto da janela de seleção com um clique separado.

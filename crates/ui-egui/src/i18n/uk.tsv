@@ -1792,3 +1792,5 @@
 	List the backup and autosave copies to recover from.	Показати резервні й автозбережені копії для відновлення.
 	Close this drawing.	Закрити це креслення.
 	Close every open drawing.	Закрити всі відкриті креслення.
+	Select using two clicks only	Вибирати лише двома клацаннями
+	Define each corner of the selection window with a separate click.	Задайте кожен кут рамки вибору окремим клацанням.
