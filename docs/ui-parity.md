@@ -472,6 +472,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | trivial | Only large toggles are at least 38 px wide (AutoCAD's View Cube); other large buttons keep the 42 px minimum, which keeps Home, Insert and Annotate at their measured widths |
 | 2026-10-19 | minor | Manage ▸ Action Recorder has its slide-out (the Action Tree, disabled); the Named Views list stays enabled with no views; View Manager's row notes that VIEW asks on the command line |
 | 2026-10-19 | minor | Ribbon palette toggles (Home and View, Parametric's Parameters Manager) close their palette when clicked while pressed; View ▸ Palettes ▸ Count starts COUNT; Parametric ▸ Manage becomes ✅ |
 | 2026-10-19 | minor | View ▸ Model Viewports: the two and three-viewport arrangements and Join are commands of their own (`vports.2v` … `vports.3h`, `vports.join`); nine fewer ribbon items without a command |

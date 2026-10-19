@@ -190,8 +190,14 @@ fn paint_large(ui: &Ui, rect: Rect, icon: Icon, label: &str, enabled: bool, chev
 
 /// A large button's width: its widest label line with 3 px either side (AutoCAD's "Layer /
 /// Properties" is its "Properties" line plus about that), and never narrower than the icon
-/// with 3 px either side (View ▸ Viewport Tools' UCS Icon and View Cube are 38 px).
+/// with 5 px either side.
 fn large_width(ui: &Ui, label: &str) -> f32 {
+    (large_label(ui, label, true).size().x + 6.0).max(LARGE_ICON + 10.0)
+}
+
+/// A large toggle's width: as a large button's, but AutoCAD's toggles are only 3 px wider than
+/// the icon either side (View ▸ Viewport Tools' UCS Icon and View Cube are 38 px).
+fn large_toggle_width(ui: &Ui, label: &str) -> f32 {
     (large_label(ui, label, true).size().x + 6.0).max(LARGE_ICON + 6.0)
 }
 
@@ -261,6 +267,7 @@ fn plain_button(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd: &st
     let enabled = why.is_ready();
     let shown = crate::i18n::t(label);
     let (w, h) = match size {
+        Size::Large if on.is_some() => (large_toggle_width(ui, shown), LARGE_H),
         Size::Large => (large_width(ui, shown), LARGE_H),
         Size::Small { label } => (small_width(ui, label.then_some(shown)), SMALL_H),
     };
@@ -419,6 +426,7 @@ pub fn item_width(ui: &Ui, key: &str, item: &Item, compact: bool) -> f32 {
         Size::Small { label: shown } => small_width(ui, shown.then(|| crate::i18n::t(label))),
     };
     match *item {
+        Item::Toggle { label, size: Size::Large, .. } => large_toggle_width(ui, crate::i18n::t(label)),
         Item::Button { label, size, .. } | Item::Toggle { label, size, .. } => width(size, label),
         Item::Split { label, size, menu, default, .. } => {
             let face = label.unwrap_or(split_face(ui.ctx(), key, menu, default).1);
