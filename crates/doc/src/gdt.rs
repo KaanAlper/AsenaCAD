@@ -5,7 +5,7 @@
 //! characters of the `gdt` font inside `{\Fgdt;…}` runs. AsenaCAD never uses that font: every
 //! symbol is drawn by [`symbol_prims`] from our own geometry (standard ISO/ASME symbol shapes).
 
-use cadcraft_geom::{Bounds2, Vec2, Vec3};
+use asenacad_geom::{Bounds2, Vec2, Vec3};
 use serde::{Deserialize, Serialize};
 
 /// Caps for hostile frame strings (files, command parameters).

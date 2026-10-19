@@ -1,9 +1,9 @@
 //! HATCH and HATCHEDIT options (#451): HPGAPTOL gap tolerance, pattern origin, separate
 //! hatches, island style, linking and unlinking boundaries, recreated boundaries, -HATCHEDIT.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Handle, Hatch};
-use cadcraft_engine::geom::Vec2;
+use asenacad_engine::Session;
+use asenacad_engine::doc::{EntityKind, Handle, Hatch};
+use asenacad_engine::geom::Vec2;
 use serde_json::{Value, json};
 
 fn hatch(s: &Session, h: &str) -> Hatch {

@@ -1,6 +1,6 @@
 //! AsenaCAD in the browser.
 //!
-//! Runs the same [`cadcraft_ui_egui::CadApp`] as the desktop app through eframe's web runner
+//! Runs the same [`asenacad_ui_egui::CadApp`] as the desktop app through eframe's web runner
 //! (wgpu: WebGPU where available, WebGL2 otherwise). Build with `trunk build --release` from this
 //! directory (output in `dist/web`). URL flags: `?webgl` forces WebGL2, `?cpu` draws the drawing
 //! with egui shapes instead of the GPU canvas, `?sample` opens the sample drawing. Saving downloads
@@ -16,8 +16,8 @@ mod host;
 
 #[cfg(target_arch = "wasm32")]
 mod web {
-    use cadcraft_engine::Session;
-    use cadcraft_ui_egui::{CadApp, Services};
+    use asenacad_engine::Session;
+    use asenacad_ui_egui::{CadApp, Services};
     use wasm_bindgen::JsCast as _;
 
     const CANVAS_ID: &str = "asenacad_canvas";
@@ -40,12 +40,12 @@ mod web {
         }
         fn raw_input_hook(&mut self, ctx: &egui::Context, raw: &mut egui::RawInput) {
             self.0.raw_input_hook(raw);
-            cadcraft_ui_egui::cmdline::capture_tab(ctx, raw);
+            asenacad_ui_egui::cmdline::capture_tab(ctx, raw);
         }
         /// Preferences (interface theme and language) survive reloads; egui state is not kept.
         fn save(&mut self, storage: &mut dyn eframe::Storage) {
-            storage.set_string(cadcraft_ui_egui::options::PROFILE_KEY, self.0.profile_json());
-            storage.set_string(cadcraft_ui_egui::PREFS_KEY, self.0.prefs_json());
+            storage.set_string(asenacad_ui_egui::options::PROFILE_KEY, self.0.profile_json());
+            storage.set_string(asenacad_ui_egui::PREFS_KEY, self.0.prefs_json());
         }
         fn persist_egui_memory(&self) -> bool {
             false
@@ -74,18 +74,18 @@ mod web {
 
     pub fn start() {
         eframe::WebLogger::init(log::LevelFilter::Info).ok();
-        cadcraft_engine::cmd::file::set_io(cadcraft_engine::cmd::file::IoHooks {
-            read: |b, name| cadcraft_io::read(b, name).map_err(|e| e.to_string()),
-            write: |d, name| cadcraft_io::write(d, name).map_err(|e| e.to_string()),
-            plot: Some(|d, space, opts| cadcraft_io::plotter::plot(d, space, opts).map_err(|e| e.to_string())),
+        asenacad_engine::cmd::file::set_io(asenacad_engine::cmd::file::IoHooks {
+            read: |b, name| asenacad_io::read(b, name).map_err(|e| e.to_string()),
+            write: |d, name| asenacad_io::write(d, name).map_err(|e| e.to_string()),
+            plot: Some(|d, space, opts| asenacad_io::plotter::plot(d, space, opts).map_err(|e| e.to_string())),
         });
-        cadcraft_engine::cmd::file::set_write_as(|d, name, o| {
-            cadcraft_io::write_with(d, name, &cadcraft_io::SaveOptions { version: o.version, binary: o.binary }).map_err(|e| e.to_string())
+        asenacad_engine::cmd::file::set_write_as(|d, name, o| {
+            asenacad_io::write_with(d, name, &asenacad_io::SaveOptions { version: o.version, binary: o.binary }).map_err(|e| e.to_string())
         });
         // AutoLISP's entget, entmake and entmod see entities as DXF groups.
-        cadcraft_engine::cmd::file::set_entity_codec(cadcraft_engine::cmd::file::EntityCodec {
-            groups: cadcraft_io::entity_groups,
-            entity: cadcraft_io::entity_from_groups,
+        asenacad_engine::cmd::file::set_entity_codec(asenacad_engine::cmd::file::EntityCodec {
+            groups: asenacad_io::entity_groups,
+            entity: asenacad_io::entity_from_groups,
         });
         // `?host=parent`: a same-origin page framing AsenaCAD (such as a Nextcloud app) opens
         // drawings in it and stores what it saves. Otherwise there is no file system here: saved
@@ -94,9 +94,9 @@ mod web {
         match &bridge {
             Some(bridge) => {
                 bridge.install();
-                cadcraft_engine::cmd::file::set_deliver(crate::host::deliver);
+                asenacad_engine::cmd::file::set_deliver(crate::host::deliver);
             }
-            None => cadcraft_engine::cmd::file::set_deliver(crate::download::download),
+            None => asenacad_engine::cmd::file::set_deliver(crate::download::download),
         }
         let app_bridge = bridge.clone();
         wasm_bindgen_futures::spawn_local(async move {
@@ -121,10 +121,10 @@ mod web {
                         let mut app = CadApp::new(session, services());
                         app.system_languages =
                             web_sys::window().map(|w| w.navigator().languages().iter().filter_map(|v| v.as_string()).collect()).unwrap_or_default();
-                        if let Some(profile) = cc.storage.and_then(|s| s.get_string(cadcraft_ui_egui::options::PROFILE_KEY)) {
+                        if let Some(profile) = cc.storage.and_then(|s| s.get_string(asenacad_ui_egui::options::PROFILE_KEY)) {
                             app.load_profile(&profile);
                         }
-                        if let Some(prefs) = cc.storage.and_then(|s| s.get_string(cadcraft_ui_egui::PREFS_KEY)) {
+                        if let Some(prefs) = cc.storage.and_then(|s| s.get_string(asenacad_ui_egui::PREFS_KEY)) {
                             app.load_prefs(&prefs);
                         }
                         // `?cpu`: no render state for the app, so the canvas draws with egui shapes.

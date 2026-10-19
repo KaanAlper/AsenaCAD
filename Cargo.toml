@@ -12,18 +12,18 @@ repository = "https://github.com/KaanAlper/AsenaCAD"
 
 [workspace.dependencies]
 # internal
-cadcraft-geom = { path = "crates/geom" }
-cadcraft-dxf = { path = "crates/dxf" }
-cadcraft-dwg = { path = "crates/dwg" }
-cadcraft-color = { path = "crates/color" }
-cadcraft-doc = { path = "crates/doc" }
-cadcraft-constraints = { path = "crates/constraints" }
-cadcraft-fonts = { path = "crates/fonts" }
-cadcraft-render = { path = "crates/render" }
-cadcraft-io = { path = "crates/io" }
-cadcraft-engine = { path = "crates/engine" }
-cadcraft-ui-egui = { path = "crates/ui-egui" }
-cadcraft-mcp = { path = "crates/mcp" }
+asenacad-geom = { path = "crates/geom" }
+asenacad-dxf = { path = "crates/dxf" }
+asenacad-dwg = { path = "crates/dwg" }
+asenacad-color = { path = "crates/color" }
+asenacad-doc = { path = "crates/doc" }
+asenacad-constraints = { path = "crates/constraints" }
+asenacad-fonts = { path = "crates/fonts" }
+asenacad-render = { path = "crates/render" }
+asenacad-io = { path = "crates/io" }
+asenacad-engine = { path = "crates/engine" }
+asenacad-ui-egui = { path = "crates/ui-egui" }
+asenacad-mcp = { path = "crates/mcp" }
 # Which paths stored in a drawing (xrefs, data links) may be opened.
 craft-docpath = { version = "0.1.0", git = "https://github.com/storytold/craft-libs", rev = "82a24b006eefa036b43c09a67fb9a3fbd17ffe63" }
 

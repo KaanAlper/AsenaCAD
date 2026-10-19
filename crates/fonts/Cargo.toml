@@ -1,5 +1,5 @@
 [package]
-name = "cadcraft-fonts"
+name = "asenacad-fonts"
 description = "AsenaCAD text: the built-in single-stroke drafting font and TEXT/MTEXT layout"
 version.workspace = true
 edition.workspace = true
@@ -9,7 +9,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-cadcraft-geom = { workspace = true }
+asenacad-geom = { workspace = true }
 skrifa = { workspace = true }
 harfrust = { workspace = true }
 unicode-bidi = { workspace = true }

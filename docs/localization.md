@@ -12,7 +12,7 @@ browser's `navigator.languages` on the web. BCP 47 and POSIX tags select their p
 `uk-UA` → `uk`, `de_AT.UTF-8` → `de`, `es-MX` → `es`, `pt_BR.UTF-8` → `pt-BR`,
 `cs-CZ` and `cs_CZ.UTF-8` → `cs`, `it-IT` and `it_CH.UTF-8` → `it`, `ko-KR` and `ko_KR.UTF-8` → `ko`,
 `sv-SE`, `sv-FI` and `sv_SE.UTF-8` → `sv`. Unsupported languages fall back to English.
-Set `CADCRAFT_LOCALE=cs-CZ` to override the desktop's locale for a launch.
+Set `ASENACAD_LOCALE=cs-CZ` to override the desktop's locale for a launch.
 An explicit saved language choice takes precedence over that override.
 
 Automation can select the language through the existing control channel:
@@ -107,7 +107,7 @@ The implementation follows the display-time catalog pattern used by
   command needs a row in one language, not in all of them.
 - Catalogs are embedded and parsed once. Missing or malformed rows cannot crash the app;
   tests reject invalid rows, duplicate keys, changed placeholders, and mismatched ellipses.
-- `cargo test -p cadcraft-ui-egui i18n` checks menu/command/tool/snap coverage, every marked
+- `cargo test -p asenacad-ui-egui i18n` checks menu/command/tool/snap coverage, every marked
   UI literal, locale resolution, preferences, integer plurals, bundled glyphs and actual
   egui renders with language switching. `cargo xtask assets` checks asset attribution;
   `cargo xtask ci` runs the workspace quality gates.

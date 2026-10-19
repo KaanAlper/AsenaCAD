@@ -6,7 +6,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use cadcraft_ui_egui::UiState;
+use asenacad_ui_egui::UiState;
 use serde_json::{Value, json};
 
 const MAX_BYTES: u64 = 64 * 1024;
@@ -20,7 +20,7 @@ pub struct Workspace {
 }
 
 fn config_dir_from(platform: &str, get: impl Fn(&str) -> Option<OsString>) -> Option<PathBuf> {
-    if let Some(root) = get("CADCRAFT_CONFIG_DIR") {
+    if let Some(root) = get("ASENACAD_CONFIG_DIR") {
         return (!root.is_empty()).then(|| PathBuf::from(root));
     }
     let nonempty = |key| get(key).filter(|value| !value.is_empty()).map(PathBuf::from);
@@ -46,8 +46,8 @@ fn snapshot(ui: &UiState) -> Result<Value, String> {
         return Err("qatShown exceeds the workspace size limit".into());
     }
     // Saved as a valid set: each item once, in the Customization list's order.
-    let (status_shown, _) = cadcraft_ui_egui::chrome::statusbar::normalize(&ui.status_shown);
-    if !cadcraft_ui_egui::ribbon::model::is_tab(&ui.ribbon_tab) {
+    let (status_shown, _) = asenacad_ui_egui::chrome::statusbar::normalize(&ui.status_shown);
+    if !asenacad_ui_egui::ribbon::model::is_tab(&ui.ribbon_tab) {
         return Err("ribbonTab must name a ribbon tab".into());
     }
     Ok(json!({
@@ -99,14 +99,14 @@ fn read(path: &Path) -> Result<Option<UiState>, String> {
     let docking = fields.as_object_mut().and_then(|fields| fields.remove("docking"));
     let mut ui: UiState = serde_json::from_value(fields).map_err(|error| format!("{}: invalid workspace: {error}", path.display()))?;
     if let Some(docking) = docking
-        && let Ok(docking) = serde_json::from_value::<cadcraft_ui_egui::docking::Workspace>(docking)
+        && let Ok(docking) = serde_json::from_value::<asenacad_ui_egui::docking::Workspace>(docking)
         && docking.validate().is_ok()
     {
         ui.docking = docking;
     }
     // Status bar items this version doesn't know (a newer version's, or a typo) are dropped
     // rather than refusing the whole workspace; duplicates go too.
-    let (status_shown, unknown) = cadcraft_ui_egui::chrome::statusbar::normalize(&ui.status_shown);
+    let (status_shown, unknown) = asenacad_ui_egui::chrome::statusbar::normalize(&ui.status_shown);
     if !unknown.is_empty() {
         log::warn!("{}: dropped unknown status bar items {unknown:?}", path.display());
     }
@@ -207,13 +207,13 @@ mod tests {
     #[test]
     fn profile_override_isolated_or_explicitly_disabled() {
         let get = |key: &str| match key {
-            "CADCRAFT_CONFIG_DIR" => Some(OsString::from("/private/test-state")),
+            "ASENACAD_CONFIG_DIR" => Some(OsString::from("/private/test-state")),
             "HOME" | "APPDATA" | "XDG_CONFIG_HOME" => Some(OsString::from("/unrelated-user-profile")),
             _ => None,
         };
         for platform in ["macos", "windows", "linux", "freebsd"] {
             assert_eq!(config_dir_from(platform, get), Some(PathBuf::from("/private/test-state")));
-            assert_eq!(config_dir_from(platform, |key| if key == "CADCRAFT_CONFIG_DIR" { Some(OsString::new()) } else { get(key) }), None);
+            assert_eq!(config_dir_from(platform, |key| if key == "ASENACAD_CONFIG_DIR" { Some(OsString::new()) } else { get(key) }), None);
         }
         assert_eq!(
             config_dir_from("linux", |key| (key == "XDG_CONFIG_HOME").then(|| OsString::from("/config"))),
@@ -237,7 +237,7 @@ mod tests {
             qat_shown: vec!["open".into(), "u".into(), "preview".into()],
             qat_below_ribbon: true,
             ribbon_tab: "Annotate".into(),
-            ribbon_min: cadcraft_ui_egui::ribbon::RibbonMin::PanelTitles,
+            ribbon_min: asenacad_ui_egui::ribbon::RibbonMin::PanelTitles,
             status_shown: vec!["coordinates".into(), "grid".into(), "dynmode".into()],
             show_navbar: false,
             dialog: Some("layers".into()),
@@ -264,12 +264,12 @@ mod tests {
 
     #[test]
     fn docked_floating_and_hidden_panels_survive_native_workspace_file_reload() {
-        use cadcraft_ui_egui::docking::Panel;
+        use asenacad_ui_egui::docking::Panel;
         let directory = temp_dir();
         let path = directory.join("workspace.json");
         let (mut store, _, _) = Workspace::at(Some(path.clone()));
         let mut ui = UiState::default();
-        let mut app = cadcraft_ui_egui::CadApp::new(cadcraft_engine::Session::default(), Default::default());
+        let mut app = asenacad_ui_egui::CadApp::new(asenacad_engine::Session::default(), Default::default());
         app.run("ui.dock", json!({"operation":"open", "panel":"layers"})).unwrap();
         app.run("ui.dock", json!({"operation":"float", "panel":"layers", "rect":[120,90,340,410]})).unwrap();
         ui.docking = app.ui.docking;
@@ -291,17 +291,17 @@ mod tests {
         let directory = temp_dir();
         let path = directory.join("workspace.json");
         let (mut store, _, _) = Workspace::at(Some(path.clone()));
-        let ui = UiState { ribbon_tab: "Express Tools".into(), ribbon_min: cadcraft_ui_egui::ribbon::RibbonMin::Tabs, ..Default::default() };
+        let ui = UiState { ribbon_tab: "Express Tools".into(), ribbon_min: asenacad_ui_egui::ribbon::RibbonMin::Tabs, ..Default::default() };
         store.save_if_changed(&ui).unwrap();
         let value: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
         assert_eq!(value["workspace"]["ribbonTab"], "Express Tools");
         assert_eq!(value["workspace"]["ribbonMin"], "tabs");
         let restored = read(&path).unwrap().unwrap();
-        assert_eq!((restored.ribbon_tab.as_str(), restored.ribbon_min), ("Express Tools", cadcraft_ui_egui::ribbon::RibbonMin::Tabs));
+        assert_eq!((restored.ribbon_tab.as_str(), restored.ribbon_min), ("Express Tools", asenacad_ui_egui::ribbon::RibbonMin::Tabs));
         // A workspace saved before the ribbon has neither field: Home, full ribbon.
         fs::write(&path, br#"{"version":1,"workspace":{"showToolbar":true,"inWindowMenu":true}}"#).unwrap();
         let older = read(&path).unwrap().unwrap();
-        assert_eq!((older.ribbon_tab.as_str(), older.ribbon_min), ("Home", cadcraft_ui_egui::ribbon::RibbonMin::Full));
+        assert_eq!((older.ribbon_tab.as_str(), older.ribbon_min), ("Home", asenacad_ui_egui::ribbon::RibbonMin::Full));
         assert!(older.show_toolbar && older.in_window_menu, "saved shell choices still load");
         assert!(snapshot(&UiState { ribbon_tab: "x".repeat(300), ..Default::default() }).is_err());
         fs::remove_dir_all(directory).unwrap();

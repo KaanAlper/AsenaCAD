@@ -2,10 +2,10 @@
 
 use std::collections::HashMap;
 
-use cadcraft_color::{Color, Rgb};
-use cadcraft_doc::*;
-use cadcraft_dxf::{Tag, records, sections};
-use cadcraft_geom::{PolyVertex, Spline, Vec2, Vec3};
+use asenacad_color::{Color, Rgb};
+use asenacad_doc::*;
+use asenacad_dxf::{Tag, records, sections};
+use asenacad_geom::{PolyVertex, Spline, Vec2, Vec3};
 
 use crate::{IoError, Result};
 
@@ -89,7 +89,7 @@ fn ocs(c: &Common, p: Vec3) -> Vec3 {
 }
 
 fn ocs_n(n: Vec3, p: Vec3) -> Vec3 {
-    if (n.z - 1.0).abs() < 1e-12 && n.x.abs() < 1e-12 && n.y.abs() < 1e-12 { p } else { cadcraft_geom::Mat4::ocs(n).apply(p) }
+    if (n.z - 1.0).abs() < 1e-12 && n.x.abs() < 1e-12 && n.y.abs() < 1e-12 { p } else { asenacad_geom::Mat4::ocs(n).apply(p) }
 }
 
 /// The properties an ATTRIB carries itself: those it has groups for. Its layer counts only when
@@ -127,7 +127,7 @@ fn split_embedded(tags: &[Tag]) -> (&[Tag], Option<&[Tag]>) {
 /// A multiline attribute's text, from the MTEXT groups embedded in it.
 fn multiline_attrib(embedded: Option<&[Tag]>, c: &Common) -> Option<MultilineAttrib> {
     let mtext = mtext_from(embedded.filter(|e| !e.is_empty())?, c);
-    let read_as = cadcraft_fonts::plain_mtext(&mtext.contents);
+    let read_as = asenacad_fonts::plain_mtext(&mtext.contents);
     Some(MultilineAttrib { mtext, read_as })
 }
 
@@ -154,7 +154,7 @@ fn mtext_from(tags: &[Tag], c: &Common) -> MText {
         // Insertion point and direction are WCS, but the line height runs along extrusion ×
         // direction: under (0,0,-1) the glyphs are mirrored. Drawn readable (MIRRTEXT = 0) with
         // the same footprint, the text turns round and left/right attachment swap.
-        rotation = cadcraft_geom::norm_angle(rotation + std::f64::consts::PI);
+        rotation = asenacad_geom::norm_angle(rotation + std::f64::consts::PI);
         attach = match attach {
             1 | 4 | 7 => attach + 2,
             3 | 6 | 9 => attach - 2,
@@ -218,7 +218,7 @@ fn text_from(t: &T) -> Text {
 /// (MIRRTEXT = 0), so it keeps the mirrored footprint: the direction turns to -rotation and
 /// left/right justification swap ends (start ↔ end point).
 fn mirror_text(t: &mut Text, align: Option<Vec3>, insert: Vec3) {
-    t.rotation = cadcraft_geom::norm_angle(-t.rotation);
+    t.rotation = asenacad_geom::norm_angle(-t.rotation);
     let baseline_left = |t: &Text, p: Vec3| if t.valign == VAlign::Baseline { None } else { Some(p) };
     match t.halign {
         HAlign::Left => {
@@ -261,8 +261,8 @@ fn entity(kind: &str, tags: &[Tag]) -> Option<(Common, EntityKind)> {
             if c.extrusion.z < 0.0 {
                 // Mirrored OCS: angles run the other way.
                 let (s, e) = (std::f64::consts::PI - a.end, std::f64::consts::PI - a.start);
-                a.start = cadcraft_geom::norm_angle(s);
-                a.end = cadcraft_geom::norm_angle(e);
+                a.start = asenacad_geom::norm_angle(s);
+                a.end = asenacad_geom::norm_angle(e);
             }
             EntityKind::Arc(a)
         }
@@ -274,13 +274,13 @@ fn entity(kind: &str, tags: &[Tag]) -> Option<(Common, EntityKind)> {
                 start: t.fd(41, 0.0),
                 end: t.fd(42, std::f64::consts::TAU),
             };
-            if c.extrusion.z < 0.0 && (cadcraft_geom::ccw_sweep(e.start, e.end) - std::f64::consts::TAU).abs() > 1e-9 {
+            if c.extrusion.z < 0.0 && (asenacad_geom::ccw_sweep(e.start, e.end) - std::f64::consts::TAU).abs() > 1e-9 {
                 // Centre and major axis are WCS, but the minor axis is extrusion × major: with (0,0,-1)
                 // it points the other way, so parameter t lands where -t does in the XY plane. A full
                 // ellipse is symmetric and stays as it is.
                 let (s, e2) = (-e.end, -e.start);
-                e.start = cadcraft_geom::norm_angle(s);
-                e.end = cadcraft_geom::norm_angle(e2);
+                e.start = asenacad_geom::norm_angle(s);
+                e.end = asenacad_geom::norm_angle(e2);
             }
             EntityKind::Ellipse(e)
         }
@@ -343,7 +343,7 @@ fn entity(kind: &str, tags: &[Tag]) -> Option<(Common, EntityKind)> {
             let weights = t.all_f(41);
             let fit = t.pts(11);
             let tangent = |c: i32| t.f(c).map(|_| t.p(c).xy());
-            let fit_opts = cadcraft_geom::FitOptions {
+            let fit_opts = asenacad_geom::FitOptions {
                 knots: Default::default(),
                 start_tangent: tangent(12),
                 end_tangent: tangent(13),
@@ -476,7 +476,7 @@ fn entity(kind: &str, tags: &[Tag]) -> Option<(Common, EntityKind)> {
                     v.p.x = -v.p.x;
                     v.bulge = -v.bulge;
                 }
-                h.angle = cadcraft_geom::norm_angle(std::f64::consts::PI - h.angle);
+                h.angle = asenacad_geom::norm_angle(std::f64::consts::PI - h.angle);
             }
             k
         }
@@ -677,14 +677,14 @@ fn hatch(tags: &[Tag], t: &T) -> Option<EntityKind> {
                         let (s, e) = if ccw { (sa, ea) } else { (-sa, -ea) };
                         let p0 = Vec2::polar(c, r, s);
                         let p1 = Vec2::polar(c, r, e);
-                        let sweep = if ccw { cadcraft_geom::ccw_sweep(s, e) } else { -cadcraft_geom::ccw_sweep(e, s) };
+                        let sweep = if ccw { asenacad_geom::ccw_sweep(s, e) } else { -asenacad_geom::ccw_sweep(e, s) };
                         if verts.last().is_none_or(|l| !l.p.near(p0, 1e-9)) {
                             verts.push(PolyVertex::new(p0));
                         }
                         // A full circle (0 to 360) starts and ends on the same point, which one
                         // bulge can't span: it goes in as two half circles.
                         let full = (sweep.abs() - std::f64::consts::TAU).abs() < 1e-9;
-                        let bulge = cadcraft_geom::arc_to_bulge(if full { sweep / 2.0 } else { sweep });
+                        let bulge = asenacad_geom::arc_to_bulge(if full { sweep / 2.0 } else { sweep });
                         if let Some(l) = verts.last_mut() {
                             l.bulge = bulge;
                         }
@@ -706,7 +706,7 @@ fn hatch(tags: &[Tag], t: &T) -> Option<EntityKind> {
                         // runs from -start clockwise to -end, the ccw sweep from -end to -start
                         // walked backwards.
                         let (s, e) = if ccw { (sa, ea) } else { (-ea, -sa) };
-                        let e = cadcraft_geom::Ellipse { center: c, major: m, ratio, start: s, end: e };
+                        let e = asenacad_geom::Ellipse { center: c, major: m, ratio, start: s, end: e };
                         let mut pts = Vec::new();
                         e.tessellate(m.len() * 1e-3, &mut pts);
                         if !ccw {
@@ -836,7 +836,7 @@ const MAX_PATTERN_DASHES: usize = 256;
 /// (unit scale, no hatch rotation, base point relative to the hatch origin, offset as shift
 /// along the line and spacing), which the writer and the renderer turn back. Lines with
 /// non-finite values are skipped.
-fn pattern_definition(tags: &[Tag], scale: f64, angle: f64, origin: Vec2) -> Vec<cadcraft_doc::library::PatternLine> {
+fn pattern_definition(tags: &[Tag], scale: f64, angle: f64, origin: Vec2) -> Vec<asenacad_doc::library::PatternLine> {
     let Some(at) = tags.iter().position(|x| x.code == 78) else { return Vec::new() };
     let scale = if scale.is_finite() && scale > 1e-9 { scale } else { 1.0 };
     let angle = if angle.is_finite() { angle } else { 0.0 };
@@ -869,7 +869,7 @@ fn pattern_definition(tags: &[Tag], scale: f64, angle: f64, origin: Vec2) -> Vec
         .map(|(a, base, offset, dashes)| {
             let local = (base - origin).rotate(-angle) * (1.0 / scale);
             let delta = offset.rotate(-a.to_radians()) * (1.0 / scale);
-            cadcraft_doc::library::PatternLine {
+            asenacad_doc::library::PatternLine {
                 angle: a - angle.to_degrees(),
                 origin: (local.x, local.y),
                 delta: (delta.x, delta.y),
@@ -982,14 +982,14 @@ struct Rx {
     /// Plot style name placeholder handle (upper case) → plot style name (`ACAD_PLOTSTYLENAME`).
     pstyles: HashMap<String, String>,
     /// Upper-case block name → associative array parameters from its BLOCK_RECORD.
-    block_arrays: HashMap<String, cadcraft_doc::ArrayParams>,
+    block_arrays: HashMap<String, asenacad_doc::ArrayParams>,
     /// LAYER record handle (upper case) → layer name (VIEWPORT group 341 frozen layers).
     layers: HashMap<String, String>,
 }
 
 /// The plot style names of a file: the entries of the `ACAD_PLOTSTYLENAME` dictionary of the
 /// named object dictionary (the first object), by placeholder handle.
-fn plot_style_names(secs: &[cadcraft_dxf::Section]) -> HashMap<String, String> {
+fn plot_style_names(secs: &[asenacad_dxf::Section]) -> HashMap<String, String> {
     let mut out = HashMap::new();
     let Some(objects) = secs.iter().find(|s| s.name == "OBJECTS") else { return out };
     let recs = records(&objects.tags);
@@ -1060,7 +1060,7 @@ fn entity_extras(kind: &str, tags: &[Tag], h: Handle, k: &mut EntityKind, rx: &m
                 _ => None,
             };
             if let (Some(base), Some(o)) = (base, T(tags).f(52).filter(|o| o.is_finite() && o.rem_euclid(180.0) != 0.0)) {
-                dm.marks.oblique = Some(cadcraft_geom::norm_angle(base + o.to_radians()));
+                dm.marks.oblique = Some(asenacad_geom::norm_angle(base + o.to_radians()));
             }
         }
         ("ACAD_TABLE", EntityKind::Table(_)) => {
@@ -1326,9 +1326,9 @@ fn header(tags: &[Tag], d: &mut Drawing) {
                 [x, y, z] if x.code == 10 => HVal::Point(Vec3::new(x.f64(), y.f64(), z.f64())),
                 [x, y] if x.code == 10 => HVal::Point(Vec3::new(x.f64(), y.f64(), 0.0)),
                 [v] => match &v.value {
-                    cadcraft_dxf::Value::Real(r) => HVal::Real(*r),
-                    cadcraft_dxf::Value::Int(n) => HVal::Int(*n),
-                    cadcraft_dxf::Value::Bool(b) => HVal::Int(i64::from(*b)),
+                    asenacad_dxf::Value::Real(r) => HVal::Real(*r),
+                    asenacad_dxf::Value::Int(n) => HVal::Int(*n),
+                    asenacad_dxf::Value::Bool(b) => HVal::Int(i64::from(*b)),
                     other => HVal::Str(other.as_str()),
                 },
                 _ => continue,
@@ -1648,7 +1648,7 @@ fn ltype_pattern(tags: &[Tag], styles: &HashMap<String, String>) -> Vec<DashElem
 
 /// Read a DXF file into a drawing.
 pub fn read(bytes: &[u8]) -> Result<Drawing> {
-    let tags = cadcraft_dxf::parse(bytes).map_err(|e| IoError::Format(e.to_string()))?;
+    let tags = asenacad_dxf::parse(bytes).map_err(|e| IoError::Format(e.to_string()))?;
     let secs = sections(&tags);
     if secs.is_empty() {
         return Err(IoError::Format("no sections found".into()));
@@ -1915,7 +1915,7 @@ struct Objects {
     /// Dictionary entry handle (upper case) → entry name.
     names: HashMap<String, String>,
     /// SCALE objects (the annotation scale list), in file order.
-    scales: Vec<cadcraft_doc::AnnoScale>,
+    scales: Vec<asenacad_doc::AnnoScale>,
     /// XRECORD handle (upper case) → its groups.
     xrecords: HashMap<String, Vec<Tag>>,
     /// TABLESTYLE objects: (handle, groups).
@@ -1938,7 +1938,7 @@ impl Objects {
     fn add(&mut self, kind: &str, tags: &[Tag]) {
         let h = T(tags).s(5).map(|h| h.trim().to_ascii_uppercase()).unwrap_or_default();
         match kind {
-            "SCALE" if self.scales.len() < cadcraft_doc::MAX_SCALES => {
+            "SCALE" if self.scales.len() < asenacad_doc::MAX_SCALES => {
                 if let Some(s) = crate::dxf_ext::read_scale(tags)
                     && !self.scales.iter().any(|x| x.name.eq_ignore_ascii_case(&s.name))
                 {
@@ -2019,7 +2019,7 @@ impl Objects {
                 d.table_styles
                     .iter()
                     .find(|s| s.name.eq_ignore_ascii_case(style))
-                    .map_or(cadcraft_doc::TableStyle::default().text_height, |s| s.text_height)
+                    .map_or(asenacad_doc::TableStyle::default().text_height, |s| s.text_height)
             };
             let _ = d.modify_entity(*h, |e| {
                 if let EntityKind::Table(t) = &mut e.kind {
@@ -2040,7 +2040,7 @@ impl Objects {
         if !self.scales.is_empty() {
             d.scales = self.scales.clone();
         } else if d.header.i64("MEASUREMENT", 0) == 1 {
-            d.scales = cadcraft_doc::metric_scales();
+            d.scales = asenacad_doc::metric_scales();
         }
         if let Some(p) = self.xrecord_text(crate::dxf_ext::ANNOTATION_KEY).and_then(|t| crate::dxf_ext::parse_anno(&t)) {
             crate::dxf_ext::apply_anno(d, p);
@@ -2156,7 +2156,7 @@ fn infer_snap(d: &Drawing, osnap: i64, main: Handle, other: Option<Handle>, at: 
                 }
             }
             EntityKind::Arc(a) => {
-                let g = cadcraft_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
+                let g = asenacad_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
                 if osnap == 13 || g.start_point().dist(at) <= g.end_point().dist(at) { AssocSnap::Start } else { AssocSnap::End }
             }
             EntityKind::LwPolyline(p) => {

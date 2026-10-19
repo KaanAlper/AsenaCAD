@@ -3,11 +3,11 @@
 //! Attachment splits keep their face's label and are disabled, URL Options is a drop-down button
 //! disabled until one of its entries has a command.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::ribbon::express::EXPRESS;
-use cadcraft_ui_egui::ribbon::model::Panel;
-use cadcraft_ui_egui::ribbon::render_panel_for_test;
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_ui_egui::ribbon::express::EXPRESS;
+use asenacad_ui_egui::ribbon::model::Panel;
+use asenacad_ui_egui::ribbon::render_panel_for_test;
+use asenacad_ui_egui::{CadApp, Services};
 use egui::accesskit::Role;
 use egui::vec2;
 use egui_kittest::Harness;

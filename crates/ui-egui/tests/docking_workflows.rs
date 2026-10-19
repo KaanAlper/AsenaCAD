@@ -1,7 +1,7 @@
 //! Panel moves use the real app shell, retain commands, and survive a complete UI-state reload.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::{CadApp, Services, UiState, docking::Panel};
+use asenacad_engine::Session;
+use asenacad_ui_egui::{CadApp, Services, UiState, docking::Panel};
 use egui::{Event, Modifiers, PointerButton, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
@@ -15,14 +15,14 @@ fn harness(state: Option<UiState>, width: f32, scale: f32) -> Harness<'static, C
     app.run("view.set", json!({"center":[100,70],"height":220})).unwrap();
     match state {
         Some(state) => app.ui = state,
-        // These tests move CADCraft's palettes around: start with all of them open (AutoCAD's
+        // These tests move AsenaCAD's palettes around: start with all of them open (AutoCAD's
         // default workspace has none).
         None => {
-            app.ui.docking = cadcraft_ui_egui::docking::Workspace::with_palettes();
+            app.ui.docking = asenacad_ui_egui::docking::Workspace::with_palettes();
             app.ui.show_toolsets = true;
             app.ui.show_palettes = true;
             // The Home ribbon would repeat the palette's labels (Line).
-            app.ui.ribbon_min = cadcraft_ui_egui::ribbon::RibbonMin::Tabs;
+            app.ui.ribbon_min = asenacad_ui_egui::ribbon::RibbonMin::Tabs;
         }
     }
     app.ui.in_window_menu = false;
@@ -182,7 +182,7 @@ fn stack_boundary_resizes_by_pointer_and_keyboard_without_changing_the_drawing()
 fn grouped_restore_preserves_order_and_rectangle_in_both_close_orders_after_reload() {
     use craft_ui::docking::{Action, Placement};
     for order in [[Panel::Layers, Panel::Properties], [Panel::Properties, Panel::Layers]] {
-        let mut workspace = cadcraft_ui_egui::docking::Workspace::with_palettes();
+        let mut workspace = asenacad_ui_egui::docking::Workspace::with_palettes();
         let rect = [50.0, 60.0, 320.0, 400.0];
         workspace.apply(Action::Float { panel: Panel::Layers, rect }).unwrap();
         workspace
@@ -287,7 +287,7 @@ fn reset_typed_in_canvas_preserves_authoritative_workspace_replacement() {
     h.run_steps(3);
     let drawing = h.state().session.doc().unwrap().clone();
     type_command(&mut h, "ui.dock.reset");
-    let expected = cadcraft_ui_egui::docking::Workspace::default();
+    let expected = asenacad_ui_egui::docking::Workspace::default();
     assert_eq!(h.state().ui.docking.layout, expected.layout);
     assert_eq!(h.state().ui.docking.hidden, expected.hidden);
     assert_eq!(h.state().session.doc().unwrap(), &drawing);
@@ -328,7 +328,7 @@ fn canvas_reset_during_splitter_drag_discards_old_resize_and_ends_gesture() {
     h.event(Event::Text("ui.dock.reset".into()));
     h.event(Event::Key { key: egui::Key::Enter, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::NONE });
     h.run_steps(1);
-    let expected = cadcraft_ui_egui::docking::Workspace::default();
+    let expected = asenacad_ui_egui::docking::Workspace::default();
     assert!(h.state().cmd.buffer.is_empty(), "Canvas submitted the actual reset command");
     assert_eq!(h.state().ui.docking.layout, expected.layout, "old-frame resize must not modify Reset's tree");
     assert_eq!(h.state().ui.docking.hidden, expected.hidden);

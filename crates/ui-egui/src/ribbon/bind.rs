@@ -3,8 +3,8 @@
 //! to set yet is shown disabled with its value. Each frame reads only the current value; the
 //! list of entries is built while it is open.
 
-use cadcraft_color::Color;
-use cadcraft_doc::{Drawing, Lineweight};
+use asenacad_color::Color;
+use asenacad_doc::{Drawing, Lineweight};
 use egui::{Response, Ui, WidgetInfo, WidgetType};
 use serde_json::{Value, json};
 
@@ -47,7 +47,7 @@ fn plot_table_name<'d>(app: &CadApp, d: &'d Drawing) -> Option<&'d str> {
 /// Whether `name` is a named (STB) plot style table, without building the large built-in
 /// colour-dependent ones.
 fn is_named_table(d: &Drawing, name: &str) -> bool {
-    if cadcraft_doc::no_plot_style_table(name) {
+    if asenacad_doc::no_plot_style_table(name) {
         return false;
     }
     let n = name.trim();
@@ -55,7 +55,7 @@ fn is_named_table(d: &Drawing, name: &str) -> bool {
         Some(t) => !t.is_color_dependent(),
         None => {
             let stb = n.get(n.len().saturating_sub(4)..).is_some_and(|ext| ext.eq_ignore_ascii_case(".stb"));
-            stb && cadcraft_doc::plot_style_table(d, n).is_some_and(|t| !t.is_color_dependent())
+            stb && asenacad_doc::plot_style_table(d, n).is_some_and(|t| !t.is_color_dependent())
         }
     }
 }
@@ -148,7 +148,7 @@ fn choices(app: &CadApp, kind: Combo) -> Vec<Choice> {
         Combo::TableStyle => names(d.table_styles.iter().map(|s| s.name.as_str()), "tablestyle", |n| json!({ "name": n, "current": true })),
         Combo::LayerState => names(d.layer_states.iter().map(|s| s.name.as_str()), "layerstate.restore", |n| json!({ "name": n })),
         Combo::PlotStyle => {
-            let table = plot_table_name(app, d).and_then(|n| cadcraft_doc::plot_style_table(d, n)).filter(|t| !t.is_color_dependent());
+            let table = plot_table_name(app, d).and_then(|n| asenacad_doc::plot_style_table(d, n)).filter(|t| !t.is_color_dependent());
             table.map_or_else(Vec::new, |t| {
                 names(BY.into_iter().chain(t.styles.iter().map(|s| s.name.as_str())), "plotstyle", |n| json!({ "name": n }))
             })
@@ -184,7 +184,7 @@ fn height_text(v: f64) -> String {
 
 /// TEXTSIZE, or the default for the drawing's units when the header has none.
 fn text_size(app: &CadApp) -> f64 {
-    cadcraft_engine::sysvars::get(&app.session, "TEXTSIZE").and_then(|v| v.as_f64()).filter(|v| v.is_finite()).unwrap_or(0.2)
+    asenacad_engine::sysvars::get(&app.session, "TEXTSIZE").and_then(|v| v.as_f64()).filter(|v| v.is_finite()).unwrap_or(0.2)
 }
 
 /// Our own choice of common text heights for the height list: paper-like sizes in the drawing's
@@ -200,8 +200,8 @@ fn heights(app: &CadApp) -> Vec<f64> {
     let Ok(d) = app.session.doc() else { return Vec::new() };
     let common = if d.header.i64("MEASUREMENT", 0) == 1 { METRIC_HEIGHTS } else { IMPERIAL_HEIGHTS };
     let used = std::iter::once(&d.model).chain(d.layouts.iter().map(|l| &l.entities)).flat_map(|st| st.iter()).filter_map(|e| match &e.kind {
-        cadcraft_doc::EntityKind::Text(t) => Some(t.height),
-        cadcraft_doc::EntityKind::MText(t) => Some(t.height),
+        asenacad_doc::EntityKind::Text(t) => Some(t.height),
+        asenacad_doc::EntityKind::MText(t) => Some(t.height),
         _ => None,
     });
     let mut out: Vec<f64> = std::iter::once(text_size(app)).chain(common).chain(used).filter(|h| h.is_finite() && *h > 0.0).collect();
@@ -336,7 +336,7 @@ const fn slider_var(kind: Slider) -> (&'static str, f64) {
 /// so the slider shows the value (the drawing's, else AutoCAD's default) and is disabled.
 pub fn slider(ui: &mut Ui, app: &CadApp, kind: Slider, width: f32) -> Response {
     let (var, default) = slider_var(kind);
-    let mut value = cadcraft_engine::sysvars::get(&app.session, var).and_then(|v| v.as_f64()).filter(|v| v.is_finite()).unwrap_or(default);
+    let mut value = asenacad_engine::sysvars::get(&app.session, var).and_then(|v| v.as_f64()).filter(|v| v.is_finite()).unwrap_or(default);
     let label = crate::i18n::t(kind.label());
     let resp = ui
         .add_enabled_ui(false, |ui| {

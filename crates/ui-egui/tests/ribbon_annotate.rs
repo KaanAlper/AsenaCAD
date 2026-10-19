@@ -2,11 +2,11 @@
 //! AutoCAD's variants and remembers the last one, unbuilt items are disabled, the style lists
 //! show the current styles, Find Text finds text and Annotation Text Height sets TEXTSIZE.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::ribbon::annotate::ANNOTATE;
-use cadcraft_ui_egui::ribbon::model::Panel;
-use cadcraft_ui_egui::ribbon::{render_panel_for_test, widgets::RibbonState};
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_ui_egui::ribbon::annotate::ANNOTATE;
+use asenacad_ui_egui::ribbon::model::Panel;
+use asenacad_ui_egui::ribbon::{render_panel_for_test, widgets::RibbonState};
+use asenacad_ui_egui::{CadApp, Services};
 use egui::accesskit::Role;
 use egui::vec2;
 use egui_kittest::Harness;

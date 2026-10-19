@@ -1,8 +1,8 @@
 //! The Home ribbon's icons: every icon a ribbon item uses is drawn, the variants are told apart,
 //! and (with `CRAFT_UI_VISUAL_DIR` set) an icon sheet at 16 and 32 px for a visual check.
 
-use cadcraft_ui_egui::icons::{self, Icon};
-use cadcraft_ui_egui::ribbon::model::{Entry, Item, tabs};
+use asenacad_ui_egui::icons::{self, Icon};
+use asenacad_ui_egui::ribbon::model::{Entry, Item, tabs};
 use egui::{Color32, FontId, Rect, pos2, vec2};
 
 /// Every icon the ribbon tabs use (faces, split menu entries, slide-outs), in ribbon order.
@@ -83,7 +83,7 @@ fn ribbon_icons_are_distinct() {
     }
 }
 
-/// `CRAFT_UI_VISUAL_DIR=/dir cargo test -p cadcraft-ui-egui --test ribbon_icons icon_sheet`
+/// `CRAFT_UI_VISUAL_DIR=/dir cargo test -p asenacad-ui-egui --test ribbon_icons icon_sheet`
 /// renders every ribbon icon at 16 and 32 px with its name, in both themes.
 #[test]
 fn icon_sheet() {
@@ -99,8 +99,8 @@ fn icon_sheet() {
             let rows = chunk.len().div_ceil(COLS);
             let size = vec2(CELL.x * COLS as f32, CELL.y * rows as f32);
             let mut h = Harness::builder().with_size(size).wgpu().build_ui(move |ui| {
-                cadcraft_ui_egui::theme::set_active(theme);
-                let t = cadcraft_ui_egui::theme::Tokens::get();
+                asenacad_ui_egui::theme::set_active(theme);
+                let t = asenacad_ui_egui::theme::Tokens::get();
                 ui.painter().rect_filled(Rect::from_min_size(pos2(0.0, 0.0), size), 0.0, t.panel);
                 for (k, icon) in chunk.iter().enumerate() {
                     let o = pos2((k % COLS) as f32 * CELL.x, (k / COLS) as f32 * CELL.y);

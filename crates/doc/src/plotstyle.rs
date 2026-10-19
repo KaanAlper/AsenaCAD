@@ -14,7 +14,7 @@
 //! Tables are saved as files in our own JSON format (see `docs/plot-styles.md`):
 //! [`PlotStyleTable::to_file_text`] and [`PlotStyleTable::from_file_text`].
 
-use cadcraft_color::Rgb;
+use asenacad_color::Rgb;
 use serde::{Deserialize, Serialize};
 
 /// Built-in colour-dependent table that prints objects with their own properties.
@@ -129,7 +129,7 @@ fn is_default<T: Default + PartialEq>(v: &T) -> bool {
 
 /// `Option<Rgb>` as `"#rrggbb"` (also read from `[r, g, b]`).
 mod rgb_hex {
-    use cadcraft_color::Rgb;
+    use asenacad_color::Rgb;
     use serde::{Deserialize, Deserializer, Serializer};
 
     pub fn serialize<S: Serializer>(c: &Option<Rgb>, s: S) -> Result<S::Ok, S::Error> {

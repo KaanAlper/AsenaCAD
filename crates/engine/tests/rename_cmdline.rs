@@ -1,7 +1,7 @@
 //! RENAME: blocks in the JSON form, and -RENAME's type / old name / new name prompts.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{Drawing, EntityKind};
+use asenacad_engine::Session;
+use asenacad_engine::doc::{Drawing, EntityKind};
 use serde_json::json;
 
 /// Names of the blocks every INSERT (model, layouts and block definitions) refers to.

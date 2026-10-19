@@ -2,10 +2,10 @@
 //! table's colours and pen widths, layout SVG exports follow "Display plot styles", and the
 //! page setup's table and flag survive a DXF round trip.
 
-use cadcraft_color::Color;
-use cadcraft_doc::{Common, Drawing, EntityKind, Line, Space};
-use cadcraft_geom::Vec3;
-use cadcraft_io::{read_dxf, svg, write_dxf};
+use asenacad_color::Color;
+use asenacad_doc::{Common, Drawing, EntityKind, Line, Space};
+use asenacad_geom::Vec3;
+use asenacad_io::{read_dxf, svg, write_dxf};
 use serde_json::json;
 
 fn layout_with_red_line() -> Drawing {
@@ -21,7 +21,7 @@ fn pdf_text(d: &Drawing, extra: serde_json::Value) -> String {
     if let (Some(o), Some(e)) = (opts.as_object_mut(), extra.as_object()) {
         o.extend(e.clone());
     }
-    let bytes = cadcraft_io::plot(d, &Space::Paper("Layout1".into()), &opts).unwrap();
+    let bytes = asenacad_io::plot(d, &Space::Paper("Layout1".into()), &opts).unwrap();
     String::from_utf8_lossy(&bytes).into_owned()
 }
 
@@ -63,7 +63,7 @@ fn page_setup_table_and_display_flag_round_trip() {
 
 #[test]
 fn named_plot_styles_round_trip_through_the_plot_style_dictionary() {
-    use cadcraft_doc::{Layer, PlotStyle, PlotStyleTable};
+    use asenacad_doc::{Layer, PlotStyle, PlotStyleTable};
     let mut d = layout_with_red_line();
     d.layers.push(Layer { plot_style: "Black".into(), ..Layer::new("Walls") });
     let line = |y: f64| EntityKind::Line(Line { a: Vec3::new(0.0, y, 0.0), b: Vec3::new(1.0, y, 0.0) });
@@ -88,12 +88,12 @@ fn named_plot_styles_round_trip_through_the_plot_style_dictionary() {
 
 #[test]
 fn pdf_applies_a_named_table_from_the_drawing() {
-    use cadcraft_doc::{PlotStyle, PlotStyleTable};
+    use asenacad_doc::{PlotStyle, PlotStyleTable};
     let mut d = layout_with_red_line();
     let blue = PlotStyleTable::named(
         "blue.stb",
         "",
-        vec![PlotStyle { name: "Blue".into(), color: Some(cadcraft_color::Rgb(0, 0, 255)), ..PlotStyle::default() }],
+        vec![PlotStyle { name: "Blue".into(), color: Some(asenacad_color::Rgb(0, 0, 255)), ..PlotStyle::default() }],
     );
     d.plot_style_tables.push(blue);
     let space = Space::Paper("Layout1".into());

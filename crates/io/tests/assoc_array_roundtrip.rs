@@ -4,9 +4,9 @@
 
 use std::sync::Arc;
 
-use cadcraft_doc::*;
-use cadcraft_geom::{Vec2, Vec3};
-use cadcraft_io::{read_dxf, write_dxf};
+use asenacad_doc::*;
+use asenacad_geom::{Vec2, Vec3};
+use asenacad_io::{read_dxf, write_dxf};
 
 fn params(source: &str) -> ArrayParams {
     ArrayParams {

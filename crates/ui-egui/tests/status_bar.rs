@@ -2,11 +2,11 @@
 //! Model, the layouts, "+") and the default status bar items in AutoCAD's order, with the
 //! Customization menu that shows the hidden ones and the ▾ menus wired to commands.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::snap::mode;
-use cadcraft_geom::Vec2;
-use cadcraft_ui_egui::chrome::statusbar;
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_engine::snap::mode;
+use asenacad_geom::Vec2;
+use asenacad_ui_egui::chrome::statusbar;
+use asenacad_ui_egui::{CadApp, Services};
 use egui::accesskit::{Role, Toggled};
 use egui::{Rect, vec2};
 use egui_kittest::Harness;
@@ -62,7 +62,7 @@ fn in_bar(h: &Harness<'_, CadApp>, label: &str) -> bool {
 /// The menu row labelled `label` (a status bar menu's row, above the status bar row).
 fn menu_row<'a>(h: &'a Harness<'_, CadApp>, label: &'a str) -> egui_kittest::Node<'a> {
     let bottom = canvas(h).bottom();
-    let row = cadcraft_ui_egui::chrome::statusmenus::ROW;
+    let row = asenacad_ui_egui::chrome::statusmenus::ROW;
     let mut nodes: Vec<_> = h.query_all_by_label(label).filter(|n| n.rect().max.y < bottom && (n.rect().width() - row.x).abs() < 0.5).collect();
     assert_eq!(nodes.len(), 1, "one menu row {label}");
     nodes.remove(0)
@@ -112,10 +112,10 @@ fn clicking_a_layout_tab_and_plus_switch_and_add_layouts() {
     let mut h = harness();
     bar_node(&h, "Layout2").click();
     h.run_steps(3);
-    assert_eq!(h.state().session.layout_space(), cadcraft_doc::Space::Paper("Layout2".into()));
+    assert_eq!(h.state().session.layout_space(), asenacad_doc::Space::Paper("Layout2".into()));
     bar_node(&h, "New layout").click();
     h.run_steps(3);
-    assert_eq!(h.state().session.layout_space(), cadcraft_doc::Space::Paper("Layout3".into()));
+    assert_eq!(h.state().session.layout_space(), asenacad_doc::Space::Paper("Layout3".into()));
     let xs = lefts(&h, &["Model", "Layout1", "Layout2", "Layout3", "New layout"]);
     assert!(xs.windows(2).all(|w| w[0] < w[1]), "the new layout comes before +: {xs:?}");
 }
@@ -240,10 +240,10 @@ fn model_returns_to_the_last_layout_and_toggles_paper_space_there() {
     h.run_steps(3);
     bar_node(&h, "Model").click();
     h.run_steps(3);
-    assert_eq!(h.state().session.layout_space(), cadcraft_doc::Space::Model);
+    assert_eq!(h.state().session.layout_space(), asenacad_doc::Space::Model);
     bar_node(&h, "MODEL").click();
     h.run_steps(3);
-    assert_eq!(h.state().session.layout_space(), cadcraft_doc::Space::Paper("Layout2".into()), "back to the last layout");
+    assert_eq!(h.state().session.layout_space(), asenacad_doc::Space::Paper("Layout2".into()), "back to the last layout");
     assert!(in_bar(&h, "PAPER"));
 }
 
@@ -251,7 +251,7 @@ fn model_returns_to_the_last_layout_and_toggles_paper_space_there() {
 fn a_separator_band_spans_the_window_between_the_drawing_and_the_bar() {
     let h = harness();
     let c = canvas(&h);
-    let band_color = cadcraft_ui_egui::theme::Tokens::get().status_band;
+    let band_color = asenacad_ui_egui::theme::Tokens::get().status_band;
     let band = h.output().shapes.iter().find_map(|s| match &s.shape {
         egui::Shape::Rect(r) if r.fill == band_color && (r.rect.height() - statusbar::BAND_H).abs() < 0.5 => Some(r.rect),
         _ => None,
@@ -314,7 +314,7 @@ fn a_narrow_window_drops_items_from_the_left_and_never_overlaps_the_layout_bar()
             }
             bar_node(&h, "Model").click();
             h.run_steps(3);
-            assert_eq!(h.state().session.layout_space(), cadcraft_doc::Space::Model, "{at}: Model is clickable");
+            assert_eq!(h.state().session.layout_space(), asenacad_doc::Space::Model, "{at}: Model is clickable");
         }
     }
 }

@@ -2,8 +2,8 @@
 //! form, -LINETYPE at the command line, HATCH with a pattern file, HATCH.PATTERNS. The files are
 //! tiny synthetic ones written here, with our own names.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Hatch};
+use asenacad_engine::Session;
+use asenacad_engine::doc::{EntityKind, Hatch};
 use serde_json::json;
 
 const LIN: &str = "*MYDASH,My dash __ __\nA,.5,-.25\n*MYTEXT,My text --MY--\nA,.5,-.2,[\"MY\",Standard,S=.1,X=-.1,Y=-.05],-.2\n";

@@ -80,7 +80,7 @@ fn tooltips(resp: Response, shown: &str, why: &Availability) -> Response {
 
 /// Whether a toggle button shows pressed.
 pub fn is_on(app: &CadApp, state: Toggle) -> bool {
-    let var = |name: &str| cadcraft_engine::sysvars::get(&app.session, name).and_then(|v| v.as_i64());
+    let var = |name: &str| asenacad_engine::sysvars::get(&app.session, name).and_then(|v| v.as_i64());
     match state {
         Toggle::LayerPalette => app.ui.dialog.as_deref() == Some("layers"),
         // No fading is drawn yet: the button only reflects LAYLOCKFADECTL as the drawing has it.

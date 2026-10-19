@@ -222,8 +222,8 @@ fn info_center(app: &mut CadApp, ui: &mut Ui, right: f32, center_y: f32) -> f32 
 pub fn search_for(app: &mut CadApp, ctx: &egui::Context, query: &str) {
     let query: String = query.trim().chars().take(QUERY_MAX).collect();
     if !query.is_empty() && !query.contains(char::is_whitespace) {
-        let id = cadcraft_engine::cmd::resolve_alias(query.trim_start_matches(['_', '.']));
-        if cadcraft_engine::find_command(&id).is_some() {
+        let id = asenacad_engine::cmd::resolve_alias(query.trim_start_matches(['_', '.']));
+        if asenacad_engine::find_command(&id).is_some() {
             crate::menus::activate(app, &id);
             return;
         }

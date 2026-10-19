@@ -249,9 +249,9 @@ checksum = "175571dd1d178ced59193a6fc02dde1b972eb0bc56c892cde9beeceac5bf0f6b"
 name = "asenacad"
 version = "0.8.0"
 dependencies = [
- "cadcraft-engine",
- "cadcraft-io",
- "cadcraft-ui-egui",
+ "asenacad-engine",
+ "asenacad-io",
+ "asenacad-ui-egui",
  "eframe",
  "egui",
  "hidapi",
@@ -271,20 +271,167 @@ dependencies = [
 name = "asenacad-cli"
 version = "0.8.0"
 dependencies = [
- "cadcraft-engine",
- "cadcraft-io",
- "cadcraft-mcp",
- "cadcraft-render",
+ "asenacad-engine",
+ "asenacad-io",
+ "asenacad-mcp",
+ "asenacad-render",
  "serde_json",
+]
+
+[[package]]
+name = "asenacad-color"
+version = "0.8.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "asenacad-constraints"
+version = "0.8.0"
+dependencies = [
+ "asenacad-doc",
+ "asenacad-geom",
+ "serde",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "asenacad-doc"
+version = "0.8.0"
+dependencies = [
+ "asenacad-color",
+ "asenacad-geom",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "asenacad-dwg"
+version = "0.8.0"
+dependencies = [
+ "acadrust",
+]
+
+[[package]]
+name = "asenacad-dxf"
+version = "0.8.0"
+dependencies = [
+ "encoding_rs",
+ "log",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "asenacad-engine"
+version = "0.8.0"
+dependencies = [
+ "asenacad-color",
+ "asenacad-constraints",
+ "asenacad-doc",
+ "asenacad-dxf",
+ "asenacad-fonts",
+ "asenacad-geom",
+ "asenacad-io",
+ "asenacad-render",
+ "craft-docpath",
+ "log",
+ "rstar",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "asenacad-fonts"
+version = "0.8.0"
+dependencies = [
+ "asenacad-geom",
+ "harfrust",
+ "skrifa 0.47.0",
+ "unicode-bidi",
+]
+
+[[package]]
+name = "asenacad-geom"
+version = "0.8.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "asenacad-io"
+version = "0.8.0"
+dependencies = [
+ "asenacad-color",
+ "asenacad-doc",
+ "asenacad-dwg",
+ "asenacad-dxf",
+ "asenacad-fonts",
+ "asenacad-geom",
+ "asenacad-render",
+ "miniz_oxide 0.8.9",
+ "quick-xml",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tiny-skia",
+]
+
+[[package]]
+name = "asenacad-mcp"
+version = "0.8.0"
+dependencies = [
+ "asenacad-engine",
+ "asenacad-io",
+ "asenacad-render",
+ "log",
+ "serde_json",
+]
+
+[[package]]
+name = "asenacad-render"
+version = "0.8.0"
+dependencies = [
+ "asenacad-color",
+ "asenacad-doc",
+ "asenacad-fonts",
+ "asenacad-geom",
+ "lyon_tessellation",
+ "rayon",
+ "serde_json",
+ "tiny-skia",
+]
+
+[[package]]
+name = "asenacad-ui-egui"
+version = "0.8.0"
+dependencies = [
+ "asenacad-color",
+ "asenacad-doc",
+ "asenacad-engine",
+ "asenacad-fonts",
+ "asenacad-geom",
+ "asenacad-render",
+ "craft-ui",
+ "egui",
+ "egui-wgpu",
+ "egui_kittest",
+ "image",
+ "log",
+ "naga",
+ "serde",
+ "serde_json",
+ "toml",
 ]
 
 [[package]]
 name = "asenacad-web"
 version = "0.8.0"
 dependencies = [
- "cadcraft-engine",
- "cadcraft-io",
- "cadcraft-ui-egui",
+ "asenacad-engine",
+ "asenacad-io",
+ "asenacad-ui-egui",
  "eframe",
  "egui",
  "log",
@@ -593,153 +740,6 @@ name = "bytes"
 version = "1.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
-
-[[package]]
-name = "cadcraft-color"
-version = "0.8.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "cadcraft-constraints"
-version = "0.8.0"
-dependencies = [
- "cadcraft-doc",
- "cadcraft-geom",
- "serde",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "cadcraft-doc"
-version = "0.8.0"
-dependencies = [
- "cadcraft-color",
- "cadcraft-geom",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "cadcraft-dwg"
-version = "0.8.0"
-dependencies = [
- "acadrust",
-]
-
-[[package]]
-name = "cadcraft-dxf"
-version = "0.8.0"
-dependencies = [
- "encoding_rs",
- "log",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "cadcraft-engine"
-version = "0.8.0"
-dependencies = [
- "cadcraft-color",
- "cadcraft-constraints",
- "cadcraft-doc",
- "cadcraft-dxf",
- "cadcraft-fonts",
- "cadcraft-geom",
- "cadcraft-io",
- "cadcraft-render",
- "craft-docpath",
- "log",
- "rstar",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "cadcraft-fonts"
-version = "0.8.0"
-dependencies = [
- "cadcraft-geom",
- "harfrust",
- "skrifa 0.47.0",
- "unicode-bidi",
-]
-
-[[package]]
-name = "cadcraft-geom"
-version = "0.8.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "cadcraft-io"
-version = "0.8.0"
-dependencies = [
- "cadcraft-color",
- "cadcraft-doc",
- "cadcraft-dwg",
- "cadcraft-dxf",
- "cadcraft-fonts",
- "cadcraft-geom",
- "cadcraft-render",
- "miniz_oxide 0.8.9",
- "quick-xml",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "tiny-skia",
-]
-
-[[package]]
-name = "cadcraft-mcp"
-version = "0.8.0"
-dependencies = [
- "cadcraft-engine",
- "cadcraft-io",
- "cadcraft-render",
- "log",
- "serde_json",
-]
-
-[[package]]
-name = "cadcraft-render"
-version = "0.8.0"
-dependencies = [
- "cadcraft-color",
- "cadcraft-doc",
- "cadcraft-fonts",
- "cadcraft-geom",
- "lyon_tessellation",
- "rayon",
- "serde_json",
- "tiny-skia",
-]
-
-[[package]]
-name = "cadcraft-ui-egui"
-version = "0.8.0"
-dependencies = [
- "cadcraft-color",
- "cadcraft-doc",
- "cadcraft-engine",
- "cadcraft-fonts",
- "cadcraft-geom",
- "cadcraft-render",
- "craft-ui",
- "egui",
- "egui-wgpu",
- "egui_kittest",
- "image",
- "log",
- "naga",
- "serde",
- "serde_json",
- "toml",
-]
 
 [[package]]
 name = "calloop"

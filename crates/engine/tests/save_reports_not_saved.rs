@@ -2,9 +2,9 @@
 //! file) as DWG says which ones the file doesn't keep, instead of dropping them silently. DXF
 //! writes them back as read: nothing to report.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::{Block, Common, Drawing, EntityKind, RawTag, Space, Unknown};
+use asenacad_engine::Session;
+use asenacad_engine::cmd::file::{IoHooks, set_io};
+use asenacad_engine::doc::{Block, Common, Drawing, EntityKind, RawTag, Space, Unknown};
 use serde_json::json;
 
 fn unknown(kind: &str) -> EntityKind {
@@ -20,7 +20,7 @@ fn save_lists_the_entities_the_file_does_not_keep() {
     }
     let mut b = Block::new("Part");
     let h = d.new_handle();
-    b.entities.push(cadcraft_engine::doc::Entity { handle: h, common: Common::default(), kind: unknown("REGION") });
+    b.entities.push(asenacad_engine::doc::Entity { handle: h, common: Common::default(), kind: unknown("REGION") });
     d.blocks.insert("Part".into(), std::sync::Arc::new(b));
     let mut s = Session::empty();
     s.open_drawing(d, "foreign.dxf", None);
@@ -54,16 +54,16 @@ fn save_lists_the_entities_the_file_does_not_keep() {
 
 #[test]
 fn templates_report_what_dwg_does_not_keep() {
-    use cadcraft_engine::cmd::file::drops_unknown;
+    use asenacad_engine::cmd::file::drops_unknown;
     assert!(drops_unknown("a.dwg") && drops_unknown("B.DWT"));
     assert!(!drops_unknown("a.dxf"));
 }
 
 #[test]
 fn solids_whose_geometry_the_data_store_keeps_are_not_reported_from_2013() {
-    use cadcraft_engine::cmd::file::{Version, not_saved_as};
-    use cadcraft_engine::doc::Handle;
-    use cadcraft_engine::doc::foreign::Foreign;
+    use asenacad_engine::cmd::file::{Version, not_saved_as};
+    use asenacad_engine::doc::Handle;
+    use asenacad_engine::doc::foreign::Foreign;
     let mut d = Drawing::new_imperial();
     let kept = d.add(&Space::Model, Common::default(), unknown("3DSOLID")).unwrap();
     d.add(&Space::Model, Common::default(), unknown("3DSOLID")).unwrap();

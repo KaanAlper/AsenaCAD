@@ -3,11 +3,11 @@
 //! choice, the export lists show AutoCAD's defaults disabled, and Collaborate's online tools are
 //! disabled while DWG Compare runs COMPARE.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::ribbon::model::{Panel, Tab};
-use cadcraft_ui_egui::ribbon::output::{COLLABORATE, OUTPUT};
-use cadcraft_ui_egui::ribbon::{render_panel_for_test, widgets::LAUNCHER, widgets::RibbonState};
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_ui_egui::ribbon::model::{Panel, Tab};
+use asenacad_ui_egui::ribbon::output::{COLLABORATE, OUTPUT};
+use asenacad_ui_egui::ribbon::{render_panel_for_test, widgets::LAUNCHER, widgets::RibbonState};
+use asenacad_ui_egui::{CadApp, Services};
 use egui::accesskit::Role;
 use egui::vec2;
 use egui_kittest::Harness;

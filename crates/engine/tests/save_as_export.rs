@@ -2,8 +2,8 @@
 //! drawing keeps its name and its unsaved changes, so closing still asks and QSAVE doesn't write
 //! the image again.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
+use asenacad_engine::Session;
+use asenacad_engine::cmd::file::{IoHooks, set_io};
 use serde_json::json;
 
 #[test]

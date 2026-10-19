@@ -76,7 +76,7 @@ fn window_drag(ui: &mut egui::Ui, rect: Rect) {
     }
 }
 
-/// CADCraft's Tool Bar (Window ▸ Tool Bar), under the ribbon. AutoCAD has none, so it is off by
+/// AsenaCAD's Tool Bar (Window ▸ Tool Bar), under the ribbon. AutoCAD has none, so it is off by
 /// default; the title row (`titlerow`) holds the window title and the macOS traffic-light inset.
 pub fn toolbar(app: &mut CadApp, ui: &mut egui::Ui) {
     if !app.ui.show_toolbar {

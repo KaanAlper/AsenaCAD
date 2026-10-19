@@ -106,7 +106,7 @@ cp "$ROOT/assets/app-icon/asenacad.icns" "$APP/Contents/Resources/AsenaCAD.icns"
 # Licences of the embedded craft-fonts fonts (only when built with CRAFT_FONTS_DIR).
 copy_font_licences "$APP/Contents/Resources"
 sed -e "s/@VERSION@/$VERSION/g" -e "s/@SHORT_VERSION@/$SHORT_VERSION/g" \
-  -e "s/@BUILD_SHA@/${CADCRAFT_BUILD_SHA:-unknown}/g" \
+  -e "s/@BUILD_SHA@/${ASENACAD_BUILD_SHA:-unknown}/g" \
   "$HERE/Info.plist.in" >"$APP/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist"
 printf 'APPL????' >"$APP/Contents/PkgInfo"

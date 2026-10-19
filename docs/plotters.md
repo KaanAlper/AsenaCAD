@@ -32,7 +32,7 @@ settings directory:
 | macOS | `~/Library/Application Support/AsenaCAD/plotters` |
 | Windows | `%APPDATA%\AsenaCAD\plotters` |
 
-`CADCRAFT_CONFIG_DIR` replaces the settings directory. On the web, devices last for the
+`ASENACAD_CONFIG_DIR` replaces the settings directory. On the web, devices last for the
 session unless the host provides storage (`cmd::plotters::set_plotter_store`). Binary `.pc3`
 files are not read; we haven't found a public specification of that format.
 

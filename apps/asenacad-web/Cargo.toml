@@ -14,9 +14,9 @@ name = "asenacad-web"
 path = "src/main.rs"
 
 [dependencies]
-cadcraft-engine = { workspace = true }
-cadcraft-ui-egui = { workspace = true }
-cadcraft-io = { workspace = true }
+asenacad-engine = { workspace = true }
+asenacad-ui-egui = { workspace = true }
+asenacad-io = { workspace = true }
 egui = { workspace = true }
 log = { workspace = true }
 serde_json = { workspace = true }

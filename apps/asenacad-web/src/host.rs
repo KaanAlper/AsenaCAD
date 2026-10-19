@@ -15,7 +15,7 @@
 
 use std::cell::{Cell, RefCell};
 
-use cadcraft_ui_egui::CadApp;
+use asenacad_ui_egui::CadApp;
 use wasm_bindgen::JsCast as _;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::closure::Closure;
@@ -118,7 +118,7 @@ impl Bridge {
     }
 }
 
-/// The engine's delivery hook in host mode ([`cadcraft_engine::cmd::file::set_deliver`]): hand
+/// The engine's delivery hook in host mode ([`asenacad_engine::cmd::file::set_deliver`]): hand
 /// the file to the parent page. `Ok` once it was posted; the engine then counts a drawing as saved.
 pub fn deliver(name: &str, _mime: &str, bytes: &[u8]) -> Result<(), String> {
     let bridge = BRIDGE.with(|b| b.borrow().clone()).ok_or("the page that embeds AsenaCAD is gone")?;

@@ -2,12 +2,12 @@
 //! entry, unbuilt items are disabled, lists show the drawing's values and the Reference
 //! launcher opens the External References palette.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::docking::Panel as Palette;
-use cadcraft_ui_egui::ribbon::insert::INSERT;
-use cadcraft_ui_egui::ribbon::model::Panel;
-use cadcraft_ui_egui::ribbon::{render_panel_for_test, widgets::LAUNCHER, widgets::RibbonState};
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_ui_egui::docking::Panel as Palette;
+use asenacad_ui_egui::ribbon::insert::INSERT;
+use asenacad_ui_egui::ribbon::model::Panel;
+use asenacad_ui_egui::ribbon::{render_panel_for_test, widgets::LAUNCHER, widgets::RibbonState};
+use asenacad_ui_egui::{CadApp, Services};
 use egui::accesskit::Role;
 use egui::vec2;
 use egui_kittest::Harness;

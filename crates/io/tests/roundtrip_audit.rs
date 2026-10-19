@@ -7,9 +7,9 @@
 
 use std::collections::HashMap;
 
-use cadcraft_doc::{Drawing, EntityKind};
-use cadcraft_dxf::{Tag, records, sections};
-use cadcraft_io::{read_dxf, write_dxf};
+use asenacad_doc::{Drawing, EntityKind};
+use asenacad_dxf::{Tag, records, sections};
+use asenacad_io::{read_dxf, write_dxf};
 
 /// DXF text from lines of `code value` (the value may be empty).
 fn dxf(src: &str) -> String {
@@ -565,7 +565,7 @@ struct Out {
 
 impl Out {
     fn new(text: &str) -> Out {
-        let tags = cadcraft_dxf::parse(text.as_bytes()).expect("parse written DXF");
+        let tags = asenacad_dxf::parse(text.as_bytes()).expect("parse written DXF");
         let mut recs = Vec::new();
         for s in sections(&tags) {
             for (k, t) in records(&s.tags) {
@@ -896,7 +896,7 @@ fn class_records_have_instance_counts_for_generated_and_preserved_records() {
 #[test]
 fn erased_entities_take_their_extension_data_with_them() {
     let mut d = read_dxf(fixture().as_bytes()).expect("read");
-    let line = cadcraft_doc::Handle::parse_hex("2A").expect("handle");
+    let line = asenacad_doc::Handle::parse_hex("2A").expect("handle");
     d.remove_entity(line).expect("erase the line");
     let o = Out::new(&write_dxf(&d));
     assert!(o.handle("2A").is_none());
@@ -911,10 +911,10 @@ fn erased_entities_take_their_extension_data_with_them() {
 #[test]
 fn a_new_colour_drops_the_colour_book_name() {
     let mut d = read_dxf(fixture().as_bytes()).expect("read");
-    let line = cadcraft_doc::Handle::parse_hex("2A").expect("handle");
-    d.modify_entity(line, |e| e.common.color = cadcraft_color::Color::Index(3)).expect("recolour");
+    let line = asenacad_doc::Handle::parse_hex("2A").expect("handle");
+    d.modify_entity(line, |e| e.common.color = asenacad_color::Color::Index(3)).expect("recolour");
     if let Some(l) = d.layer_mut("WALLS") {
-        l.color = cadcraft_color::Color::Index(5);
+        l.color = asenacad_color::Color::Index(5);
     }
     let o = Out::new(&write_dxf(&d));
     assert_eq!(s(o.handle("2A").expect("line").1, 430), "");
@@ -959,7 +959,7 @@ fn hostile_raw_data_never_panics() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn dwg_keeps_extension_dictionaries_xrecords_and_entity_xdata() {
-    let via_dwg = |d: &Drawing| cadcraft_io::read(&cadcraft_io::write(d, "x.dwg").expect("write DWG"), "x.dwg").expect("read DWG");
+    let via_dwg = |d: &Drawing| asenacad_io::read(&asenacad_io::write(d, "x.dwg").expect("write DWG"), "x.dwg").expect("read DWG");
     let d = via_dwg(&via_dwg(&read_dxf(fixture().as_bytes()).expect("read fixture")));
     let o = Out::new(&write_dxf(&d));
     assert_eq!(o.dangling(), Vec::<String>::new());

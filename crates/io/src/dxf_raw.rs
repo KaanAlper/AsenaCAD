@@ -16,9 +16,9 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 
-use cadcraft_doc::foreign::{Foreign, ForeignExtra, ForeignKey, ForeignObject};
-use cadcraft_doc::{Drawing, Entity, EntityKind, Handle, RawTag, Unknown};
-use cadcraft_dxf::{Section, Tag};
+use asenacad_doc::foreign::{Foreign, ForeignExtra, ForeignKey, ForeignObject};
+use asenacad_doc::{Drawing, Entity, EntityKind, Handle, RawTag, Unknown};
+use asenacad_dxf::{Section, Tag};
 
 /// Named object dictionary entries AsenaCAD writes itself from its model (plus every key that
 /// starts with `CADCRAFT`): they are read into the model, not kept raw. A change that starts
@@ -73,7 +73,7 @@ fn raw(t: &Tag) -> RawTag {
 /// A kept group with the value type its code has (so binary output encodes it right); text that
 /// doesn't parse as that type stays text.
 fn tag(r: &RawTag) -> Tag {
-    use cadcraft_dxf::{Kind, Value, kind_of};
+    use asenacad_dxf::{Kind, Value, kind_of};
     let v = r.value.trim();
     let value = match kind_of(r.code) {
         Kind::Real => v.parse::<f64>().ok().filter(|x| x.is_finite()).map(Value::Real),
@@ -307,7 +307,7 @@ fn put_xdata(d: &mut Drawing, mut xdata: HashMap<Handle, Vec<RawTag>>) {
     if xdata.is_empty() {
         return;
     }
-    let mut give = |store: &mut cadcraft_doc::EntityStore| {
+    let mut give = |store: &mut asenacad_doc::EntityStore| {
         let hs: Vec<Handle> = store.iter().map(|e| e.handle).filter(|h| xdata.contains_key(h)).collect();
         for h in hs {
             if let Some(xd) = xdata.remove(&h) {
@@ -736,7 +736,7 @@ fn extra_for<'a>(f: &'a Foreign, xd: &XdataOf, rec: &Rec, body: &[Tag], block: &
     }
 }
 
-/// Entities' own xdata ([`cadcraft_doc::Common::xdata`]), by handle.
+/// Entities' own xdata ([`asenacad_doc::Common::xdata`]), by handle.
 type XdataOf<'a> = HashMap<Handle, &'a [RawTag]>;
 
 /// The extras of entity `h`: what the drawing keeps for it, with the entity's own xdata.
@@ -913,11 +913,11 @@ fn plan_unknown(d: &Drawing, recs: &[Rec], tags: &[Tag], roles: &HashMap<Foreign
         recs.iter().skip(i).find(|r| r.kind == "ENDBLK").map(|r| r.start)
     };
     let br = |name: &str| roles.get(&("BLOCK_RECORD".to_string(), up(name))).cloned();
-    let first_at = |s: &cadcraft_doc::EntityStore| s.iter().find_map(|e| at.get(&e.handle.hex()).copied());
-    let mut layouts: Vec<&cadcraft_doc::Layout> = d.layouts.iter().collect();
+    let first_at = |s: &asenacad_doc::EntityStore| s.iter().find_map(|e| at.get(&e.handle.hex()).copied());
+    let mut layouts: Vec<&asenacad_doc::Layout> = d.layouts.iter().collect();
     layouts.sort_by_key(|l| l.tab_order);
     // (entities, owner, paper space, end of the space, section)
-    let mut stores: Vec<(&cadcraft_doc::EntityStore, Option<String>, bool, Option<usize>, &str)> = Vec::new();
+    let mut stores: Vec<(&asenacad_doc::EntityStore, Option<String>, bool, Option<usize>, &str)> = Vec::new();
     let model_end = layouts.first().and_then(|l| first_at(&l.entities)).or(ents_end);
     stores.push((&d.model, br("*Model_Space"), false, model_end, "ENTITIES"));
     for (i, l) in layouts.iter().enumerate() {

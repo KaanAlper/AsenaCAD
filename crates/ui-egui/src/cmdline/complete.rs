@@ -24,8 +24,8 @@ pub(super) fn suggestions(prefix: &str) -> Vec<Suggestion> {
     let mut seen_ids: HashSet<&'static str> = HashSet::new();
 
     // 1. Exact match: alias resolution or exact command name match.
-    let resolved = cadcraft_engine::cmd::resolve_alias(&p);
-    if let Some(spec) = cadcraft_engine::cmd::find_command(&resolved)
+    let resolved = asenacad_engine::cmd::resolve_alias(&p);
+    if let Some(spec) = asenacad_engine::cmd::find_command(&resolved)
         && !spec.id.contains('.')
     {
         let display =
@@ -35,8 +35,8 @@ pub(super) fn suggestions(prefix: &str) -> Vec<Suggestion> {
     }
 
     // 2. Command ID prefix matches (excluding already matched exact command).
-    let mut id_matches: Vec<&'static cadcraft_engine::CommandSpec> =
-        cadcraft_engine::command_specs().iter().filter(|c| !c.id.contains('.') && !seen_ids.contains(c.id) && c.id.starts_with(&p)).collect();
+    let mut id_matches: Vec<&'static asenacad_engine::CommandSpec> =
+        asenacad_engine::command_specs().iter().filter(|c| !c.id.contains('.') && !seen_ids.contains(c.id) && c.id.starts_with(&p)).collect();
     id_matches.sort_by_key(|c| (c.id.len(), c.id));
     for c in id_matches {
         out.push(Suggestion { id: c.id.to_ascii_uppercase(), display: c.id.to_ascii_uppercase(), label: c.label });
@@ -44,8 +44,8 @@ pub(super) fn suggestions(prefix: &str) -> Vec<Suggestion> {
     }
 
     // 3. Command alias prefix matches (for commands not yet added).
-    let mut alias_matches: Vec<(&'static str, &'static cadcraft_engine::CommandSpec)> = Vec::new();
-    for c in cadcraft_engine::command_specs() {
+    let mut alias_matches: Vec<(&'static str, &'static asenacad_engine::CommandSpec)> = Vec::new();
+    for c in asenacad_engine::command_specs() {
         if c.id.contains('.') || seen_ids.contains(c.id) {
             continue;
         }

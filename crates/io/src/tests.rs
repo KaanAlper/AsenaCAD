@@ -1,6 +1,6 @@
-use cadcraft_color::Color;
-use cadcraft_doc::*;
-use cadcraft_geom::{PolyVertex, Vec2, Vec3};
+use asenacad_color::Color;
+use asenacad_doc::*;
+use asenacad_geom::{PolyVertex, Vec2, Vec3};
 
 use crate::*;
 
@@ -72,7 +72,7 @@ fn sample() -> Drawing {
     d.add(
         &Space::Model,
         c("0"),
-        EntityKind::Spline(cadcraft_geom::Spline::from_fit_points(&[Vec2::ZERO, Vec2::new(1.0, 2.0), Vec2::new(3.0, 1.0), Vec2::new(4.0, 3.0)])),
+        EntityKind::Spline(asenacad_geom::Spline::from_fit_points(&[Vec2::ZERO, Vec2::new(1.0, 2.0), Vec2::new(3.0, 1.0), Vec2::new(4.0, 3.0)])),
     )
     .unwrap();
     d.add(
@@ -343,7 +343,7 @@ fn hostile_dxf_does_not_panic() {
         "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n42\n5\n20\n1\n0\nENDSEC\n0\nEOF\n",
     ] {
         if let Ok(d) = read(t.as_bytes(), "x.dxf") {
-            let _ = cadcraft_render::build(&d, &Space::Model, &cadcraft_render::Options::default());
+            let _ = asenacad_render::build(&d, &Space::Model, &asenacad_render::Options::default());
             let _ = d.extents(&Space::Model);
         }
     }
@@ -365,7 +365,7 @@ fn view_box(svg: &str) -> String {
 
 #[test]
 fn image_export_frames_window() {
-    use cadcraft_geom::Bounds2;
+    use asenacad_geom::Bounds2;
     let d = sample();
     let win = Bounds2::new(Vec2::new(1.0, 2.0), Vec2::new(31.0, 22.0));
     // SVG: the viewBox is exactly the window (no margin); the default still fits the extents.
@@ -374,14 +374,14 @@ fn image_export_frames_window() {
     assert_eq!(view_box(&framed), "0 0 30.000000 20.000000");
     assert_ne!(view_box(&framed), view_box(&plain));
     assert_eq!(plain, String::from_utf8(write_framed(&d, "a.svg", None).unwrap()).unwrap());
-    let ext = cadcraft_render::build(&d, &Space::Model, &cadcraft_render::Options::default()).bounds;
+    let ext = asenacad_render::build(&d, &Space::Model, &asenacad_render::Options::default()).bounds;
     let m = ext.width().max(ext.height()) * 0.02;
     assert_eq!(view_box(&plain), format!("0 0 {:.6} {:.6}", ext.width() + 2.0 * m, ext.height() + 2.0 * m));
     // PNG: the window fills the 3:2 image exactly, centred.
     let v = png_view(&ext, 2400, 1600, Some(win));
     assert_eq!(v.center, Vec2::new(16.0, 12.0));
     assert!((v.scale - 80.0).abs() < 1e-9);
-    assert_eq!(png_view(&ext, 2400, 1600, None), cadcraft_render::raster::View::fit(&ext, 2400, 1600, 0.05));
+    assert_eq!(png_view(&ext, 2400, 1600, None), asenacad_render::raster::View::fit(&ext, 2400, 1600, 0.05));
     let png_framed = write_framed(&d, "a.png", Some(win)).unwrap();
     assert_eq!(&png_framed[1..4], b"PNG");
     assert_ne!(png_framed, write(&d, "a.png").unwrap());
@@ -395,7 +395,7 @@ fn image_export_frames_window() {
 
 #[test]
 fn hostile_export_window_is_an_error() {
-    use cadcraft_geom::Bounds2;
+    use asenacad_geom::Bounds2;
     let d = sample();
     let raw = |x0: f64, y0: f64, x1: f64, y1: f64| Bounds2 { min: Vec2::new(x0, y0), max: Vec2::new(x1, y1) };
     let bad = [
@@ -544,7 +544,7 @@ fn pdf_hostile_options_and_empty() {
 #[test]
 fn dxf_roundtrips_page_setup() {
     let mut d = sample();
-    let a3 = cadcraft_render::paper_size("A3").unwrap();
+    let a3 = asenacad_render::paper_size("A3").unwrap();
     {
         let p = &mut d.layouts[0].page;
         p.paper = a3.name.into();
@@ -770,7 +770,7 @@ fn viewport_layer_colors_roundtrip() {
             on: true,
         })
     };
-    let colors = vec![("Walls".to_string(), Color::Index(5)), ("A B".to_string(), Color::True(cadcraft_color::Rgb(255, 128, 0)))];
+    let colors = vec![("Walls".to_string(), Color::Index(5)), ("A B".to_string(), Color::True(asenacad_color::Rgb(255, 128, 0)))];
     d.add(&paper, Common::default(), vp(2, Vec::new(), colors.clone())).unwrap();
     d.add(&paper, Common::default(), vp(3, Vec::new(), Vec::new())).unwrap();
     // Frozen layers and colour overrides share one AsenaCAD xdata group.
@@ -935,8 +935,8 @@ fn many_entities(n: usize) -> Drawing {
 #[cfg(not(target_arch = "wasm32"))]
 fn ac1024_dwg(n: usize) -> Vec<u8> {
     let dxf = write_dxf(&many_entities(n)).replacen("AC1015", "AC1024", 1);
-    let dwg = cadcraft_dwg::dxf_to_dwg(dxf.as_bytes()).unwrap();
-    assert_eq!(cadcraft_dwg::version(&dwg).as_deref(), Some("AC1024"));
+    let dwg = asenacad_dwg::dxf_to_dwg(dxf.as_bytes()).unwrap();
+    assert_eq!(asenacad_dwg::version(&dwg).as_deref(), Some("AC1024"));
     dwg
 }
 
@@ -948,8 +948,8 @@ fn ac1024_dwg(n: usize) -> Vec<u8> {
 fn ac1024_dwg_with_many_entities_opens() {
     let n = 30_000;
     let dwg = ac1024_dwg(n);
-    let dxf = cadcraft_dwg::dwg_to_dxf(&dwg).unwrap();
-    let tags = cadcraft_dxf::parse(&dxf).unwrap().len();
+    let dxf = asenacad_dwg::dwg_to_dxf(&dwg).unwrap();
+    let tags = asenacad_dxf::parse(&dxf).unwrap().len();
     assert!(dxf.len() < dwg.len() * 20, "DXF {} bytes from {} DWG bytes", dxf.len(), dwg.len());
     assert!(tags < dwg.len(), "{tags} group codes from {} DWG bytes", dwg.len());
     let d = read(&dwg, "big.dwg").unwrap();
@@ -965,20 +965,20 @@ fn ac1024_dwg_with_many_entities_opens() {
 #[test]
 fn oversized_dwg_and_dxf_are_rejected_early() {
     let dwg = ac1024_dwg(3000);
-    let full = cadcraft_dwg::dwg_to_dxf(&dwg).unwrap().len();
+    let full = asenacad_dwg::dwg_to_dxf(&dwg).unwrap().len();
     assert!(full > 400_000, "{full}");
-    let limits = cadcraft_dwg::Limits { max_dxf_bytes: 300_000, ..cadcraft_dwg::Limits::DEFAULT };
-    let e = cadcraft_dwg::dwg_to_dxf_with(&dwg, limits).unwrap_err();
+    let limits = asenacad_dwg::Limits { max_dxf_bytes: 300_000, ..asenacad_dwg::Limits::DEFAULT };
+    let e = asenacad_dwg::dwg_to_dxf_with(&dwg, limits).unwrap_err();
     assert!(e.starts_with("DWG: converting this 0."), "{e}");
     assert!(e.contains("MB file produced more than 0.3 MB of drawing data (the limit)"), "{e}");
 
-    let limits = cadcraft_dwg::Limits { max_dwg_bytes: 100_000, ..cadcraft_dwg::Limits::DEFAULT };
-    let e = cadcraft_dwg::dwg_to_dxf_with(&dwg, limits).unwrap_err();
+    let limits = asenacad_dwg::Limits { max_dwg_bytes: 100_000, ..asenacad_dwg::Limits::DEFAULT };
+    let e = asenacad_dwg::dwg_to_dxf_with(&dwg, limits).unwrap_err();
     assert!(e.starts_with("DWG: the file is 0.") && e.ends_with("MB, larger than the 0.1 MB AsenaCAD opens"), "{e}");
 
     // Lines that aren't even group codes: the size is reported before anything is parsed.
     let text = "not a group code\nx\n".repeat(60);
-    let e = cadcraft_dxf::parse_with_limit(text.as_bytes(), 50).unwrap_err();
+    let e = asenacad_dxf::parse_with_limit(text.as_bytes(), 50).unwrap_err();
     assert_eq!(e.to_string(), "drawing too large: 60 DXF group codes, more than the 50 AsenaCAD reads");
 }
 
@@ -1069,7 +1069,7 @@ fn dimension_associativity_roundtrips() {
 
     // Without AsenaCAD's xdata (a file from another writer), the standard DIMASSOC objects
     // still give the extension-line links.
-    let tags = cadcraft_dxf::parse(text.as_bytes()).unwrap();
+    let tags = asenacad_dxf::parse(text.as_bytes()).unwrap();
     let mut stripped = Vec::new();
     let mut skipping = false;
     for t in tags {
@@ -1082,7 +1082,7 @@ fn dimension_associativity_roundtrips() {
             stripped.push(t);
         }
     }
-    let foreign = read_dxf(cadcraft_dxf::write_ascii(&stripped).as_bytes()).unwrap();
+    let foreign = read_dxf(asenacad_dxf::write_ascii(&stripped).as_bytes()).unwrap();
     assert_eq!(assoc_of(&foreign, hl), lin.assoc);
     let fa = assoc_of(&foreign, ha);
     assert_eq!(fa.len(), 2);
@@ -1173,7 +1173,7 @@ fn layer_states_roundtrip_next_to_constraints() {
     let (constraints, _) = parametric_sample(&mut d);
     d.layers.push(Layer {
         name: "Wände".into(),
-        color: Color::True(cadcraft_color::Rgb(200, 10, 40)),
+        color: Color::True(asenacad_color::Rgb(200, 10, 40)),
         transparency: 30,
         description: "walls \\ hidden".into(),
         ..Layer::default()
@@ -1375,7 +1375,7 @@ fn non_ascii_text_is_escaped_for_r2000_and_roundtrips() {
     let d = intl_sample();
     let text = write_dxf(&d);
     assert!(text.is_ascii(), "an AC1015 DXF must not contain UTF-8 bytes");
-    let tags = cadcraft_dxf::parse(text.as_bytes()).unwrap();
+    let tags = asenacad_dxf::parse(text.as_bytes()).unwrap();
     let header = |name: &str| tags.windows(2).find(|w| w[0].code == 9 && w[0].str() == name).map(|w| w[1].str());
     assert_eq!(header("$ACADVER").as_deref(), Some("AC1015"));
     assert_eq!(header("$DWGCODEPAGE").as_deref(), Some("ANSI_1252"));
@@ -1445,7 +1445,7 @@ fn hostile_extension_data_never_panics() {
     ];
     for t in &cases {
         if let Ok(d) = read(t.as_bytes(), "x.dxf") {
-            let _ = cadcraft_render::build(&d, &Space::Model, &cadcraft_render::Options::default());
+            let _ = asenacad_render::build(&d, &Space::Model, &asenacad_render::Options::default());
             let _ = write_dxf(&d);
         }
     }
@@ -1492,7 +1492,7 @@ fn extension_sample() -> Drawing {
 fn extension_sample_roundtrips_and_can_be_exported() {
     let d = extension_sample();
     let text = write_dxf(&d);
-    if let Ok(path) = std::env::var("CADCRAFT_DXF_OUT") {
+    if let Ok(path) = std::env::var("ASENACAD_DXF_OUT") {
         std::fs::write(path, &text).unwrap();
     }
     let back = read_dxf(text.as_bytes()).unwrap();
@@ -1533,7 +1533,7 @@ fn dwg_roundtrip_keeps_extension_data() {
 #[test]
 fn mleader_is_written_as_multileader() {
     let mut d = Drawing::new_metric();
-    let text = cadcraft_doc::MText {
+    let text = asenacad_doc::MText {
         insert: Vec3::new(12.0, 5.0, 0.0),
         height: 2.5,
         width: 0.0,
@@ -1545,7 +1545,7 @@ fn mleader_is_written_as_multileader() {
         line_spacing_exact: false,
         columns: None,
     };
-    let m = cadcraft_doc::MLeader {
+    let m = asenacad_doc::MLeader {
         leaders: vec![vec![Vec3::new(0.0, 0.0, 0.0)]],
         landing: Vec3::new(10.0, 5.0, 0.0),
         dogleg: 2.0,
@@ -1660,8 +1660,8 @@ fn arc_length_dimension_keeps_its_kind_and_centre_on_roundtrip() {
         _ => panic!("not a dimension"),
     }
     // And through DWG.
-    let dwg = cadcraft_dwg::dxf_to_dwg(text.as_bytes()).unwrap();
-    let back = read_dxf(&cadcraft_dwg::dwg_to_dxf(&dwg).unwrap()).unwrap();
+    let dwg = asenacad_dwg::dxf_to_dwg(text.as_bytes()).unwrap();
+    let back = read_dxf(&asenacad_dwg::dwg_to_dxf(&dwg).unwrap()).unwrap();
     let dims: Vec<_> = back.model.iter().filter_map(|e| if let EntityKind::Dimension(x) = &e.kind { Some(x.clone()) } else { None }).collect();
     assert_eq!(dims.len(), 1);
     assert!(matches!(dims[0].kind, DimKind::ArcLength), "{:?}", dims[0].kind);
@@ -1681,8 +1681,8 @@ fn gradient_sample() -> (Drawing, Vec<Option<Gradient>>) {
     let gradients = vec![
         Some(Gradient {
             name: "LINEAR".into(),
-            color1: Color::True(cadcraft_color::Rgb(255, 0, 0)),
-            color2: Color::True(cadcraft_color::Rgb(0, 0, 255)),
+            color1: Color::True(asenacad_color::Rgb(255, 0, 0)),
+            color2: Color::True(asenacad_color::Rgb(0, 0, 255)),
             angle: 30f64.to_radians(),
             centered: false,
         }),
@@ -1761,7 +1761,7 @@ fn gradient_falls_back_to_xdata_and_native_groups_win() {
     let back = read_dxf(edited.as_bytes()).unwrap();
     let g = hatches(&back).into_iter().next().and_then(|h| h.gradient).unwrap();
     assert_eq!(g.name, "SPHERICAL");
-    assert_eq!(g.color1, Color::True(cadcraft_color::Rgb(0, 255, 0)));
+    assert_eq!(g.color1, Color::True(asenacad_color::Rgb(0, 255, 0)));
 }
 
 /// Issue #80: DWG saves (R2000, which has no native gradient fields) keep the gradient too.
@@ -1803,7 +1803,7 @@ fn hostile_gradient_groups_never_panic() {
                 assert!(g.angle.is_finite());
             }
         }
-        let _ = cadcraft_render::build(&d, &Space::Model, &cadcraft_render::Options::default());
+        let _ = asenacad_render::build(&d, &Space::Model, &asenacad_render::Options::default());
         let back = read_dxf(write_dxf(&d).as_bytes()).unwrap();
         assert_eq!(
             hatches(&back).into_iter().map(|h| h.gradient).collect::<Vec<_>>(),
@@ -1985,7 +1985,7 @@ fn mirrored_text_extrusion_keeps_its_footprint() {
     assert!(t.rotation.abs() < 1e-12, "{}", t.rotation);
     let a = t.align_pt.expect("right-justified text has an alignment point");
     assert!((a.x - 10.0).abs() < 1e-9 && (a.y - 5.0).abs() < 1e-9, "{a:?}");
-    let list = cadcraft_render::build(&d, &Space::Model, &cadcraft_render::Options::default());
+    let list = asenacad_render::build(&d, &Space::Model, &asenacad_render::Options::default());
     assert!((list.bounds.max.x - 10.0).abs() < 1e-6 && list.bounds.min.x < 9.5, "drawn left of (10,5): {:?}", list.bounds);
 }
 
@@ -2000,7 +2000,7 @@ fn mirrored_mtext_extrusion_keeps_its_footprint() {
     let t = first(&d, |k| if let EntityKind::MText(t) = k { Some(t.clone()) } else { None });
     assert_eq!(t.attach, 3);
     assert!((t.rotation - std::f64::consts::PI).abs() < 1e-12, "{}", t.rotation);
-    let b = cadcraft_render::build(&d, &Space::Model, &cadcraft_render::Options::default()).bounds;
+    let b = asenacad_render::build(&d, &Space::Model, &asenacad_render::Options::default()).bounds;
     assert!(b.min.x > -0.2 && b.max.x > 0.5 && b.min.y > -0.2 && b.max.y > 0.5, "box right of and above (0,0): {b:?}");
 }
 

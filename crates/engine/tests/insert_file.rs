@@ -1,11 +1,11 @@
 //! INSERT of exploded blocks (`*NAME`) and of drawing files (`-INSERT path`, `NAME=path`, JSON
 //! `file`), read through the io hooks (#340).
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::color::Color;
-use cadcraft_engine::doc::geom::Vec3;
-use cadcraft_engine::doc::{Block, Circle, Drawing, Entity, EntityKind, HVal, Handle, Insert, Layer, Line};
+use asenacad_engine::Session;
+use asenacad_engine::cmd::file::{IoHooks, set_io};
+use asenacad_engine::doc::color::Color;
+use asenacad_engine::doc::geom::Vec3;
+use asenacad_engine::doc::{Block, Circle, Drawing, Entity, EntityKind, HVal, Handle, Insert, Layer, Line};
 use serde_json::json;
 
 /// A drawing file in a test format: its bytes are "x,y", the $INSBASE. Model space: a line from

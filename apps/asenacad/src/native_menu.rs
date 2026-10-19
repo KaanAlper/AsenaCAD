@@ -4,8 +4,8 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use cadcraft_ui_egui::menus::{self, Entry};
-use cadcraft_ui_egui::{CadApp, i18n};
+use asenacad_ui_egui::menus::{self, Entry};
+use asenacad_ui_egui::{CadApp, i18n};
 use muda::accelerator::Accelerator;
 use muda::{Menu, MenuEvent, MenuItem, PredefinedMenuItem, Submenu};
 
@@ -106,13 +106,13 @@ impl NativeMenu {
                 submenu.set_text(i18n::tr_menu(language, label));
             }
         }
-        let now = cadcraft_ui_egui::now_ms();
+        let now = asenacad_ui_egui::now_ms();
         if now - self.last_refresh < 300.0 {
             return;
         }
         self.last_refresh = now;
         for (cmd, _, item) in self.items.values() {
-            let en = cadcraft_engine::find_command(cmd).is_none_or(|c| (c.enabled)(&app.session).is_ok());
+            let en = asenacad_engine::find_command(cmd).is_none_or(|c| (c.enabled)(&app.session).is_ok());
             item.set_enabled(en);
         }
     }

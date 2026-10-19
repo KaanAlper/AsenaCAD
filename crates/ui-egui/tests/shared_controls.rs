@@ -1,18 +1,18 @@
 //! Interaction and optional offscreen evidence for the application's painted controls.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::{CadApp, Services, icons, theme};
+use asenacad_engine::Session;
+use asenacad_ui_egui::{CadApp, Services, icons, theme};
 use egui::{Event, Key, Modifiers, PointerButton, Response, pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 
 fn app() -> CadApp {
     let mut app = CadApp::new(Session::default(), Services::default());
-    // CADCraft's palettes (closed by default, as in AutoCAD).
+    // AsenaCAD's palettes (closed by default, as in AutoCAD).
     app.ui.show_palettes = true;
     app.ui.show_toolsets = true;
     // The ribbon down to its tabs: its Home panels repeat the palette's labels (Line, Circle).
-    app.ui.ribbon_min = cadcraft_ui_egui::ribbon::RibbonMin::Tabs;
+    app.ui.ribbon_min = asenacad_ui_egui::ribbon::RibbonMin::Tabs;
     app.run("ui.sample", serde_json::json!({})).unwrap();
     app
 }
@@ -124,7 +124,7 @@ fn right_palettes_collapse_arrow_hides_menu() {
     let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_ui_state(
         |ui, app: &mut CadApp| {
             app.logic(&ui.ctx().clone());
-            cadcraft_ui_egui::palettes::right_palettes(app, ui);
+            asenacad_ui_egui::palettes::right_palettes(app, ui);
         },
         app(),
     );
@@ -142,7 +142,7 @@ fn toolsets_collapse_arrow_hides_menu() {
     let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_ui_state(
         |ui, app: &mut CadApp| {
             app.logic(&ui.ctx().clone());
-            cadcraft_ui_egui::palettes::toolsets(app, ui);
+            asenacad_ui_egui::palettes::toolsets(app, ui);
         },
         app(),
     );

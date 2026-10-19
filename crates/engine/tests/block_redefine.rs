@@ -1,7 +1,7 @@
 //! BLOCK redefinition: no self-referencing blocks, names are case-insensitive (#250).
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::EntityKind;
+use asenacad_engine::Session;
+use asenacad_engine::doc::EntityKind;
 use serde_json::{Value, json};
 
 fn line(s: &mut Session, a: [f64; 2], b: [f64; 2]) -> String {

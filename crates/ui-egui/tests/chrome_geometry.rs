@@ -2,11 +2,11 @@
 //! row, ribbon tab row, panel strip and document tabs, the Home panels that collapse at AutoCAD's
 //! window widths (in points, whatever the display scale), and the status bar.
 
-use cadcraft_engine::Session;
-use cadcraft_geom::Vec2;
-use cadcraft_ui_egui::chrome::{FILE_TABS_H, titlerow};
-use cadcraft_ui_egui::ribbon::{self, home::HOME, layout};
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_geom::Vec2;
+use asenacad_ui_egui::chrome::{FILE_TABS_H, titlerow};
+use asenacad_ui_egui::ribbon::{self, home::HOME, layout};
+use asenacad_ui_egui::{CadApp, Services};
 use egui::accesskit::Role;
 use egui::{Rect, Shape, vec2};
 use egui_kittest::Harness;
@@ -92,7 +92,7 @@ fn status_labels_never_overlap_at_standard_and_compact_sizes() {
     assert!(overlaps.is_empty(), "{}", overlaps.join("\n"));
 }
 
-/// CADCraft's Tool Bar, which is off by default (AutoCAD has none).
+/// AsenaCAD's Tool Bar, which is off by default (AutoCAD has none).
 fn with_toolbar(app: &mut CadApp) {
     app.ui.show_toolbar = true;
 }
