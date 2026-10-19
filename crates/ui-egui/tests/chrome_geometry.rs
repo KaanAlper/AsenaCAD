@@ -4,7 +4,7 @@
 
 use asenacad_engine::Session;
 use asenacad_geom::Vec2;
-use asenacad_ui_egui::chrome::{FILE_TABS_H, titlerow};
+use asenacad_ui_egui::chrome::{FILE_TABS_H, statusbar, titlerow};
 use asenacad_ui_egui::ribbon::{self, home::HOME, layout};
 use asenacad_ui_egui::{CadApp, Services};
 use egui::accesskit::Role;
@@ -15,11 +15,23 @@ use egui_kittest::kittest::Queryable;
 /// The test harness keeps an 8 point margin around the app.
 const MARGIN: f32 = 8.0;
 
-fn harness(width: f32, height: f32, scale: f32, message: bool) -> Harness<'static, CadApp> {
-    harness_with(width, height, scale, message, |_| {})
+/// The interface font a test runs with. The layout must hold in any: the ribbon font is sized
+/// to AutoCAD's tab widths whatever the font ([`asenacad_ui_egui::theme::ribbon_font`]).
+#[derive(Clone, Copy, Debug)]
+enum UiFont {
+    /// The system's (DejaVu Sans, Segoe UI, ...), when this machine has one where AsenaCAD looks.
+    System,
+    /// egui's own, what a system without one shows (the FreeBSD CI VM).
+    Egui,
 }
 
-fn harness_with(width: f32, height: f32, scale: f32, message: bool, setup: impl FnOnce(&mut CadApp)) -> Harness<'static, CadApp> {
+const FONTS: [UiFont; 2] = [UiFont::System, UiFont::Egui];
+
+fn harness(font: UiFont, width: f32, height: f32, scale: f32, message: bool) -> Harness<'static, CadApp> {
+    harness_with(font, width, height, scale, message, |_| {})
+}
+
+fn harness_with(font: UiFont, width: f32, height: f32, scale: f32, message: bool, setup: impl FnOnce(&mut CadApp)) -> Harness<'static, CadApp> {
     let mut app = CadApp::new(Session::default(), Services::default());
     app.run("new", serde_json::json!({})).unwrap();
     app.ui.start_tab = false;
@@ -37,6 +49,11 @@ fn harness_with(width: f32, height: f32, scale: f32, message: bool, setup: impl 
         },
         app,
     );
+    if let UiFont::Egui = font {
+        // The app installs its fonts once per interface language, in its first pass.
+        h.run();
+        h.ctx.set_fonts(egui::FontDefinitions::default());
+    }
     h.run_steps(5);
     h
 }
@@ -61,28 +78,34 @@ fn visible_text(shape: &Shape, clip: Rect, result: &mut Vec<(String, Rect)>) {
 #[test]
 fn status_labels_never_overlap_at_standard_and_compact_sizes() {
     let mut overlaps = Vec::new();
-    for (width, height) in [(1200.0, 760.0), (900.0, 560.0)] {
+    let sizes = FONTS.into_iter().flat_map(|font| [(1200.0, 760.0), (900.0, 560.0)].map(|size| (font, size)));
+    for (font, (width, height)) in sizes {
         for scale in [1.0, 2.0] {
             for message in [false, true] {
-                let mut h = harness(width, height, scale, message);
+                let mut h = harness(font, width, height, scale, message);
                 if let Ok(directory) = std::env::var("CRAFT_UI_VISUAL_DIR") {
                     std::fs::create_dir_all(&directory).unwrap();
-                    h.render().unwrap().save(format!("{directory}/cad-{width}-{scale}-{message}.png")).unwrap();
+                    h.render().unwrap().save(format!("{directory}/cad-{font:?}-{width}-{scale}-{message}.png")).unwrap();
                 }
                 let mut texts = Vec::new();
                 for shape in &h.output().shapes {
                     visible_text(&shape.shape, shape.clip_rect, &mut texts);
                 }
-                texts.retain(|(_, rect)| rect.center().y > height - 26.0);
+                // The status bar's texts: those inside its rectangle (whatever the interface
+                // font's ascent puts a text's centre at; "Model", with no descender, sits higher
+                // than "Layout1").
+                let status_top = height - MARGIN - statusbar::HEIGHT;
+                texts.retain(|(_, rect)| rect.top() >= status_top - 0.5 && rect.bottom() <= height - MARGIN + 0.5);
                 // The current tab is always drawn; the others move to the layout list when the bar is narrow.
-                assert!(texts.iter().any(|(text, _)| text == "Model"));
+                let at = format!("{font:?} font, {width}px @{scale}");
+                assert!(texts.iter().any(|(text, _)| text == "Model"), "{at}: the Model tab's name in {texts:?}");
                 if width >= 1200.0 {
-                    assert!(texts.iter().any(|(text, _)| text == "Layout2"));
+                    assert!(texts.iter().any(|(text, _)| text == "Layout2"), "{at}: Layout2's name in {texts:?}");
                 }
                 for (i, (first, first_rect)) in texts.iter().enumerate() {
                     for (second, second_rect) in texts.iter().skip(i + 1) {
                         if first_rect.intersects(*second_rect) {
-                            overlaps.push(format!("{width}px @{scale}: {first:?} {first_rect:?} overlaps {second:?} {second_rect:?}"));
+                            overlaps.push(format!("{at}: {first:?} {first_rect:?} overlaps {second:?} {second_rect:?}"));
                         }
                     }
                 }
@@ -99,7 +122,7 @@ fn with_toolbar(app: &mut CadApp) {
 
 #[test]
 fn compact_toolbar_overflow_keeps_help_reachable() {
-    let mut h = harness_with(900.0, 560.0, 1.0, false, with_toolbar);
+    let mut h = harness_with(UiFont::System, 900.0, 560.0, 1.0, false, with_toolbar);
     h.get_by_label("More toolbar commands").click();
     h.run_steps(3);
     // The overflow menu's Help, not the title row's Help button above it.
@@ -110,15 +133,15 @@ fn compact_toolbar_overflow_keeps_help_reachable() {
 
 #[test]
 fn toolbar_plot_preview_opens_dialog() {
-    let mut h = harness_with(1200.0, 760.0, 1.0, false, with_toolbar);
+    let mut h = harness_with(UiFont::System, 1200.0, 760.0, 1.0, false, with_toolbar);
     h.get_by_label("Plot Preview").click();
     h.run_steps(3);
     assert_eq!(h.state().ui.dialog.as_deref(), Some("preview"));
 }
 
 /// The app in a window `width` points wide (the harness's margin added), at display `scale`.
-fn window(width: f32, height: f32, scale: f32) -> Harness<'static, CadApp> {
-    harness(width + 2.0 * MARGIN, height + 2.0 * MARGIN, scale, false)
+fn window(font: UiFont, width: f32, height: f32, scale: f32) -> Harness<'static, CadApp> {
+    harness(font, width + 2.0 * MARGIN, height + 2.0 * MARGIN, scale, false)
 }
 
 /// AutoCAD's bands, from the window's top: title row, tab row, panel strip, document tab bar.
@@ -145,10 +168,10 @@ fn the_title_row_tabs_ribbon_and_document_tabs_stack_like_autocads_without_overl
     // 156..182 and the strip under them to 186, where the drawing starts.
     let [title, tabs, strip, docs] = bands();
     assert_eq!((tabs.1, strip.1, docs.1, docs.2), (32.0, 56.0, 156.0, 186.0));
-    for width in [1906.0, 1280.0] {
+    for (font, width) in FONTS.into_iter().flat_map(|font| [1906.0, 1280.0].map(|width| (font, width))) {
         for scale in [1.0, 1.34] {
-            let h = window(width, 1000.0, scale);
-            let at = format!("{width} pt @{scale}");
+            let h = window(font, width, 1000.0, scale);
+            let at = format!("{font:?} font, {width} pt @{scale}");
             let check = |r: Rect, band| within(r, band).unwrap_or_else(|e| panic!("{at}: {e}"));
             check(h.get_by_label("Application Button").rect(), title);
             check(h.get_by_role_and_label(Role::Button, "Save").rect(), title);
@@ -205,32 +228,33 @@ fn panel_rects(h: &Harness<'_, CadApp>) -> Vec<Rect> {
 #[test]
 fn home_collapses_at_autocads_window_widths_whatever_the_display_scale() {
     let collapsed_at_1280 = ["Properties", "Groups", "Utilities", "Clipboard", "View"];
-    for scale in [1.0, 1.34] {
+    for (font, scale) in FONTS.into_iter().flat_map(|font| [1.0, 1.34].map(|scale| (font, scale))) {
+        let at = format!("{font:?} font @{scale}");
         // 1280: Draw, Modify, Annotation, Layers and Block stay (small items without their
         // labels: Modify shows icons only), the five panels on the right collapse.
-        let h = window(1280.0, 1000.0, scale);
+        let h = window(font, 1280.0, 1000.0, scale);
         let shown: Vec<_> = HOME.panels.iter().map(|p| p.label).filter(|p| collapsed(&h, p)).collect();
-        assert_eq!(shown, collapsed_at_1280, "@{scale}: AutoCAD's collapsed panels at 1280 px");
+        assert_eq!(shown, collapsed_at_1280, "{at}: AutoCAD's collapsed panels at 1280 px");
         let mv = h.get_by_role_and_label(Role::Button, "Move").rect();
-        assert!(mv.width() < 30.0, "@{scale}: Modify shows icons only at 1280 px: {mv:?}");
-        assert!(h.get_by_role_and_label(Role::Button, "Line").rect().height() > 60.0, "Line stays a large button");
+        assert!(mv.width() < 30.0, "{at}: Modify shows icons only at 1280 px: {mv:?}");
+        assert!(h.get_by_role_and_label(Role::Button, "Line").rect().height() > 60.0, "{at}: Line stays a large button");
         let rects_1280 = panel_rects(&h);
         // 1906: all ten panels with their labels.
-        let h = window(1906.0, 1026.0, scale);
-        assert!(HOME.panels.iter().all(|p| !collapsed(&h, p.label)), "@{scale}: every Home panel is expanded at 1906 px");
-        assert!(h.get_by_role_and_label(Role::Button, "Move").rect().width() > 40.0, "@{scale}: Move shows its label at 1906 px");
+        let h = window(font, 1906.0, 1026.0, scale);
+        assert!(HOME.panels.iter().all(|p| !collapsed(&h, p.label)), "{at}: every Home panel is expanded at 1906 px");
+        assert!(h.get_by_role_and_label(Role::Button, "Move").rect().width() > 40.0, "{at}: Move shows its label at 1906 px");
         let rects_1906 = panel_rects(&h);
         if scale == 1.0 {
             continue;
         }
-        // In points, the layout is the same at any display scale: less than a pixel apart
-        // (text widths never depend on the scale; see `large_label_width`).
+        // In points, the layout is the same at any display scale, in any interface font: less
+        // than a pixel apart (text widths never depend on the scale; see `large_label_width`).
         let reference = |w: f32, rects: &[Rect]| {
-            let base = panel_rects(&window(w, 1000.0, 1.0));
+            let base = panel_rects(&window(font, w, 1000.0, 1.0));
             for (i, (a, b)) in base.iter().zip(rects).enumerate() {
                 assert!(
                     (a.left() - b.left()).abs() <= 0.5 && (a.width() - b.width()).abs() <= 0.5,
-                    "{}: {a:?} at 1.0 vs {b:?} at {scale}",
+                    "{font:?} font, {}: {a:?} at 1.0 vs {b:?} at {scale}",
                     HOME.panels[i].label
                 );
             }
@@ -253,10 +277,10 @@ fn galleys_of(shape: &Shape, text: &str, out: &mut Vec<std::sync::Arc<egui::Gall
 fn collapsed_panel_labels_keep_whole_words_and_fit_their_buttons() {
     // AutoCAD never breaks a word of a collapsed panel's name: a button whose name is too wide
     // for the standard width gets wider ("Annotation" in a ~900 pt window).
-    for scale in [1.0, 1.34] {
+    for (font, scale) in FONTS.into_iter().flat_map(|font| [1.0, 1.34].map(|scale| (font, scale))) {
         for width in [700.0, 900.0] {
-            let h = window(width, 700.0, scale);
-            let at = format!("{width} pt @{scale}");
+            let h = window(font, width, 700.0, scale);
+            let at = format!("{font:?} font, {width} pt @{scale}");
             let collapsed_panels: Vec<_> = HOME.panels.iter().map(|p| p.label).filter(|p| collapsed(&h, p)).collect();
             assert!(collapsed_panels.contains(&"Annotation"), "{at}: Annotation collapses: {collapsed_panels:?}");
             for label in collapsed_panels {
