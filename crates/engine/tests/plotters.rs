@@ -2,10 +2,10 @@
 //! PAGESETUP takes a device and its papers with their printable areas, and PLOT hands the
 //! plotter the device's output, paper and margins.
 
-use cadcraft_doc::{Drawing, Space};
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, base64_decode, set_io};
-use cadcraft_engine::cmd::plotters::{PlotterStore, set_plotter_store};
+use asenacad_doc::{Drawing, Space};
+use asenacad_engine::Session;
+use asenacad_engine::cmd::file::{IoHooks, base64_decode, set_io};
+use asenacad_engine::cmd::plotters::{PlotterStore, set_plotter_store};
 use serde_json::{Value, json};
 
 /// The plot hook echoes the options it gets.
@@ -62,7 +62,7 @@ fn manage_devices() {
 
     // Save as text, load under another name, delete.
     let text = s.execute("plottermanager", &json!({"action": "save", "name": "Office Raster"})).unwrap()["text"].as_str().unwrap().to_string();
-    assert!(text.contains("\"cadcraftPlotter\": 1"), "{text}");
+    assert!(text.contains("\"asenacadPlotter\": 1"), "{text}");
     s.execute("plottermanager", &json!({"action": "load", "text": text, "name": "Office Copy"})).unwrap();
     let copy = s.execute("plottermanager", &json!({"action": "get", "name": "Office Copy"})).unwrap();
     assert_eq!(copy["output"], "png");
@@ -84,7 +84,7 @@ fn page_setup_takes_a_device_and_its_papers() {
     let page = &s.doc().unwrap().layout("Layout1").unwrap().page;
     assert_eq!((page.width_mm, page.height_mm, page.margins_mm), (200.0, 600.0, [10.0, 20.0, 10.0, 20.0]));
     // The printable area shown in the layout follows the device paper.
-    let sheet = cadcraft_render::sheet(s.doc().unwrap(), "Layout1").unwrap();
+    let sheet = asenacad_render::sheet(s.doc().unwrap(), "Layout1").unwrap();
     let mm = |v: f64| v * sheet.unit_mm;
     let got = [mm(sheet.printable.min.x), mm(sheet.printable.min.y), mm(sheet.printable.max.x), mm(sheet.printable.max.y)];
     assert!(got.iter().zip([10.0, 20.0, 190.0, 580.0]).all(|(a, b)| (a - b).abs() < 1e-9), "{got:?}");
@@ -180,7 +180,7 @@ fn plotwindow_keeps_the_picked_window_for_the_plot_dialog() {
     s.cmdline("plotwindow").unwrap();
     assert_eq!(s.current_prompt().unwrap().message, "Specify first corner");
     s.cmdline("10,20").unwrap();
-    assert_eq!(s.preview(cadcraft_engine::geom::Vec2::new(40.0, 5.0)).len(), 4, "the rubber-band rectangle");
+    assert_eq!(s.preview(asenacad_engine::geom::Vec2::new(40.0, 5.0)).len(), 4, "the rubber-band rectangle");
     s.cmdline("40,5").unwrap();
     assert!(s.running.is_none());
     let w = s.plot_window.expect("the picked window");
@@ -193,8 +193,8 @@ fn plotwindow_keeps_the_picked_window_for_the_plot_dialog() {
 
 #[test]
 fn cadcraft_era_device_names_resolve_to_the_builtins() {
-    use cadcraft_doc::PlotOutput;
-    use cadcraft_engine::cmd::plotters::find_device;
+    use asenacad_doc::PlotOutput;
+    use asenacad_engine::cmd::plotters::find_device;
     let mut s = session();
     for (old, new, output) in [
         ("CADCraft PDF", "AsenaCAD PDF", PlotOutput::Pdf),

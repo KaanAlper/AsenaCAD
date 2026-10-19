@@ -4,11 +4,11 @@ use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpStream, ToSocketAddrs};
 use std::time::Duration;
 
-use cadcraft_engine::Session;
+use asenacad_engine::Session;
 use serde_json::{Value, json};
 
 /// Something that answers control-channel methods (`engine.execute`, `cmdline.input`,
-/// `drawing.inspect`, `ui.render`…). See `cadcraft_ui_egui::control` for the full list.
+/// `drawing.inspect`, `ui.render`…). See `asenacad_ui_egui::control` for the full list.
 pub trait Backend {
     fn call(&mut self, method: &str, params: Value) -> Result<Value, String>;
     /// True when a real UI is attached (`ui.screenshot` works).
@@ -110,14 +110,14 @@ impl Remote {
 
 /// The `window` of a `ui.render` request: two finite corners [[x0, y0], [x1, y1]] around an area
 /// (`None` when absent or unusable).
-fn render_window(p: &Value) -> Option<cadcraft_engine::geom::Bounds2> {
+fn render_window(p: &Value) -> Option<asenacad_engine::geom::Bounds2> {
     let a = p.get("window")?.as_array().filter(|a| a.len() == 2)?;
-    let pt = |v: &Value| -> Option<cadcraft_engine::geom::Vec2> {
+    let pt = |v: &Value| -> Option<asenacad_engine::geom::Vec2> {
         let c = v.as_array().filter(|c| c.len() == 2)?;
         let (x, y) = (c[0].as_f64()?, c[1].as_f64()?);
-        (x.is_finite() && y.is_finite()).then(|| cadcraft_engine::geom::Vec2::new(x, y))
+        (x.is_finite() && y.is_finite()).then(|| asenacad_engine::geom::Vec2::new(x, y))
     };
-    let b = cadcraft_engine::geom::Bounds2::new(pt(&a[0])?, pt(&a[1])?);
+    let b = asenacad_engine::geom::Bounds2::new(pt(&a[0])?, pt(&a[1])?);
     (b.width() > 0.0 && b.height() > 0.0).then_some(b)
 }
 
@@ -126,7 +126,7 @@ fn not_open(addr: &str, e: std::io::Error) -> std::io::Error {
     std::io::Error::new(
         e.kind(),
         format!(
-            "AsenaCAD is not answering at {addr} ({e}). Open AsenaCAD with its control port (`--control PORT` or CADCRAFT_CONTROL_PORT), then try again"
+            "AsenaCAD is not answering at {addr} ({e}). Open AsenaCAD with its control port (`--control PORT` or ASENACAD_CONTROL_PORT), then try again"
         ),
     )
 }
@@ -224,7 +224,7 @@ impl Default for Headless {
     }
 }
 
-/// The command-line state, with the same fields as the app's (`cadcraft_ui_egui::control`). There
+/// The command-line state, with the same fields as the app's (`asenacad_ui_egui::control`). There
 /// is no command-line widget here: nothing is typed (`buffer`) and the history isn't expanded.
 fn state(s: &Session) -> Value {
     let p = s.current_prompt();
@@ -279,7 +279,7 @@ impl Backend for Headless {
                     s.cancel();
                     Ok(())
                 } else {
-                    s.input(cadcraft_engine::Input::Enter)
+                    s.input(asenacad_engine::Input::Enter)
                 };
                 // Like the app: a refused Enter is echoed to the history (and `output`), and also
                 // reported in `error`; the call itself succeeds.
@@ -298,7 +298,7 @@ impl Backend for Headless {
             }
             "cmdline.state" => Ok(state(s)),
             "engine.commands" => {
-                Ok(Value::Array(cadcraft_engine::command_specs().iter().map(|c| serde_json::to_value(c.info(s)).unwrap_or_default()).collect()))
+                Ok(Value::Array(asenacad_engine::command_specs().iter().map(|c| serde_json::to_value(c.info(s)).unwrap_or_default()).collect()))
             }
             "drawing.inspect" | "document.inspect" => s.execute("drawing.inspect", &p).map_err(|e| e.to_string()),
             "ui.render" => {
@@ -306,25 +306,25 @@ impl Backend for Headless {
                 let h = p.get("height").and_then(Value::as_f64).unwrap_or(1000.0).clamp(16.0, 8192.0) as u32;
                 let st = s.state().map_err(|e| e.to_string())?;
                 let window = render_window(&p);
-                let opts = cadcraft_render::Options { view: window, transparency: s.settings.transparency_display, ..Default::default() };
-                let list = cadcraft_render::build(&st.doc, &st.space, &opts);
+                let opts = asenacad_render::Options { view: window, transparency: s.settings.transparency_display, ..Default::default() };
+                let list = asenacad_render::build(&st.doc, &st.space, &opts);
                 let fit = p.get("fit").and_then(Value::as_bool).unwrap_or(true);
                 let side = |k: &str| p.get(k).and_then(Value::as_f64).map(|x| x as u32);
                 let view = if let Some(win) = &window {
-                    cadcraft_render::raster::View::of_window(win, side("width"), side("height"))
+                    asenacad_render::raster::View::of_window(win, side("width"), side("height"))
                 } else if fit {
-                    cadcraft_render::raster::View::fit(&list.bounds, w, h, 0.05)
+                    asenacad_render::raster::View::fit(&list.bounds, w, h, 0.05)
                 } else {
                     let v = st.view();
-                    cadcraft_render::raster::View { center: v.center, scale: f64::from(h) / v.height.max(1e-12), width: w, height: h }
+                    asenacad_render::raster::View { center: v.center, scale: f64::from(h) / v.height.max(1e-12), width: w, height: h }
                 };
                 let (w, h) = (view.width, view.height);
                 let png =
-                    cadcraft_render::raster::render_png(&list, &view, &cadcraft_render::raster::RasterOptions::default()).ok_or("render failed")?;
+                    asenacad_render::raster::render_png(&list, &view, &asenacad_render::raster::RasterOptions::default()).ok_or("render failed")?;
                 if let Some(path) = str_p("path") {
                     std::fs::write(&path, &png).map_err(|e| format!("{path}: {e}"))?;
                 }
-                Ok(json!({"pngBase64": cadcraft_engine::cmd::file::base64_encode(&png), "width": w, "height": h}))
+                Ok(json!({"pngBase64": asenacad_engine::cmd::file::base64_encode(&png), "width": w, "height": h}))
             }
             "app.open" => {
                 let path = str_p("path").ok_or("missing path")?;

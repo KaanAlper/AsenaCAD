@@ -2,11 +2,11 @@
 //! exist are enabled, and the unbuilt Action Recorder, customization and standards tools are
 //! disabled.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::ribbon::manage::MANAGE;
-use cadcraft_ui_egui::ribbon::model::Panel;
-use cadcraft_ui_egui::ribbon::render_panel_for_test;
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_ui_egui::ribbon::manage::MANAGE;
+use asenacad_ui_egui::ribbon::model::Panel;
+use asenacad_ui_egui::ribbon::render_panel_for_test;
+use asenacad_ui_egui::{CadApp, Services};
 use egui::accesskit::Role;
 use egui::vec2;
 use egui_kittest::Harness;

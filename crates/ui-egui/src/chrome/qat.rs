@@ -101,7 +101,7 @@ fn is_shown(app: &CadApp, cmd: &str) -> bool {
 
 /// Whether AsenaCAD has `cmd` at all.
 fn exists(cmd: &str) -> bool {
-    cadcraft_engine::find_command(cmd).is_some() || crate::menus::is_ui_command(cmd)
+    asenacad_engine::find_command(cmd).is_some() || crate::menus::is_ui_command(cmd)
 }
 
 /// `ui.qat`: `{"item": id|label, "on"?: bool}` shows or hides an item (toggles without `on`),
@@ -186,7 +186,7 @@ fn icon_rect(rect: Rect) -> Rect {
 /// The tooltip: the label with the command's shortcut, as AutoCAD shows "Save (Ctrl+S)".
 fn tip(ui: &Ui, it: &Item) -> String {
     let label = crate::i18n::t(it.label);
-    match cadcraft_engine::find_command(it.cmd).and_then(|c| c.shortcut) {
+    match asenacad_engine::find_command(it.cmd).and_then(|c| c.shortcut) {
         Some(sc) => format!("{label} ({})", crate::menus::shortcut_label(sc, ui.ctx().os().is_mac())),
         None => label.to_string(),
     }
@@ -349,7 +349,7 @@ mod tests {
 
     #[test]
     fn the_qat_command_toggles_items_in_autocads_order_and_validates() {
-        let mut app = CadApp::new(cadcraft_engine::Session::default(), Default::default());
+        let mut app = CadApp::new(asenacad_engine::Session::default(), Default::default());
         let r = app.run("ui.qat", json!({"item": "Plot Preview"})).unwrap();
         assert_eq!(r["items"], json!(["new", "open", "qsave", "saveas", "plot", "u", "redo", "preview"]));
         app.run("ui.qat", json!({"item": "publish", "on": true})).unwrap();

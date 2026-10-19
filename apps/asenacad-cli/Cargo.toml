@@ -10,8 +10,8 @@ publish = false
 workspace = true
 
 [dependencies]
-cadcraft-engine = { workspace = true }
-cadcraft-io = { workspace = true }
-cadcraft-mcp = { workspace = true }
-cadcraft-render = { workspace = true }
+asenacad-engine = { workspace = true }
+asenacad-io = { workspace = true }
+asenacad-mcp = { workspace = true }
+asenacad-render = { workspace = true }
 serde_json = { workspace = true }

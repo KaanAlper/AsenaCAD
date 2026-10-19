@@ -14,7 +14,7 @@
 //! Tables are saved as files in our own JSON format (see `docs/plot-styles.md`):
 //! [`PlotStyleTable::to_file_text`] and [`PlotStyleTable::from_file_text`].
 
-use cadcraft_color::Rgb;
+use asenacad_color::Rgb;
 use serde::{Deserialize, Serialize};
 
 /// Built-in colour-dependent table that prints objects with their own properties.
@@ -40,7 +40,9 @@ pub const MAX_NAMED_STYLES: usize = 1024;
 /// Largest table file we read, in bytes.
 pub const MAX_TABLE_FILE: usize = 4 << 20;
 /// Format marker and version of our table files.
-const FILE_MARKER: &str = "cadcraftPlotStyleTable";
+const FILE_MARKER: &str = "asenacadPlotStyleTable";
+/// The marker of files written before the rename (read only).
+const LEGACY_FILE_MARKER: &str = "cadcraftPlotStyleTable";
 const FILE_VERSION: u64 = 1;
 
 /// Number of styles in a colour-dependent table (one per index colour 1..=255).
@@ -129,7 +131,7 @@ fn is_default<T: Default + PartialEq>(v: &T) -> bool {
 
 /// `Option<Rgb>` as `"#rrggbb"` (also read from `[r, g, b]`).
 mod rgb_hex {
-    use cadcraft_color::Rgb;
+    use asenacad_color::Rgb;
     use serde::{Deserialize, Deserializer, Serializer};
 
     pub fn serialize<S: Serializer>(c: &Option<Rgb>, s: S) -> Result<S::Ok, S::Error> {
@@ -362,7 +364,7 @@ impl PlotStyleTable {
             return Err("the plot style table file is too large".into());
         }
         let v: serde_json::Value = serde_json::from_str(text).map_err(|e| format!("not an AsenaCAD plot style table: {e}"))?;
-        match v.get(FILE_MARKER).and_then(serde_json::Value::as_u64) {
+        match v.get(FILE_MARKER).or_else(|| v.get(LEGACY_FILE_MARKER)).and_then(serde_json::Value::as_u64) {
             Some(FILE_VERSION) => {}
             Some(n) => return Err(format!("plot style table format version {n} is newer than this AsenaCAD reads")),
             None => return Err(format!("not an AsenaCAD plot style table (no `{FILE_MARKER}`)")),
@@ -467,18 +469,32 @@ mod tests {
         for name in BUILTIN_PLOT_STYLE_TABLES {
             let t = PlotStyleTable::builtin(name).unwrap();
             let text = t.to_file_text();
-            assert!(text.contains("\"cadcraftPlotStyleTable\": 1"));
+            assert!(text.contains("\"asenacadPlotStyleTable\": 1"));
             assert_eq!(PlotStyleTable::from_file_text(&text).unwrap(), t, "{name}");
         }
         let mono = PlotStyleTable::builtin(MONOCHROME_CTB).unwrap().to_file_text();
         assert!(mono.contains("\"color\": \"#000000\""), "colours as hex");
         assert!(!mono.contains("screening"), "defaults are left out");
         assert!(PlotStyleTable::from_file_text("{}").is_err());
-        assert!(PlotStyleTable::from_file_text("{\"cadcraftPlotStyleTable\": 9}").is_err());
+        assert!(PlotStyleTable::from_file_text("{\"asenacadPlotStyleTable\": 9}").is_err());
         assert!(PlotStyleTable::from_file_text("not json").is_err());
         let rgb: PlotStyle = serde_json::from_value(serde_json::json!({"name": "x", "color": [1, 2, 3]})).unwrap();
         assert_eq!(rgb.color, Some(Rgb(1, 2, 3)));
         assert!(serde_json::from_value::<PlotStyle>(serde_json::json!({"color": "#zz0000"})).is_err());
+    }
+
+    #[test]
+    fn a_table_file_with_the_legacy_marker_reads_and_saves_with_the_new_one() {
+        let t = PlotStyleTable::builtin(MONOCHROME_CTB).unwrap();
+        let text = t.to_file_text();
+        let legacy = text.replace("asenacadPlotStyleTable", "cadcraftPlotStyleTable");
+        assert!(legacy.contains("\"cadcraftPlotStyleTable\": 1"));
+        let back = PlotStyleTable::from_file_text(&legacy).unwrap();
+        assert_eq!(back, t);
+        let again = back.to_file_text();
+        assert_eq!(again, text);
+        assert!(!again.contains("cadcraft"), "only the new marker is written");
+        assert!(PlotStyleTable::from_file_text("{\"cadcraftPlotStyleTable\": 9}").is_err(), "newer legacy version");
     }
 
     #[test]

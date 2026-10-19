@@ -2,8 +2,8 @@
 //! recalculated on edit, row/column insertion and REGEN; cycles and bad input show an error text
 //! and never panic. TABLEDIT and TABLEEXPORT.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Table};
+use asenacad_engine::Session;
+use asenacad_engine::doc::{EntityKind, Table};
 use serde_json::{Value, json};
 
 /// A 2-column table without title/header: A1..A3 = 1, 2, 3; B column empty.
@@ -17,7 +17,7 @@ fn session() -> (Session, String) {
 }
 
 fn table(s: &Session, h: &str) -> Table {
-    let h = cadcraft_engine::doc::Handle::parse_hex(h).unwrap();
+    let h = asenacad_engine::doc::Handle::parse_hex(h).unwrap();
     match &s.doc().unwrap().entity(h).unwrap().kind {
         EntityKind::Table(t) => t.clone(),
         _ => panic!("not a table"),
@@ -105,7 +105,7 @@ fn regen_recalculates() {
     let (mut s, h) = session();
     set(&mut s, &h, 3, 0, "=Sum(A1:A3)");
     // Make the shown value stale, as a foreign file could.
-    let hh = cadcraft_engine::doc::Handle::parse_hex(&h).unwrap();
+    let hh = asenacad_engine::doc::Handle::parse_hex(&h).unwrap();
     s.doc_mut()
         .unwrap()
         .modify_entity(hh, |e| {

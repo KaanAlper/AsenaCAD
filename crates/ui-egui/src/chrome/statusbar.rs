@@ -182,8 +182,8 @@ fn item_width(app: &CadApp, ui: &Ui, it: &Item) -> f32 {
         "modelspace" => text_width(ui, crate::i18n::t(space_label(app))),
         "units" => text_width(ui, units_name(app)),
         "annoscale" => match app.session.layout_space() {
-            cadcraft_doc::Space::Model => super::annoscale::width(app, ui),
-            cadcraft_doc::Space::Paper(_) => crate::vpscale::width(app, ui),
+            asenacad_doc::Space::Model => super::annoscale::width(app, ui),
+            asenacad_doc::Space::Paper(_) => crate::vpscale::width(app, ui),
         },
         key => toggle_of(app, key).map_or(0.0, |tg| SLOT + if tg.arrow { ARROW_W } else { 0.0 }),
     }
@@ -210,7 +210,7 @@ fn interact(ui: &mut Ui, rect: Rect, id: egui::Id, enabled: bool) -> Response {
 /// `label` with its command's key, as AutoCAD's tooltips read "Grid (F7)".
 fn tip(label: &str, cmd: Option<&str>) -> String {
     let label = crate::i18n::t(label);
-    match cmd.and_then(cadcraft_engine::find_command).and_then(|c| c.shortcut) {
+    match cmd.and_then(asenacad_engine::find_command).and_then(|c| c.shortcut) {
         Some(key) => format!("{label} ({key})"),
         None => label.to_string(),
     }
@@ -255,7 +255,7 @@ impl Toggle {
 
 /// The icon items, by key.
 fn toggle_of(app: &CadApp, key: &str) -> Option<Toggle> {
-    use cadcraft_engine::snap::mode;
+    use asenacad_engine::snap::mode;
     let s = &app.session.settings;
     let doc = app.session.doc().ok();
     let anno_all = doc.is_some_and(|d| d.anno_all_visible());
@@ -309,8 +309,8 @@ fn item_ui(app: &mut CadApp, ui: &mut Ui, it: &Item, right: f32, cy: f32) -> f32
         "modelspace" => space_button(app, ui, right, cy),
         "units" => units_button(app, ui, right, cy),
         "annoscale" => match app.session.layout_space() {
-            cadcraft_doc::Space::Model => super::annoscale::status(app, ui, right, cy),
-            cadcraft_doc::Space::Paper(_) => crate::vpscale::status(app, ui, right, cy),
+            asenacad_doc::Space::Model => super::annoscale::status(app, ui, right, cy),
+            asenacad_doc::Space::Paper(_) => crate::vpscale::status(app, ui, right, cy),
         },
         key => match toggle_of(app, key) {
             Some(tg) => toggle_ui(app, ui, &tg, right, cy),
@@ -402,13 +402,13 @@ fn text_button(ui: &mut Ui, text: &str, label: &str, right: f32, cy: f32) -> (Re
 /// MODEL / PAPER. In model space MODEL goes back to the last layout; on a layout it switches
 /// between paper space and model space in a viewport (PSPACE / MSPACE).
 fn space_label(app: &CadApp) -> &'static str {
-    let paper = matches!(app.session.layout_space(), cadcraft_doc::Space::Paper(_));
+    let paper = matches!(app.session.layout_space(), asenacad_doc::Space::Paper(_));
     let in_viewport = app.session.state().is_ok_and(|st| st.mspace.is_some());
     if !paper || in_viewport { MODEL } else { PAPER }
 }
 
 fn space_button(app: &mut CadApp, ui: &mut Ui, right: f32, cy: f32) -> f32 {
-    let paper = matches!(app.session.layout_space(), cadcraft_doc::Space::Paper(_));
+    let paper = matches!(app.session.layout_space(), asenacad_doc::Space::Paper(_));
     let in_viewport = app.session.state().is_ok_and(|st| st.mspace.is_some());
     let label = space_label(app);
     let (rect, resp) = text_button(ui, crate::i18n::t(label), label, right, cy);
@@ -452,7 +452,7 @@ fn last_cursor_id() -> egui::Id {
 /// off the drawing area, as AutoCAD keeps them.
 fn coord_text(app: &CadApp, ctx: &egui::Context) -> String {
     let (lu, lp) = app.session.doc().map(|d| (d.header.i64("LUNITS", 2), d.header.i64("LUPREC", 4))).unwrap_or((2, 4));
-    let f = |v: f64| cadcraft_engine::units::format_distance(v, lu, lp);
+    let f = |v: f64| asenacad_engine::units::format_distance(v, lu, lp);
     let at = app.canvas.cursor.map(|c| (c.x, c.y)).or_else(|| ctx.data(|d| d.get_temp::<(f64, f64)>(last_cursor_id())));
     at.map_or_else(String::new, |(x, y)| format!("{}, {}, {}", f(x), f(y), f(0.0)))
 }
@@ -524,9 +524,9 @@ mod tests {
 
     #[test]
     fn every_item_takes_the_width_the_layout_reserves_for_it() {
-        let mut app = CadApp::new(cadcraft_engine::Session::empty(), crate::Services::default());
+        let mut app = CadApp::new(asenacad_engine::Session::empty(), crate::Services::default());
         app.start("ui.sample");
-        app.canvas.cursor = Some(cadcraft_geom::Vec2::new(1.5, -2.25));
+        app.canvas.cursor = Some(asenacad_geom::Vec2::new(1.5, -2.25));
         for paper in [false, true] {
             if paper {
                 let _ = app.run("layout.set", json!({ "name": "Layout1" }));
@@ -553,9 +553,9 @@ mod tests {
             ("selfilter", "selectionfilter"),
             ("gizmo", "gizmo"),
         ] {
-            assert!(cadcraft_engine::find_command(cmd).is_none(), "{cmd} exists now: show its state in the {key} item");
+            assert!(asenacad_engine::find_command(cmd).is_none(), "{cmd} exists now: show its state in the {key} item");
             assert!(
-                cadcraft_engine::sysvars::get(&cadcraft_engine::Session::empty(), &cmd.to_ascii_uppercase()).is_none(),
+                asenacad_engine::sysvars::get(&asenacad_engine::Session::empty(), &cmd.to_ascii_uppercase()).is_none(),
                 "{} exists now: show it in the {key} item",
                 cmd.to_ascii_uppercase()
             );
@@ -573,7 +573,7 @@ mod tests {
 
     #[test]
     fn the_statusbar_command_validates_on() {
-        let mut app = CadApp::new(cadcraft_engine::Session::empty(), crate::Services::default());
+        let mut app = CadApp::new(asenacad_engine::Session::empty(), crate::Services::default());
         assert!(command(&mut app, &json!({"item": "grid", "on": "yes"})).is_err());
         assert!(command(&mut app, &json!({"item": "grid", "on": 1})).is_err());
         assert_eq!(command(&mut app, &json!({"item": "grid", "on": false})), Ok(json!({"item": "grid", "on": false})));

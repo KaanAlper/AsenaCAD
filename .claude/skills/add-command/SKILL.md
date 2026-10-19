@@ -16,7 +16,7 @@ description: Add or complete an AutoCAD command in AsenaCAD end to end — Comma
    - Interactive form: feeding the observed inputs through `Session::input` yields AutoCAD's
      prompt sequence (exact strings from the note) and the same entities.
    - Hostile params never panic (copy the `hostile_params_never_panic` pattern).
-   Run `cargo test -p cadcraft-engine <test>` and see them fail.
+   Run `cargo test -p asenacad-engine <test>` and see them fail.
 4. **Implement** the minimum to pass. Never-crash rules apply (`docs/standards/never-crash.md`).
    Programmatic (JSON) calls never open dialogs.
 5. **Wire the UI** only through the command: ribbon/menu entries call `app.start(id)`; no logic in

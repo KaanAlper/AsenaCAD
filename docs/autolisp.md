@@ -82,6 +82,6 @@ DXF file holds for the object, plus `-1` (its name) and `410` (its layout).
 
 ## Testing against the corpus
 
-The AutoLISP conformance corpus (#648) lives in its own repository. Point `CADCRAFT_LISP_CORPUS`
-at it and run `cargo test -p cadcraft-engine --test lisp_corpus`; without the variable the test
+The AutoLISP conformance corpus (#648) lives in its own repository. Point `ASENACAD_LISP_CORPUS`
+at it and run `cargo test -p asenacad-engine --test lisp_corpus`; without the variable the test
 says it was skipped.

@@ -3,12 +3,12 @@
 //! current values and toggles show their state. The whole ribbon (`ribbon::show`): tab row,
 //! minimize states, panels packed in order, slide-outs and right-to-left collapse.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::docking::Panel as Palette;
-use cadcraft_ui_egui::ribbon::home::HOME;
-use cadcraft_ui_egui::ribbon::model::{Entry, Item, Panel};
-use cadcraft_ui_egui::ribbon::{self, RibbonMin, layout, render_panel_for_test, widgets::RibbonState};
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_ui_egui::docking::Panel as Palette;
+use asenacad_ui_egui::ribbon::home::HOME;
+use asenacad_ui_egui::ribbon::model::{Entry, Item, Panel};
+use asenacad_ui_egui::ribbon::{self, RibbonMin, layout, render_panel_for_test, widgets::RibbonState};
+use asenacad_ui_egui::{CadApp, Services};
 use egui::accesskit::{Role, Toggled};
 use egui::{pos2, vec2};
 use egui_kittest::Harness;
@@ -150,7 +150,7 @@ fn the_properties_combos_show_the_current_properties() {
     let launcher = h
         .query_all_by_role_and_label(Role::Button, "Properties")
         .map(|n| n.rect().size())
-        .find(|s| *s == cadcraft_ui_egui::ribbon::widgets::LAUNCHER);
+        .find(|s| *s == asenacad_ui_egui::ribbon::widgets::LAUNCHER);
     assert!(launcher.is_some(), "the panel's dialog launcher");
 }
 
@@ -199,7 +199,7 @@ fn the_properties_launcher_opens_the_properties_palette() {
     assert!(!h.state().ui.docking.layout.contains(&Palette::Properties));
     let launcher = h
         .query_all_by_role_and_label(Role::Button, "Properties")
-        .find(|n| n.rect().size() == cadcraft_ui_egui::ribbon::widgets::LAUNCHER)
+        .find(|n| n.rect().size() == asenacad_ui_egui::ribbon::widgets::LAUNCHER)
         .expect("the panel's dialog launcher");
     launcher.click();
     h.run_steps(3);
@@ -522,7 +522,7 @@ fn panel_buttons_open_their_panel_as_a_popup() {
     assert!(h.query_by_label("Line").is_some() && h.query_by_label("Circle").is_some());
 }
 
-/// `CRAFT_UI_VISUAL_DIR=/dir cargo test -p cadcraft-ui-egui --test ribbon_home ribbon_visuals`
+/// `CRAFT_UI_VISUAL_DIR=/dir cargo test -p asenacad-ui-egui --test ribbon_home ribbon_visuals`
 /// renders the ribbon at AutoCAD's two observed window widths for a visual check.
 #[test]
 fn ribbon_visuals() {

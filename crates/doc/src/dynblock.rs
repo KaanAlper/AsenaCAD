@@ -13,7 +13,7 @@
 
 use std::collections::HashMap;
 
-use cadcraft_geom::{Vec2, Vec3};
+use asenacad_geom::{Vec2, Vec3};
 use serde::Serialize;
 
 use crate::foreign::ForeignObject;

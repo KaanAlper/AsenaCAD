@@ -2,8 +2,8 @@
 //! (grip, close, Customize, recent commands, input, history toggle), the navigation bar below
 //! the ViewCube and the drawing window's buttons at the top-right corner.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::{CadApp, Services, cmdbar, navbar, viewcube};
+use asenacad_engine::Session;
+use asenacad_ui_egui::{CadApp, Services, cmdbar, navbar, viewcube};
 use egui::accesskit::Role;
 use egui::{Event, Modifiers, PointerButton, Pos2, Rect, vec2};
 use egui_kittest::Harness;

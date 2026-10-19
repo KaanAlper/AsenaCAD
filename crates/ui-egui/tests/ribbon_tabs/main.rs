@@ -6,10 +6,10 @@
 
 use std::sync::{Arc, Mutex};
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::ribbon::layout;
-use cadcraft_ui_egui::ribbon::model::{Entry, Item, Panel, Size, Tab, tabs};
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_ui_egui::ribbon::layout;
+use asenacad_ui_egui::ribbon::model::{Entry, Item, Panel, Size, Tab, tabs};
+use asenacad_ui_egui::{CadApp, Services};
 use egui::vec2;
 use egui_kittest::Harness;
 
@@ -156,7 +156,7 @@ fn panel_widths(label: &str) -> Vec<(&'static str, f32)> {
     let app = CadApp::new(Session::default(), Services::default());
     let mut h = Harness::builder().with_size(vec2(1906.0, 300.0)).build_ui_state(
         move |ui, _app: &mut CadApp| {
-            ui.style_mut().override_font_id = Some(cadcraft_ui_egui::theme::ribbon_font(ui.ctx()));
+            ui.style_mut().override_font_id = Some(asenacad_ui_egui::theme::ribbon_font(ui.ctx()));
             let widths = t.panels.iter().map(|p| (p.label, layout::panel_width(ui, t.label, p, false))).collect();
             if let Ok(mut o) = sink.lock() {
                 *o = widths;

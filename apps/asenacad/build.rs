@@ -3,8 +3,8 @@
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=../../assets/app-icon/asenacad.ico");
-    println!("cargo:rerun-if-env-changed=CADCRAFT_REQUIRE_WINRES");
-    println!("cargo:rerun-if-env-changed=CADCRAFT_BUILD_SHA");
+    println!("cargo:rerun-if-env-changed=ASENACAD_REQUIRE_WINRES");
+    println!("cargo:rerun-if-env-changed=ASENACAD_BUILD_SHA");
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
         return;
     }
@@ -22,7 +22,7 @@ fn main() {
         .set("OriginalFilename", "asenacad.exe")
         .set("InternalName", "asenacad");
     if let Err(e) = res.compile() {
-        if std::env::var_os("CADCRAFT_REQUIRE_WINRES").is_some() {
+        if std::env::var_os("ASENACAD_REQUIRE_WINRES").is_some() {
             eprintln!("embedding Windows resources failed: {e}");
             std::process::exit(1);
         }

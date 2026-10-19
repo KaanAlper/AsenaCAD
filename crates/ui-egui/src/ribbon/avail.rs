@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use cadcraft_engine::Session;
+use asenacad_engine::Session;
 
 /// What the ribbon knows about one command id.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -57,7 +57,7 @@ fn cache_id() -> egui::Id {
 }
 
 fn look_up(session: &Session, id: &str) -> CommandInfo {
-    match cadcraft_engine::find_command(id) {
+    match asenacad_engine::find_command(id) {
         // A placeholder that only refuses (`CommandSpec::stub`) isn't built yet.
         Some(spec) if spec.is_stub() => CommandInfo { label: Some(spec.label), availability: Availability::Missing },
         Some(spec) => {

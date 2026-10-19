@@ -1,7 +1,7 @@
 //! Real key traversal of the custom painted controls, without assigning widget focus.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_ui_egui::{CadApp, Services};
 use egui::{Key, Modifiers, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
@@ -10,11 +10,11 @@ fn harness() -> Harness<'static, CadApp> {
     let mut app = CadApp::new(Session::default(), Services::default());
     app.integrated_titlebar = true;
     app.ui.in_window_menu = false;
-    // CADCraft's Mac shell: the Tool Bar and the Tool Sets palette (off by default).
+    // The Mac-style shell AsenaCAD inherited from CADCraft: the Tool Bar and the Tool Sets palette (off by default).
     app.ui.show_toolbar = true;
     app.ui.show_toolsets = true;
     // The ribbon down to its tabs: its Home panels repeat the palette's labels (Line, Circle).
-    app.ui.ribbon_min = cadcraft_ui_egui::ribbon::RibbonMin::Tabs;
+    app.ui.ribbon_min = asenacad_ui_egui::ribbon::RibbonMin::Tabs;
     let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_ui_state(
         |ui, app: &mut CadApp| {
             ui.ctx().set_os(egui::os::OperatingSystem::Mac);

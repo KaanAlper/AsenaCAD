@@ -1,5 +1,5 @@
 [package]
-name = "cadcraft-io"
+name = "asenacad-io"
 description = "AsenaCAD file formats: DXF read/write mapping, SVG, PNG and PDF export"
 version.workspace = true
 edition.workspace = true
@@ -9,13 +9,13 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-cadcraft-geom = { workspace = true }
-cadcraft-color = { workspace = true }
-cadcraft-doc = { workspace = true }
-cadcraft-dxf = { workspace = true }
-cadcraft-dwg = { workspace = true }
-cadcraft-render = { workspace = true }
-cadcraft-fonts = { workspace = true }
+asenacad-geom = { workspace = true }
+asenacad-color = { workspace = true }
+asenacad-doc = { workspace = true }
+asenacad-dxf = { workspace = true }
+asenacad-dwg = { workspace = true }
+asenacad-render = { workspace = true }
+asenacad-fonts = { workspace = true }
 thiserror = { workspace = true }
 serde_json = { workspace = true }
 serde = { workspace = true }

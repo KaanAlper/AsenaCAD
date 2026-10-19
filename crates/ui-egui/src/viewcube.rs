@@ -202,7 +202,7 @@ fn ucs_menu(app: &mut CadApp, popup: egui::Popup<'_>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cadcraft_engine::Session;
+    use asenacad_engine::Session;
 
     /// The app with the sample drawing, laid out once in a 1400×900 window.
     fn app_and_ctx() -> (CadApp, egui::Context) {

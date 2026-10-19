@@ -5,11 +5,11 @@
 
 use std::sync::Arc;
 
-use cadcraft_color::Rgb;
-use cadcraft_engine::blockedit::CURRENT_DRAWING;
-use cadcraft_engine::doc::{Drawing, EntityKind};
-use cadcraft_geom::Vec2;
-use cadcraft_render::DisplayList;
+use asenacad_color::Rgb;
+use asenacad_engine::blockedit::CURRENT_DRAWING;
+use asenacad_engine::doc::{Drawing, EntityKind};
+use asenacad_geom::Vec2;
+use asenacad_render::DisplayList;
 use egui::{RichText, Stroke, vec2};
 use serde_json::{Value, json};
 
@@ -119,12 +119,12 @@ fn preview(app: &mut CadApp, name: &str) -> Option<Arc<DisplayList>> {
     }
     // The drawing itself shows its model space.
     let entities = if name.eq_ignore_ascii_case(CURRENT_DRAWING) { &st.doc.model } else { &st.doc.block(name)?.entities };
-    let rough = cadcraft_render::build_entities(&st.doc, entities.iter().map(|e| e.as_ref()), &cadcraft_render::Options::default());
+    let rough = asenacad_render::build_entities(&st.doc, entities.iter().map(|e| e.as_ref()), &asenacad_render::Options::default());
     let size = rough.bounds.width().max(rough.bounds.height());
     // About half a pixel of the preview's 200 points.
-    let opts = cadcraft_render::Options { tolerance: (size / 400.0).max(1e-9), ..Default::default() };
+    let opts = asenacad_render::Options { tolerance: (size / 400.0).max(1e-9), ..Default::default() };
     let list =
-        Arc::new(if rough.bounds.is_empty() { rough } else { cadcraft_render::build_entities(&st.doc, entities.iter().map(|e| e.as_ref()), &opts) });
+        Arc::new(if rough.bounds.is_empty() { rough } else { asenacad_render::build_entities(&st.doc, entities.iter().map(|e| e.as_ref()), &opts) });
     app.bedit.preview = Some((key, list.clone()));
     Some(list)
 }

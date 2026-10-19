@@ -6,7 +6,7 @@
 use std::sync::mpsc::{Receiver, TryRecvError, channel};
 use std::time::{Duration, Instant};
 
-use cadcraft_engine::cmd::file::{ReadFile, read_file};
+use asenacad_engine::cmd::file::{ReadFile, read_file};
 
 use crate::theme::Tokens;
 
@@ -102,7 +102,7 @@ impl Opening {
 mod tests {
     use std::time::{Duration, Instant};
 
-    use cadcraft_engine::Session;
+    use asenacad_engine::Session;
 
     use crate::{CadApp, Services};
 

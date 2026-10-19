@@ -6,7 +6,7 @@
 use std::cell::Cell;
 use std::rc::Rc;
 
-use cadcraft_ui_egui::CadApp;
+use asenacad_ui_egui::CadApp;
 use wasm_bindgen::JsCast as _;
 use web_sys::js_sys;
 

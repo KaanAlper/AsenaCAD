@@ -197,7 +197,7 @@ fn start_with_keyword(app: &mut CadApp, cmd: &str, keyword: &str) {
     app.start(cmd);
     let asking = app.session.running.as_ref().is_some_and(|r| r.id == cmd)
         && app.session.current_prompt().is_some_and(|p| p.keywords.iter().any(|k| k == keyword));
-    if asking && let Err(e) = app.session.input(cadcraft_engine::Input::Keyword(keyword.into())) {
+    if asking && let Err(e) = app.session.input(asenacad_engine::Input::Keyword(keyword.into())) {
         app.session.echo(e.to_string());
     }
 }
@@ -273,7 +273,7 @@ mod tests {
 
     #[test]
     fn a_zoom_option_goes_only_to_zoom_itself() {
-        let mut app = CadApp::new(cadcraft_engine::Session::empty(), crate::Services::default());
+        let mut app = CadApp::new(asenacad_engine::Session::empty(), crate::Services::default());
         app.start("ui.sample");
         // ZOOM starts and takes Scale: it now asks for the scale factor.
         start_with_keyword(&mut app, "zoom", "Scale");

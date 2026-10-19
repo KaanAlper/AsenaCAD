@@ -60,7 +60,7 @@ pub fn min_width(app: &CadApp, ui: &egui::Ui) -> f32 {
     if tabs.len() > 1 {
         w += MORE_W;
     }
-    if let cadcraft_doc::Space::Paper(name) = app.session.layout_space()
+    if let asenacad_doc::Space::Paper(name) = app.session.layout_space()
         && let Some(i) = tabs.iter().position(|t| *t == name)
     {
         w += tab_width(ui, i, &name);
@@ -74,8 +74,8 @@ pub fn show(app: &mut CadApp, ui: &mut egui::Ui, row: Rect, band_top: f32, limit
     let t = Tokens::get();
     let tabs = tab_names(app);
     let cur = app.session.state().map(|s| match &s.space {
-        cadcraft_doc::Space::Model => "Model".to_string(),
-        cadcraft_doc::Space::Paper(n) => n.clone(),
+        asenacad_doc::Space::Model => "Model".to_string(),
+        asenacad_doc::Space::Paper(n) => n.clone(),
     });
     if let Ok(name) = cur.as_ref()
         && name != "Model"

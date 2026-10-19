@@ -2,11 +2,11 @@
 //! Open makes an unsaved copy whose file stays until it is saved, Discard deletes the file.
 //! SAVETIME and SAVEFILEPATH are process-wide, so everything runs in one test.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::autosave;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::Drawing;
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_engine::autosave;
+use asenacad_engine::cmd::file::{IoHooks, set_io};
+use asenacad_engine::doc::Drawing;
+use asenacad_ui_egui::{CadApp, Services};
 
 #[test]
 fn recovery_list_opens_copies_and_discards_files() {
@@ -55,14 +55,14 @@ fn recovery_list_opens_copies_and_discards_files() {
     let _ = std::fs::remove_dir_all(&dir);
 
     // SAVETIME and SAVEFILEPATH survive restarts (process-wide, so checked in this one test).
-    cadcraft_ui_egui::autosave::load_prefs(r#"{"savetime": 25, "saveFilePath": "/tmp/cc-autosave-prefs"}"#);
+    asenacad_ui_egui::autosave::load_prefs(r#"{"savetime": 25, "saveFilePath": "/tmp/cc-autosave-prefs"}"#);
     assert_eq!(autosave::savetime(), 25);
-    let saved = cadcraft_ui_egui::autosave::prefs_json();
-    cadcraft_ui_egui::autosave::load_prefs("not json");
-    cadcraft_ui_egui::autosave::load_prefs(r#"{"savetime": "often"}"#);
+    let saved = asenacad_ui_egui::autosave::prefs_json();
+    asenacad_ui_egui::autosave::load_prefs("not json");
+    asenacad_ui_egui::autosave::load_prefs(r#"{"savetime": "often"}"#);
     assert_eq!(autosave::savetime(), 25, "bad values are ignored");
-    cadcraft_ui_egui::autosave::load_prefs(r#"{"savetime": 0}"#);
+    asenacad_ui_egui::autosave::load_prefs(r#"{"savetime": 0}"#);
     assert_eq!(autosave::savetime(), 0);
-    cadcraft_ui_egui::autosave::load_prefs(&saved);
+    asenacad_ui_egui::autosave::load_prefs(&saved);
     assert_eq!((autosave::savetime(), autosave::savefilepath().as_str()), (25, "/tmp/cc-autosave-prefs"));
 }

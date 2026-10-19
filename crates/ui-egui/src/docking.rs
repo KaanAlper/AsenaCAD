@@ -92,7 +92,7 @@ impl Default for Workspace {
 }
 
 impl Workspace {
-    /// CADCraft's arrangement with every palette open: Tool Sets on the left, the drawing, and
+    /// AsenaCAD's arrangement with every palette open: Tool Sets on the left, the drawing, and
     /// Layers above Properties on the right.
     pub fn with_palettes() -> Self {
         Self {

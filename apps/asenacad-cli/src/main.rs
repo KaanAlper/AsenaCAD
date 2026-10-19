@@ -28,9 +28,9 @@ macro_rules! outln {
 
 use std::process::ExitCode;
 
-use cadcraft_engine::doc::Space;
-use cadcraft_engine::geom::{Bounds2, Vec2};
-use cadcraft_engine::{Session, View};
+use asenacad_engine::doc::Space;
+use asenacad_engine::geom::{Bounds2, Vec2};
+use asenacad_engine::{Session, View};
 use serde_json::{Value, json};
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -102,7 +102,7 @@ fn parse_window(text: &str) -> Result<Bounds2, String> {
         return Err(format!("--window: need x0 < x1 and y0 < y1 (lower-left corner first), got {x0},{y0},{x1},{y1}"));
     }
     let w = Bounds2 { min: Vec2::new(x0, y0), max: Vec2::new(x1, y1) };
-    cadcraft_io::check_window(&w).map_err(|e| format!("--window: {e}"))?;
+    asenacad_io::check_window(&w).map_err(|e| format!("--window: {e}"))?;
     Ok(w)
 }
 
@@ -164,18 +164,18 @@ fn export_window(s: &Session, framing: Framing, before: Option<&[(u64, Option<Vi
 }
 
 fn install_io() {
-    cadcraft_engine::cmd::file::set_io(cadcraft_engine::cmd::file::IoHooks {
-        read: |b, name| cadcraft_io::read(b, name).map_err(|e| e.to_string()),
-        write: |d, name| cadcraft_io::write(d, name).map_err(|e| e.to_string()),
-        plot: Some(|d, space, opts| cadcraft_io::plotter::plot(d, space, opts).map_err(|e| e.to_string())),
+    asenacad_engine::cmd::file::set_io(asenacad_engine::cmd::file::IoHooks {
+        read: |b, name| asenacad_io::read(b, name).map_err(|e| e.to_string()),
+        write: |d, name| asenacad_io::write(d, name).map_err(|e| e.to_string()),
+        plot: Some(|d, space, opts| asenacad_io::plotter::plot(d, space, opts).map_err(|e| e.to_string())),
     });
-    cadcraft_engine::cmd::file::set_write_as(|d, name, o| {
-        cadcraft_io::write_with(d, name, &cadcraft_io::SaveOptions { version: o.version, binary: o.binary }).map_err(|e| e.to_string())
+    asenacad_engine::cmd::file::set_write_as(|d, name, o| {
+        asenacad_io::write_with(d, name, &asenacad_io::SaveOptions { version: o.version, binary: o.binary }).map_err(|e| e.to_string())
     });
     // AutoLISP's entget, entmake and entmod see entities as DXF groups.
-    cadcraft_engine::cmd::file::set_entity_codec(cadcraft_engine::cmd::file::EntityCodec {
-        groups: cadcraft_io::entity_groups,
-        entity: cadcraft_io::entity_from_groups,
+    asenacad_engine::cmd::file::set_entity_codec(asenacad_engine::cmd::file::EntityCodec {
+        groups: asenacad_io::entity_groups,
+        entity: asenacad_io::entity_from_groups,
     });
 }
 
@@ -224,12 +224,12 @@ fn export(s: &Session, out: &str) -> Result<(), String> {
 
 fn export_framed(s: &Session, out: &str, window: Option<Bounds2>) -> Result<(), String> {
     let d = s.doc().map_err(|e| e.to_string())?;
-    let bytes = cadcraft_io::write_framed(d, out, window).map_err(|e| e.to_string())?;
+    let bytes = asenacad_io::write_framed(d, out, window).map_err(|e| e.to_string())?;
     std::fs::write(out, &bytes).map_err(|e| format!("{out}: {e}"))?;
     eprintln!("wrote {out} ({} bytes)", bytes.len());
-    if cadcraft_engine::cmd::file::drops_unknown(out) {
-        let lost = cadcraft_engine::cmd::file::not_saved(d);
-        if let Some(m) = cadcraft_engine::cmd::file::not_saved_message(&lost) {
+    if asenacad_engine::cmd::file::drops_unknown(out) {
+        let lost = asenacad_engine::cmd::file::not_saved(d);
+        if let Some(m) = asenacad_engine::cmd::file::not_saved_message(&lost) {
             eprintln!("{m}");
         }
     }
@@ -239,11 +239,11 @@ fn export_framed(s: &Session, out: &str, window: Option<Bounds2>) -> Result<(), 
 fn sample(args: &[String]) -> Result<(), String> {
     let (Some(which), Some(out)) = (args.first(), args.get(1)) else { return Err(USAGE.into()) };
     let d = match which.as_str() {
-        "bracket" => cadcraft_engine::sample::bracket(),
-        "floorplan" | "floor" => cadcraft_engine::sample::floor_plan(),
+        "bracket" => asenacad_engine::sample::bracket(),
+        "floorplan" | "floor" => asenacad_engine::sample::floor_plan(),
         other => return Err(format!("unknown sample `{other}` (bracket, floorplan)")),
     };
-    let bytes = cadcraft_io::write(&d, out).map_err(|e| e.to_string())?;
+    let bytes = asenacad_io::write(&d, out).map_err(|e| e.to_string())?;
     std::fs::write(out, &bytes).map_err(|e| format!("{out}: {e}"))?;
     eprintln!("wrote {out} ({} bytes)", bytes.len());
     Ok(())
@@ -253,7 +253,7 @@ fn sample(args: &[String]) -> Result<(), String> {
 fn check_framed_output(framing: Framing, out: Option<&str>) -> Result<(), String> {
     match out {
         _ if framing == Framing::Auto => Ok(()),
-        Some(o) if !cadcraft_io::is_image(o) => Err(format!("--window/--view only apply to image output (png, svg, pdf), not `{o}`")),
+        Some(o) if !asenacad_io::is_image(o) => Err(format!("--window/--view only apply to image output (png, svg, pdf), not `{o}`")),
         Some(_) => Ok(()),
         None => Err("--window/--view need an image output (--export OUT.png|svg|pdf)".into()),
     }
@@ -280,7 +280,7 @@ fn convert(args: &[String]) -> Result<(), String> {
 }
 
 /// The warning for the records of `path` the reader could not place, or `None` when there are none.
-fn skipped_message(d: &cadcraft_engine::doc::Drawing, path: &str) -> Option<String> {
+fn skipped_message(d: &asenacad_engine::doc::Drawing, path: &str) -> Option<String> {
     let n = d.skipped_records.values().fold(0usize, |a, n| a.saturating_add(*n));
     if n == 0 {
         return None;
@@ -303,7 +303,7 @@ fn run(args: &[String]) -> Result<(), String> {
         }
         match a.as_str() {
             "--sample" => {
-                s.open_drawing(cadcraft_engine::sample::default_sample(), "Bracket", None);
+                s.open_drawing(asenacad_engine::sample::default_sample(), "Bracket", None);
             }
             "--metric" => {
                 s.new_drawing(true);
@@ -345,7 +345,7 @@ fn run(args: &[String]) -> Result<(), String> {
         export(&s, &p)?;
     }
     if let Some(p) = exp {
-        let window = if cadcraft_io::is_image(&p) { export_window(&s, framing, Some(&before))? } else { None };
+        let window = if asenacad_io::is_image(&p) { export_window(&s, framing, Some(&before))? } else { None };
         export_framed(&s, &p, window)?;
     }
     Ok(())
@@ -368,9 +368,9 @@ impl Rng {
 
 /// A synthetic drawing with `n` mixed entities (lines, circles, arcs, polylines, text) spread
 /// over a square whose side grows with sqrt(n), so density stays constant.
-fn synthetic(n: usize, side: f64) -> Result<cadcraft_engine::doc::Drawing, String> {
-    use cadcraft_engine::doc::{self as d, Common, EntityKind, Space};
-    use cadcraft_engine::geom::{PolyVertex, Vec2, Vec3};
+fn synthetic(n: usize, side: f64) -> Result<asenacad_engine::doc::Drawing, String> {
+    use asenacad_engine::doc::{self as d, Common, EntityKind, Space};
+    use asenacad_engine::geom::{PolyVertex, Vec2, Vec3};
     let mut dr = d::Drawing::new_imperial();
     let mut r = Rng(0x9E37_79B9_7F4A_7C15);
     let v3 = |x: f64, y: f64| Vec3::new(x, y, 0.0);
@@ -417,8 +417,8 @@ fn synthetic(n: usize, side: f64) -> Result<cadcraft_engine::doc::Drawing, Strin
 /// drawing's centre: tolerance, dash level of detail and view window from the zoom band), at
 /// zoom extents and zoomed in 4x at a time, next to the full-detail build plots use.
 fn perf_file(path: &str) -> Result<(), String> {
-    use cadcraft_engine::geom::{Bounds2, Vec2};
-    use cadcraft_engine::render::{Options, build};
+    use asenacad_engine::geom::{Bounds2, Vec2};
+    use asenacad_engine::render::{Options, build};
     use std::time::Instant;
     let ms = |t: Instant| t.elapsed().as_secs_f64() * 1000.0;
     let mut s = Session::empty();
@@ -455,9 +455,9 @@ fn perf_file(path: &str) -> Result<(), String> {
 }
 
 fn perf(args: &[String]) -> Result<(), String> {
-    use cadcraft_engine::doc::Space;
-    use cadcraft_engine::geom::{Bounds2, Vec2};
-    use cadcraft_engine::{select, snap};
+    use asenacad_engine::doc::Space;
+    use asenacad_engine::geom::{Bounds2, Vec2};
+    use asenacad_engine::{select, snap};
     use std::time::Instant;
     if let Some(path) = args.first().filter(|a| a.parse::<usize>().is_err()) {
         return perf_file(path);
@@ -477,9 +477,9 @@ fn perf(args: &[String]) -> Result<(), String> {
 
     // Display list at a 1600 px wide "zoom extents" view (tolerance = half a pixel).
     let px = side / 1600.0;
-    let opts = cadcraft_engine::render::Options { tolerance: px * 0.5, min_dash: px * 2.0, ..Default::default() };
+    let opts = asenacad_engine::render::Options { tolerance: px * 0.5, min_dash: px * 2.0, ..Default::default() };
     let t = Instant::now();
-    let list = cadcraft_engine::render::build(&d, &Space::Model, &opts);
+    let list = asenacad_engine::render::build(&d, &Space::Model, &opts);
     rows.push(("display list build".into(), ms(t), format!("{} prims, {} segments", list.prims.len(), list.segment_count())));
 
     // Hit testing on a zoomed-in view (aperture = 5 px at 0.02 units/px).
@@ -524,10 +524,10 @@ fn perf(args: &[String]) -> Result<(), String> {
     rows.push(("osnap x1000".into(), total, format!("{snaps} hits, {:.3} ms/query", total / 1000.0)));
 
     let t = Instant::now();
-    let bytes = cadcraft_io::write(&d, "perf.dxf").map_err(|e| e.to_string())?;
+    let bytes = asenacad_io::write(&d, "perf.dxf").map_err(|e| e.to_string())?;
     rows.push(("DXF write".into(), ms(t), format!("{:.1} MB", bytes.len() as f64 / 1e6)));
     let t = Instant::now();
-    let back = cadcraft_io::read(&bytes, "perf.dxf").map_err(|e| e.to_string())?;
+    let back = asenacad_io::read(&bytes, "perf.dxf").map_err(|e| e.to_string())?;
     rows.push(("DXF read".into(), ms(t), format!("{} entities", back.entity_count())));
 
     outln!("{:<40} {:>12}  notes", "operation", "ms");
@@ -581,17 +581,17 @@ fn parse_mcp_args(args: &[String]) -> Result<McpTarget, String> {
 }
 
 fn mcp(args: &[String]) -> Result<(), String> {
-    let backend: Box<dyn cadcraft_mcp::Backend> = match parse_mcp_args(args)? {
-        McpTarget::Connect { addr, lazy: true, launch } => Box::new(cadcraft_mcp::Remote::lazy(&addr, launch)),
-        McpTarget::Connect { addr, .. } => match cadcraft_mcp::Remote::connect(&addr) {
+    let backend: Box<dyn asenacad_mcp::Backend> = match parse_mcp_args(args)? {
+        McpTarget::Connect { addr, lazy: true, launch } => Box::new(asenacad_mcp::Remote::lazy(&addr, launch)),
+        McpTarget::Connect { addr, .. } => match asenacad_mcp::Remote::connect(&addr) {
             Ok(r) => Box::new(r),
             Err(e) => return Err(format!("asenacad-cli: cannot connect to {addr}: {e}")),
         },
-        McpTarget::Headless => Box::new(cadcraft_mcp::Headless::default()),
+        McpTarget::Headless => Box::new(asenacad_mcp::Headless::default()),
     };
     let stdin = std::io::stdin();
     let stdout = std::io::stdout();
-    cadcraft_mcp::Server::new(backend).serve(stdin.lock(), stdout.lock()).map_err(|e| e.to_string())
+    asenacad_mcp::Server::new(backend).serve(stdin.lock(), stdout.lock()).map_err(|e| e.to_string())
 }
 
 #[cfg(test)]
@@ -654,7 +654,7 @@ fn cli() -> ExitCode {
         Some("commands") => validate_options("commands", &rest, NO_OPTIONS).map(|_| {
             let s = Session::new();
             let f = rest.first().map(|x| x.to_ascii_lowercase());
-            let v: Vec<Value> = cadcraft_engine::command_specs()
+            let v: Vec<Value> = asenacad_engine::command_specs()
                 .iter()
                 .filter(|c| f.as_ref().is_none_or(|f| c.id.contains(f.as_str()) || c.label.to_ascii_lowercase().contains(f.as_str())))
                 .map(|c| serde_json::to_value(c.info(&s)).unwrap_or_default())
@@ -687,7 +687,7 @@ mod tests {
 
     fn sample_session() -> Session {
         let mut s = Session::empty();
-        s.open_drawing(cadcraft_engine::sample::default_sample(), "Bracket", None);
+        s.open_drawing(asenacad_engine::sample::default_sample(), "Bracket", None);
         s
     }
 
@@ -794,7 +794,7 @@ mod tests {
         let before = model_views(&s);
         // The smallest entity with an area, selected then framed with ZOOM Object.
         let d = s.doc().unwrap();
-        let bounds = |e: &cadcraft_engine::doc::Entity| cadcraft_engine::doc::entity_bounds(d, e, 0);
+        let bounds = |e: &asenacad_engine::doc::Entity| asenacad_engine::doc::entity_bounds(d, e, 0);
         let e = d
             .model
             .iter()

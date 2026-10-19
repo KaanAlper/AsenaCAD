@@ -151,7 +151,7 @@ fn isodraft(app: &CadApp, ui: &mut Ui, chosen: &mut Option<(&'static str, Value)
 }
 
 fn osnap(app: &CadApp, ui: &mut Ui, chosen: &mut Option<(&'static str, Value)>) {
-    use cadcraft_engine::snap::mode;
+    use asenacad_engine::snap::mode;
     settings(ui, OSNAP_SETTINGS, chosen);
     let osmode = app.session.settings.osmode;
     for (bit, label) in mode::ALL {

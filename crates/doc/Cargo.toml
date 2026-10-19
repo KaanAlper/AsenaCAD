@@ -1,5 +1,5 @@
 [package]
-name = "cadcraft-doc"
+name = "asenacad-doc"
 description = "AsenaCAD drawing database: entities, symbol tables, blocks, layouts, copy-on-write store"
 version.workspace = true
 edition.workspace = true
@@ -9,8 +9,8 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-cadcraft-geom = { workspace = true }
-cadcraft-color = { workspace = true }
+asenacad-geom = { workspace = true }
+asenacad-color = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

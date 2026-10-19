@@ -1,8 +1,8 @@
 //! The gear on a Tool Sets category header opens that category's options menu and no longer
 //! collapses the category it sits on.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_ui_egui::{CadApp, Services};
 use egui::vec2;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
@@ -21,7 +21,7 @@ fn harness() -> Harness<'static, CadApp> {
     // The Tool Sets palette is not in the default workspace.
     app.ui.show_toolsets = true;
     // The ribbon down to its tabs: its Home panels repeat the palette's labels (Draw, Line).
-    app.ui.ribbon_min = cadcraft_ui_egui::ribbon::RibbonMin::Tabs;
+    app.ui.ribbon_min = asenacad_ui_egui::ribbon::RibbonMin::Tabs;
     let mut harness = Harness::builder().with_size(vec2(1280.0, 760.0)).build_ui_state(
         |ui, app: &mut CadApp| {
             app.logic(&ui.ctx().clone());

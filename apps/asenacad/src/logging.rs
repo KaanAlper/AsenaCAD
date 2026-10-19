@@ -3,14 +3,14 @@
 //! Without a logger every `log::warn!`/`log::error!`/`log::info!` in the workspace (a broken app
 //! icon, the GPU canvas set-up, the control server) vanished. A launch from a desktop menu has no
 //! terminal, so the file is what a bug report can attach: `<settings dir>/logs/asenacad.log`
-//! (`CADCRAFT_CONFIG_DIR`, or the platform settings directory; see `config_dir` in `main.rs`).
+//! (`ASENACAD_CONFIG_DIR`, or the platform settings directory; see `config_dir` in `main.rs`).
 //! Each start moves the previous log to `asenacad.1.log` (and that one to `.2`), so the log of a
 //! run that crashed survives the next launch.
 //!
 //! Levels: `info` for AsenaCAD's own crates, `warn` for everything else (wgpu and naga are
 //! chatty). `RUST_LOG` replaces that with env_logger-style directives: `debug`,
-//! `warn,cadcraft_io=trace`, `wgpu_core=info`. A directive ending in `*` matches every target
-//! that starts with it (`cadcraft*=debug`). `RUST_LOG=cadcraft_engine=debug` also logs every
+//! `warn,asenacad_io=trace`, `wgpu_core=info`. A directive ending in `*` matches every target
+//! that starts with it (`asenacad*=debug`). `RUST_LOG=asenacad_engine=debug` also logs every
 //! command-line message (`Session::echo`).
 //!
 //! Records logged before the settings directory is known are kept (up to [`MAX_PENDING`]) and
@@ -37,7 +37,7 @@ pub const MAX_FILE_BYTES: u64 = 16 * 1024 * 1024;
 /// Records kept in memory until the log file is attached.
 pub const MAX_PENDING: usize = 512;
 /// The built-in filter when `RUST_LOG` is unset or empty.
-pub const DEFAULT_FILTER: &str = "warn,asenacad*=info,cadcraft*=info";
+pub const DEFAULT_FILTER: &str = "warn,asenacad*=info";
 
 /// Per-target level filter parsed from env_logger-style directives.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -308,12 +308,12 @@ mod tests {
     }
 
     #[test]
-    fn the_default_filter_shows_cadcraft_info_and_other_crates_warnings() {
+    fn the_default_filter_shows_asenacad_info_and_other_crates_warnings() {
         let f = Filter::parse(DEFAULT_FILTER);
         assert_eq!(f.level_for("asenacad"), LevelFilter::Info);
         assert_eq!(f.level_for("asenacad::control_server"), LevelFilter::Info);
-        assert_eq!(f.level_for("cadcraft_ui_egui::gpu"), LevelFilter::Info);
-        assert_eq!(f.level_for("cadcraft_engine"), LevelFilter::Info);
+        assert_eq!(f.level_for("asenacad_ui_egui::gpu"), LevelFilter::Info);
+        assert_eq!(f.level_for("asenacad_engine"), LevelFilter::Info);
         assert_eq!(f.level_for("wgpu_core::device"), LevelFilter::Warn);
         assert_eq!(f.level_for("naga"), LevelFilter::Warn);
         assert_eq!(f.max(), LevelFilter::Info);
@@ -321,17 +321,17 @@ mod tests {
 
     #[test]
     fn directives_follow_env_logger_and_the_most_specific_one_wins() {
-        let f = Filter::parse("info,wgpu_core=error,cadcraft_io=trace,cadcraft_io::dxf_ext=off");
+        let f = Filter::parse("info,wgpu_core=error,asenacad_io=trace,asenacad_io::dxf_ext=off");
         assert_eq!(f.level_for("eframe"), LevelFilter::Info);
         assert_eq!(f.level_for("wgpu_core::instance"), LevelFilter::Error);
-        assert_eq!(f.level_for("cadcraft_io::svg"), LevelFilter::Trace);
-        assert_eq!(f.level_for("cadcraft_io::dxf_ext"), LevelFilter::Off);
+        assert_eq!(f.level_for("asenacad_io::svg"), LevelFilter::Trace);
+        assert_eq!(f.level_for("asenacad_io::dxf_ext"), LevelFilter::Off);
         assert_eq!(f.max(), LevelFilter::Trace);
         // A module name is matched at `::` boundaries, not as a bare prefix.
         assert_eq!(f.level_for("wgpu_core_extra"), LevelFilter::Info);
         // A trailing `*` is a prefix.
-        assert_eq!(Filter::parse("warn,cadcraft_ui*=debug").level_for("cadcraft_ui_egui::gpu"), LevelFilter::Debug);
-        assert_eq!(Filter::parse("warn,cadcraft_ui*=debug").level_for("cadcraft_engine"), LevelFilter::Warn);
+        assert_eq!(Filter::parse("warn,asenacad_ui*=debug").level_for("asenacad_ui_egui::gpu"), LevelFilter::Debug);
+        assert_eq!(Filter::parse("warn,asenacad_ui*=debug").level_for("asenacad_engine"), LevelFilter::Warn);
         // A bare target name sets that target to the most verbose level, as env_logger does.
         assert_eq!(Filter::parse("naga").level_for("naga::front"), LevelFilter::Trace);
         assert_eq!(Filter::parse("naga").level_for("eframe"), LevelFilter::Error);
@@ -493,13 +493,13 @@ mod tests {
         let path = logger.attach_dir(&dir).expect("attach");
         assert_eq!(path, dir.join(LOG_FILE));
         record(&logger, log::Level::Warn, "wgpu_hal::vulkan", "a real warning");
-        record(&logger, log::Level::Debug, "cadcraft_engine", "a command-line echo");
+        record(&logger, log::Level::Debug, "asenacad_engine", "a command-line echo");
         let text = read(&path);
         let lines: Vec<&str> = text.lines().collect();
         assert_eq!(lines.len(), 2, "{text}");
         assert!(lines.first().is_some_and(|l| l.contains(" INFO  [") && l.ends_with("asenacad: AsenaCAD starting")), "{text}");
         assert!(lines.get(1).is_some_and(|l| l.ends_with("wgpu_hal::vulkan: a real warning")), "{text}");
-        assert!(logger.enabled(&log::Metadata::builder().level(log::Level::Info).target("cadcraft_ui_egui::gpu").build()));
+        assert!(logger.enabled(&log::Metadata::builder().level(log::Level::Info).target("asenacad_ui_egui::gpu").build()));
         assert!(!logger.enabled(&log::Metadata::builder().level(log::Level::Info).target("naga").build()));
         // A second launch rotates: the first log becomes `.1`.
         let second = AppLogger::new(Filter::parse(DEFAULT_FILTER), false);

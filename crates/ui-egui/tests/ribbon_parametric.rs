@@ -2,11 +2,11 @@
 //! remembers its last entry, unbuilt items are disabled, the constraint mode toggles show
 //! AutoCAD's default and the Parameters Manager toggle follows the manager.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::ribbon::model::Panel;
-use cadcraft_ui_egui::ribbon::parametric::PARAMETRIC;
-use cadcraft_ui_egui::ribbon::{render_panel_for_test, widgets::LAUNCHER, widgets::RibbonState};
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_ui_egui::ribbon::model::Panel;
+use asenacad_ui_egui::ribbon::parametric::PARAMETRIC;
+use asenacad_ui_egui::ribbon::{render_panel_for_test, widgets::LAUNCHER, widgets::RibbonState};
+use asenacad_ui_egui::{CadApp, Services};
 use egui::accesskit::{Role, Toggled};
 use egui::vec2;
 use egui_kittest::Harness;

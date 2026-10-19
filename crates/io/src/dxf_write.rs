@@ -5,10 +5,10 @@
 
 use std::collections::HashMap;
 
-use cadcraft_color::Color;
-use cadcraft_doc::*;
-use cadcraft_dxf::{Tag, Version};
-use cadcraft_geom::{Bounds2, Vec2, Vec3};
+use asenacad_color::Color;
+use asenacad_doc::*;
+use asenacad_dxf::{Tag, Version};
+use asenacad_geom::{Bounds2, Vec2, Vec3};
 
 use crate::dxf_ext::{self, DimVal, K};
 
@@ -199,7 +199,7 @@ fn annotative_xdata(w: &mut W) {
     w.s(1002, "}");
 }
 
-/// Override (`ACAD` DSTYLE) and associativity (`CADCRAFT` ASSOC) xdata of a dimension.
+/// Override (`ACAD` DSTYLE) and associativity (`ASENACAD` ASSOC) xdata of a dimension.
 fn dim_xdata(w: &mut W, dm: &Dimension, cx: &Ctx) {
     let mut ov = W { t: Vec::new(), next: 0, pstyles: HashMap::new(), layers: HashMap::new(), reactors: HashMap::new() };
     let mut sah = false;
@@ -241,7 +241,7 @@ fn dim_xdata(w: &mut W, dm: &Dimension, cx: &Ctx) {
 /// dimension line's (`base`), in degrees.
 fn oblique_52(w: &mut W, dm: &Dimension, base: f64) {
     if let Some(a) = dm.marks.oblique.filter(|a| a.is_finite()) {
-        w.f(52, cadcraft_geom::norm_angle(a - base).to_degrees());
+        w.f(52, asenacad_geom::norm_angle(a - base).to_degrees());
     }
 }
 
@@ -393,7 +393,7 @@ fn layer_and_props(w: &mut W, c: &Common, base: Option<&Common>) {
         Color::ByLayer if write(true, |b| b.color == Color::ByLayer) => w.i(62, 256),
         Color::ByLayer => {}
         Color::True(rgb) => {
-            w.i(62, i64::from(cadcraft_color::nearest_aci(rgb)));
+            w.i(62, i64::from(asenacad_color::nearest_aci(rgb)));
             w.i(420, i64::from(rgb.to_u32()));
         }
         c => w.i(62, i64::from(c.to_aci())),
@@ -796,7 +796,7 @@ fn entity(w: &mut W, d: &Drawing, e: &Entity, owner: &str, paper: bool, cx: &Ctx
             w.s(2, bname);
             w.p(10, dm.defpt);
             let style = d.dim_style(&dm.style).cloned().unwrap_or_default();
-            let g = cadcraft_render::dimension_geometry(dm, &style, d.header.f64("DIMSCALE", 1.0));
+            let g = asenacad_render::dimension_geometry(dm, &style, d.header.f64("DIMSCALE", 1.0));
             w.p(11, if dm.user_text_pos { dm.text_mid } else { g.text_pos.to3(0.0) });
             let ty: i64 = match dm.kind {
                 DimKind::Linear { .. } => 0,
@@ -892,7 +892,7 @@ fn entity(w: &mut W, d: &Drawing, e: &Entity, owner: &str, paper: bool, cx: &Ctx
             for c in t.col_widths.iter().take(cols) {
                 w.f(142, *c);
             }
-            let cov = cadcraft_render::table_covered(t);
+            let cov = asenacad_render::table_covered(t);
             let span = |v: u32| i64::from(v.min(i16::MAX as u32));
             for r in 0..rows {
                 for c in 0..cols {
@@ -1021,7 +1021,7 @@ fn entity(w: &mut W, d: &Drawing, e: &Entity, owner: &str, paper: bool, cx: &Ctx
                 w.i(77, 0);
                 // The lines read from the file, else the library's pattern of that name.
                 let lines = if h.pattern_lines.is_empty() {
-                    cadcraft_doc::library::pattern_for(d, &h.pattern).map(|p| p.lines).unwrap_or_default()
+                    asenacad_doc::library::pattern_for(d, &h.pattern).map(|p| p.lines).unwrap_or_default()
                 } else {
                     h.pattern_lines.clone()
                 };
@@ -1136,7 +1136,7 @@ fn entity(w: &mut W, d: &Drawing, e: &Entity, owner: &str, paper: bool, cx: &Ctx
 /// otherwise, and from 2007 (UTF-8 text), `ANSI_1252`.
 fn code_page(d: &Drawing, version: Version) -> String {
     let read = d.header.get("DWGCODEPAGE").and_then(HVal::as_str).map(str::trim).unwrap_or_default();
-    let known = read.is_ascii() && read.len() <= 32 && cadcraft_dxf::decode_code_page(b"", read).is_some();
+    let known = read.is_ascii() && read.len() <= 32 && asenacad_dxf::decode_code_page(b"", read).is_some();
     if version < Version::R2007 && known { read.to_string() } else { "ANSI_1252".into() }
 }
 
@@ -1164,7 +1164,7 @@ fn mleader_fallback(w: &mut W, d: &Drawing, e: &Entity, m: &MLeader, owner: &str
 /// A hatch's gradient fill (DXF Reference, HATCH group codes 450–470): two-colour gradient
 /// with its rotation (radians), shift (0 = centered, 1 = shifted) and per-colour 463 records
 /// carrying ACI (63) and, for true colours, the RGB value (421). Those groups belong to R2004+
-/// files, so the same gradient also travels as `CADCRAFT` xdata, which survives this R2000
+/// files, so the same gradient also travels as `ASENACAD` xdata, which survives this R2000
 /// file's conversion to DWG (where the native fields don't exist).
 fn gradient(w: &mut W, g: &Gradient) {
     w.i(450, 1);
@@ -1178,7 +1178,7 @@ fn gradient(w: &mut W, g: &Gradient) {
         w.f(463, k);
         match c {
             Color::True(rgb) => {
-                w.i(63, i64::from(cadcraft_color::nearest_aci(rgb)));
+                w.i(63, i64::from(asenacad_color::nearest_aci(rgb)));
                 w.i(421, i64::from(rgb.to_u32()));
             }
             c => w.i(63, i64::from(c.to_aci())),
@@ -1203,11 +1203,11 @@ fn thickness(w: &mut W, e: &Entity) {
     }
 }
 
-/// Hatch origin and background colour as `CADCRAFT` xdata: `1000 HATCH`, the origin as a
+/// Hatch origin and background colour as `ASENACAD` xdata: `1000 HATCH`, the origin as a
 /// world position (`1011`, moved with the hatch by other programs) and the background colour
 /// name (`1000`, empty for none). The DXF Reference has no HATCH groups for either: other
 /// readers get the origin through the pattern lines' base points (43/44), the background isn't
-/// carried. Appended to the gradient's `CADCRAFT` xdata when there is one.
+/// carried. Appended to the gradient's `ASENACAD` xdata when there is one.
 fn hatch_xdata(w: &mut W, h: &Hatch) {
     if h.origin == Vec2::ZERO && h.background.is_none() {
         return;
@@ -1283,7 +1283,7 @@ fn reuse_handles(ents: &mut [Entity], old: &Block, taken: &mut std::collections:
 fn dim_block_entities(d: &Drawing, dm: &Dimension, layer: &str) -> Vec<Entity> {
     // The dimension as drawn: its overrides, DIMSCALE (0 = the drawing's) and text font.
     let style = d.dim_style(&dm.style).cloned().unwrap_or_default().with_overrides(&dm.overrides);
-    let g = cadcraft_render::dimension_in(d, dm);
+    let g = asenacad_render::dimension_in(d, dm);
     let mut out = Vec::new();
     let c = Common { layer: layer.into(), color: Color::ByBlock, ..Common::default() };
     for l in &g.lines {
@@ -1331,7 +1331,7 @@ fn table_size(t: &Table) -> (usize, usize) {
 /// The anonymous `*T` block of a table: cell fills, borders and texts as its cell styles draw
 /// them, for readers that only draw the block.
 fn table_block_entities(d: &Drawing, t: &Table, layer: &str) -> Vec<Entity> {
-    let g = cadcraft_render::table_geometry(d, t);
+    let g = asenacad_render::table_geometry(d, t);
     let c = Common { layer: layer.into(), color: Color::ByBlock, ..Common::default() };
     let mut out = Vec::new();
     for f in &g.fills {
@@ -1377,8 +1377,8 @@ fn table_block_entities(d: &Drawing, t: &Table, layer: &str) -> Vec<Entity> {
 }
 
 /// Our own geometry for an arrowhead block: unit size, tip at the origin, pointing along +X.
-fn arrow_block_entities(kind: cadcraft_render::Arrowhead) -> Vec<Entity> {
-    let g = cadcraft_render::arrowhead(kind, Vec2::ZERO, Vec2::X, 1.0);
+fn arrow_block_entities(kind: asenacad_render::Arrowhead) -> Vec<Entity> {
+    let g = asenacad_render::arrowhead(kind, Vec2::ZERO, Vec2::X, 1.0);
     let c = Common { layer: "0".into(), color: Color::ByBlock, ..Common::default() };
     let mut out = Vec::new();
     for l in &g.lines {
@@ -1461,7 +1461,7 @@ fn paper_views(d: &Drawing) -> HashMap<Handle, usize> {
 /// leaves it implicit again.
 fn paper_view(w: &mut W, d: &Drawing, e: &Entity, owner: &str, cx: &Ctx) {
     let Some(l) = cx.paper_views.get(&e.handle).and_then(|i| d.layouts.get(*i)) else { return };
-    let size = cadcraft_render::paper::sheet(d, &l.name).map(|s| s.size).unwrap_or(Vec2::new(12.0, 9.0));
+    let size = asenacad_render::paper::sheet(d, &l.name).map(|s| s.size).unwrap_or(Vec2::new(12.0, 9.0));
     let center = size * 0.5;
     let h = w.h();
     w.s(0, "VIEWPORT");
@@ -1546,7 +1546,7 @@ fn record_head(w: &mut W, kind: &str, owner: &str, subclass: &str) -> String {
 /// Write a drawing as ASCII DXF.
 /// The drawing as R2000 ASCII DXF.
 pub fn write(d: &Drawing) -> String {
-    cadcraft_dxf::write_ascii(&tags(d, Version::R2000))
+    asenacad_dxf::write_ascii(&tags(d, Version::R2000))
 }
 
 /// The drawing's DXF tags, declaring `version` in `$ACADVER`.
@@ -1559,7 +1559,7 @@ pub fn tags(d: &Drawing, version: Version) -> Vec<Tag> {
 pub(crate) fn dwg_bridge(d: &Drawing, dwg: Version) -> String {
     let mut tags = tags_for(d, Version::R2000, dwg);
     bridge_markers(&mut tags);
-    cadcraft_dxf::write_ascii(&tags)
+    asenacad_dxf::write_ascii(&tags)
 }
 
 /// Subclass markers the DWG bridge knows by another spelling (it matches them exactly):
@@ -1763,10 +1763,10 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
     }
     // The annotation scale list: the ACAD_SCALELIST dictionary of SCALE objects.
     let scale_dict = w.h();
-    let scales: Vec<(&cadcraft_doc::AnnoScale, String)> = d.scales.iter().filter(|s| s.is_valid()).map(|s| (s, w.h())).collect();
+    let scales: Vec<(&asenacad_doc::AnnoScale, String)> = d.scales.iter().filter(|s| s.is_valid()).map(|s| (s, w.h())).collect();
     // Plot style names used by layers and objects (Normal always), each a placeholder object.
     let pstyle_dict = w.h();
-    let mut pstyle_names: Vec<String> = vec![cadcraft_doc::NORMAL_STYLE.to_string()];
+    let mut pstyle_names: Vec<String> = vec![asenacad_doc::NORMAL_STYLE.to_string()];
     let named = d.layers.iter().map(|l| l.plot_style.as_str()).chain(every.iter().map(|e| e.common.plot_style.as_str()));
     for n in named {
         let n = n.trim();
@@ -1897,7 +1897,7 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
         let xref = if crate::dxf_xref::dependent(&l.name) { 48 } else { 0 };
         w.i(70, i64::from(l.frozen) | if l.vp_freeze_new { 2 } else { 0 } | if l.locked { 4 } else { 0 } | xref);
         let aci = match l.color {
-            Color::True(rgb) => i64::from(cadcraft_color::nearest_aci(rgb)),
+            Color::True(rgb) => i64::from(asenacad_color::nearest_aci(rgb)),
             c => i64::from(c.to_aci()).clamp(1, 255),
         };
         w.i(62, if l.on { aci } else { -aci });
@@ -1909,7 +1909,7 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
             w.i(290, 0);
         }
         w.i(370, i64::from(l.lineweight.to_dxf()));
-        let normal = w.pstyles.get(&cadcraft_doc::NORMAL_STYLE.to_ascii_uppercase()).cloned();
+        let normal = w.pstyles.get(&asenacad_doc::NORMAL_STYLE.to_ascii_uppercase()).cloned();
         if let Some(h) = w.pstyles.get(&l.plot_style.trim().to_ascii_uppercase()).cloned().or(normal) {
             w.s(390, h);
         }
@@ -1947,9 +1947,9 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
         w.i(71, if s.backwards { 2 } else { 0 } | if s.upside_down { 4 } else { 0 });
         w.f(42, 0.2);
         // The built-in font goes out as `txt`, which every reader has; its name travels in
-        // `CADCRAFT` xdata (`1000 FONT`, name) so the style reopens with it. A legacy name of
+        // `ASENACAD` xdata (`1000 FONT`, name) so the style reopens with it. A legacy name of
         // the built-in font (a drawing saved by CADCraft) goes out as the current name.
-        let builtin = cadcraft_fonts::is_builtin_font(&s.font);
+        let builtin = asenacad_fonts::is_builtin_font(&s.font);
         w.s(3, if builtin { "txt" } else { s.font.as_str() });
         w.s(4, &s.big_font);
         if s.annotative {
@@ -1958,7 +1958,7 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
         if builtin {
             w.s(1001, dxf_ext::APP);
             w.s(1000, "FONT");
-            w.s(1000, dxf_ext::xdata_str(cadcraft_fonts::BUILTIN_FONT));
+            w.s(1000, dxf_ext::xdata_str(asenacad_fonts::BUILTIN_FONT));
         }
     }
     let mut shape_handles: HashMap<String, String> = HashMap::new();
@@ -2631,7 +2631,7 @@ fn mleader_style_obj(w: &mut W, s: &MLeaderStyle, h: &str, dict: &str, byblock_l
 
 /// The ACAD_SCALELIST dictionary and its SCALE objects (DXF Reference, OBJECTS section): name
 /// (300), paper units (140), drawing units (141), unit scale flag (290).
-fn scale_list(w: &mut W, scales: &[(&cadcraft_doc::AnnoScale, String)], dict: &str, root: &str) {
+fn scale_list(w: &mut W, scales: &[(&asenacad_doc::AnnoScale, String)], dict: &str, root: &str) {
     w.s(0, "DICTIONARY");
     w.s(5, dict);
     w.group("ACAD_REACTORS", 330, &[root]);
@@ -2652,7 +2652,7 @@ fn scale_list(w: &mut W, scales: &[(&cadcraft_doc::AnnoScale, String)], dict: &s
         w.s(300, dxf_ext::xdata_str(&s.name));
         w.f(140, s.paper_units);
         w.f(141, s.drawing_units);
-        w.i(290, i64::from(cadcraft_doc::same_factor(s.factor(), 1.0)));
+        w.i(290, i64::from(asenacad_doc::same_factor(s.factor(), 1.0)));
     }
 }
 
@@ -2669,7 +2669,7 @@ pub fn entity_groups(d: &Drawing, e: &Entity) -> (String, Vec<Tag>) {
         reactors: HashMap::new(),
     };
     let cx = Ctx { target: Version::R2018, ..Ctx::default() };
-    let paper = d.space_of(e.handle).is_some_and(|s| !matches!(s, cadcraft_doc::Space::Model));
+    let paper = d.space_of(e.handle).is_some_and(|s| !matches!(s, asenacad_doc::Space::Model));
     entity(&mut w, d, e, "0", paper, &cx);
     let mut tags = w.t.into_iter();
     let kind = tags.next().filter(|t| t.code == 0).map(|t| t.value.as_str()).unwrap_or_default();

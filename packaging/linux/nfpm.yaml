@@ -12,7 +12,7 @@ version_schema: semver
 release: 1
 section: graphics
 priority: optional
-maintainer: ${CADCRAFT_MAINTAINER}
+maintainer: ${ASENACAD_MAINTAINER}
 vendor: AsenaCAD contributors
 homepage: https://github.com/KaanAlper/AsenaCAD
 license: MIT OR Apache-2.0

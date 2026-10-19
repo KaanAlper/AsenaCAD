@@ -3,10 +3,10 @@
 
 use std::sync::Arc;
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, base64_encode, set_io};
-use cadcraft_engine::doc::{AssocSnap, Block, Circle, Common, DimAssoc, Drawing, Entity, EntityKind, Group, HVal, Handle, Insert, Line, Space, Text};
-use cadcraft_engine::geom::Vec3;
+use asenacad_engine::Session;
+use asenacad_engine::cmd::file::{IoHooks, base64_encode, set_io};
+use asenacad_engine::doc::{AssocSnap, Block, Circle, Common, DimAssoc, Drawing, Entity, EntityKind, Group, HVal, Handle, Insert, Line, Space, Text};
+use asenacad_engine::geom::Vec3;
 use serde_json::{Value, json};
 
 fn line(a: (f64, f64), b: (f64, f64)) -> EntityKind {
@@ -187,8 +187,8 @@ fn a_clean_drawing_is_left_alone() {
     assert_eq!(s.state().unwrap().undo.len(), undo, "no undo step for nothing");
 
     // What the sample drawings and the drawing commands make is not an error.
-    for d in [cadcraft_engine::sample::bracket(), cadcraft_engine::sample::floor_plan()] {
-        let r = cadcraft_engine::audit::check(&d);
+    for d in [asenacad_engine::sample::bracket(), asenacad_engine::sample::floor_plan()] {
+        let r = asenacad_engine::audit::check(&d);
         assert!(r.issues.is_empty(), "{}", r.message());
     }
     s.execute("dimlinear", &json!({"p1": [0, 0], "p2": [4, 0], "at": [2, 2]})).unwrap();
@@ -231,7 +231,7 @@ fn missing_standard_entries_and_layer_zero_are_recreated() {
     d.text_styles.clear();
     d.dim_styles.clear();
     d.linetypes.retain(|l| !l.name.eq_ignore_ascii_case("Continuous"));
-    d.layers.push(cadcraft_engine::doc::Layer { linetype: "Dashed9".into(), ..cadcraft_engine::doc::Layer::new("L1") });
+    d.layers.push(asenacad_engine::doc::Layer { linetype: "Dashed9".into(), ..asenacad_engine::doc::Layer::new("L1") });
     let r = s.execute("audit", &json!({"fix": true})).unwrap();
     assert!(r["errors"].as_u64().unwrap() >= 5, "{r:#}");
     let d = s.doc().unwrap();

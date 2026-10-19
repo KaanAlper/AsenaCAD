@@ -1,6 +1,6 @@
 //! PAGESETUP: the plot style table and "Display plot styles" of a layout (issue #410).
 
-use cadcraft_engine::Session;
+use asenacad_engine::Session;
 use serde_json::json;
 
 #[test]

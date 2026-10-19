@@ -10,7 +10,7 @@ use crate::theme::Tokens;
 
 /// The current annotation scale's name, in model space.
 fn current(app: &CadApp) -> Option<String> {
-    if !matches!(app.session.layout_space(), cadcraft_doc::Space::Model) {
+    if !matches!(app.session.layout_space(), asenacad_doc::Space::Model) {
         return None;
     }
     app.session.doc().ok().map(|d| d.current_anno_scale().name)

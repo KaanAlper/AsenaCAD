@@ -10,7 +10,7 @@
 //! All positions are in the array block's coordinates: its origin is the array's base point,
 //! which is where the array's block reference is inserted.
 
-use cadcraft_geom::{Vec2, Vec3};
+use asenacad_geom::{Vec2, Vec3};
 use serde::{Deserialize, Serialize};
 
 use crate::{Common, Drawing, Entity, EntityKind, Insert, Lineweight};
@@ -211,7 +211,7 @@ impl ArrayParams {
         let items = self.items()?;
         let common = Common {
             layer: "0".into(),
-            color: cadcraft_color::Color::ByBlock,
+            color: asenacad_color::Color::ByBlock,
             linetype: "ByBlock".into(),
             lineweight: Lineweight::ByBlock,
             ..Common::default()

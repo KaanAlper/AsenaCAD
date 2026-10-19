@@ -4,37 +4,44 @@
 //! AsenaCAD-owned payloads (exact associativity, table flags, hatch gradients, parametric
 //! constraints).
 //!
-//! AsenaCAD's own data lives under the registered application `CADCRAFT` (xdata) and the
-//! named-object-dictionary entries `CADCRAFT_CONSTRAINTS`, `CADCRAFT_LAYERSTATES`,
-//! `CADCRAFT_PLOTSTYLES`, `CADCRAFT_HANDSEED` and `CADCRAFT_MLEADERSTYLE` (XRECORDs). Other
-//! readers keep or ignore them.
+//! AsenaCAD's own data lives under the registered application `ASENACAD` (xdata) and the
+//! named-object-dictionary entries `ASENACAD_CONSTRAINTS`, `ASENACAD_LAYERSTATES`,
+//! `ASENACAD_PLOTSTYLES`, `ASENACAD_ANNOTATION`, `ASENACAD_HANDSEED` and
+//! `ASENACAD_MLEADERSTYLE` (XRECORDs). Other readers keep or ignore them.
+//!
+//! Drawings saved before the rename (and by CADCraft, which AsenaCAD is a fork of) carry the
+//! same data under `CADCRAFT` and `CADCRAFT_*`. Reading accepts those names when the new one is
+//! absent and treats them as AsenaCAD's own (never kept as another application's data); saving
+//! writes only the new names.
 
 use std::collections::HashMap;
 
-use cadcraft_color::Color;
-use cadcraft_doc::{ArrayParams, AssocSnap, Constraint, DimAssoc, DimStyle, Handle, LayerState, Parametric, PlotStyleTable};
-use cadcraft_dxf::{Tag, Version};
-use cadcraft_render::Arrowhead;
+use asenacad_color::Color;
+use asenacad_doc::{ArrayParams, AssocSnap, Constraint, DimAssoc, DimStyle, Handle, LayerState, Parametric, PlotStyleTable};
+use asenacad_dxf::{Tag, Version};
+use asenacad_render::Arrowhead;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 /// Registered application name of AsenaCAD's extended data.
-pub(crate) const APP: &str = "CADCRAFT";
+pub(crate) const APP: &str = "ASENACAD";
+/// The application name drawings saved before the rename use for the same data (read only).
+pub(crate) const LEGACY_APP: &str = "CADCRAFT";
 /// Named-object-dictionary key of the constraint XRECORD.
-pub(crate) const CONSTRAINTS_KEY: &str = "CADCRAFT_CONSTRAINTS";
+pub(crate) const CONSTRAINTS_KEY: &str = "ASENACAD_CONSTRAINTS";
 /// Named-object-dictionary key of the saved layer states XRECORD.
-pub(crate) const LAYER_STATES_KEY: &str = "CADCRAFT_LAYERSTATES";
+pub(crate) const LAYER_STATES_KEY: &str = "ASENACAD_LAYERSTATES";
 /// Named-object-dictionary key of the drawing's plot style tables XRECORD.
-pub(crate) const PLOT_STYLES_KEY: &str = "CADCRAFT_PLOTSTYLES";
+pub(crate) const PLOT_STYLES_KEY: &str = "ASENACAD_PLOTSTYLES";
 /// Named-object-dictionary key of the annotative scaling XRECORD.
-pub(crate) const ANNOTATION_KEY: &str = "CADCRAFT_ANNOTATION";
+pub(crate) const ANNOTATION_KEY: &str = "ASENACAD_ANNOTATION";
 /// Named-object-dictionary key of the plot style names dictionary (DXF Reference): its entries
 /// name `ACDBPLACEHOLDER` objects, and layers and objects point at them with group 390.
 pub(crate) const PLOT_STYLE_NAMES_KEY: &str = "ACAD_PLOTSTYLENAME";
 /// Named-object-dictionary key of the XRECORD holding the drawing's next entity handle (hex).
-pub(crate) const HANDSEED_KEY: &str = "CADCRAFT_HANDSEED";
+pub(crate) const HANDSEED_KEY: &str = "ASENACAD_HANDSEED";
 /// Named-object-dictionary key of the XRECORD holding the current multileader style.
-pub(crate) const MLEADER_STYLE_KEY: &str = "CADCRAFT_MLEADERSTYLE";
+pub(crate) const MLEADER_STYLE_KEY: &str = "ASENACAD_MLEADERSTYLE";
 /// Most plot style tables and plot style names read from a file.
 pub(crate) const MAX_PLOT_STYLE_TABLES: usize = 1000;
 pub(crate) const MAX_PLOT_STYLE_NAMES: usize = 100_000;
@@ -143,7 +150,7 @@ pub(crate) const DIMSAH: i32 = 173;
 
 /// Variables newer than R2000: DIMFXL, DIMJOGANG, DIMARCSYM, DIMFXLON, DIMLTYPE, DIMLTEX1,
 /// DIMLTEX2. Files of [`NEWER_SINCE`] or later get them as DIMSTYLE groups; R2000 files get them
-/// in a style's `CADCRAFT` "DIMVARS" xdata (`1070 <code>` then the value, like DSTYLE) instead of
+/// in a style's `ASENACAD` "DIMVARS" xdata (`1070 <code>` then the value, like DSTYLE) instead of
 /// groups an R2000 reader doesn't expect. The reader takes both.
 pub(crate) const NEWER_CODES: &[i32] = &[49, 50, 90, 290, 345, 346, 347];
 /// The first version with [`NEWER_CODES`] as DIMSTYLE groups: all came with AutoCAD 2006, whose
@@ -330,6 +337,38 @@ pub(crate) fn xdata<'a>(tags: &'a [Tag], app: &str) -> &'a [Tag] {
     rest.get(..end).unwrap_or(&[])
 }
 
+/// AsenaCAD's own xdata of a record: the [`APP`] run, else (a drawing saved before the rename)
+/// the [`LEGACY_APP`] run.
+pub(crate) fn own_xdata(tags: &[Tag]) -> &[Tag] {
+    let x = xdata(tags, APP);
+    if x.is_empty() { xdata(tags, LEGACY_APP) } else { x }
+}
+
+/// The name a drawing saved before the rename uses for one of AsenaCAD's own names
+/// (`ASENACAD_HANDSEED` → `CADCRAFT_HANDSEED`); `None` for other names.
+pub(crate) fn legacy_name(name: &str) -> Option<String> {
+    name.strip_prefix(APP).map(|rest| format!("{LEGACY_APP}{rest}"))
+}
+
+/// The current name of a legacy (pre-rename) name of AsenaCAD's (`CADCRAFT_LAYISO` →
+/// `ASENACAD_LAYISO`, case-insensitive); `None` for other names.
+pub(crate) fn renamed(name: &str) -> Option<String> {
+    name.get(..LEGACY_APP.len()).filter(|p| p.eq_ignore_ascii_case(LEGACY_APP))?;
+    name.get(LEGACY_APP.len()..).map(|rest| format!("{APP}{rest}"))
+}
+
+/// Whether an application name or dictionary key is AsenaCAD's own: it starts with [`APP`] or
+/// [`LEGACY_APP`] (case-insensitive).
+pub(crate) fn is_own_name(name: &str) -> bool {
+    [APP, LEGACY_APP].iter().any(|p| name.get(..p.len()).is_some_and(|h| h.eq_ignore_ascii_case(p)))
+}
+
+/// Whether a dictionary key names the XRECORD `key` (one of the `*_KEY` constants) under its
+/// current or its legacy name.
+pub(crate) fn is_key(name: &str, key: &str) -> bool {
+    name == key || legacy_name(key).is_some_and(|l| name == l)
+}
+
 /// The groups inside `1000 <name>` `1002 {` … `1002 }` of an xdata run (nested braces kept).
 pub(crate) fn xdata_list<'a>(x: &'a [Tag], name: &str) -> &'a [Tag] {
     let Some(at) = x.iter().position(|t| t.code == 1000 && t.str().trim().eq_ignore_ascii_case(name)) else { return &[] };
@@ -374,14 +413,14 @@ pub(crate) fn read_dstyle(
     read_dimvar_list(xdata_list(xdata(tags, "ACAD"), "DSTYLE"), styles, blocks, ltypes)
 }
 
-/// A style's [`NEWER_CODES`] variables from its `CADCRAFT` "DIMVARS" xdata.
+/// A style's [`NEWER_CODES`] variables from its `ASENACAD` "DIMVARS" xdata.
 pub(crate) fn read_newer_dimvars(
     tags: &[Tag],
     styles: &HashMap<String, String>,
     blocks: &HashMap<String, String>,
     ltypes: &HashMap<String, String>,
 ) -> serde_json::Map<String, Value> {
-    read_dimvar_list(xdata_list(xdata(tags, APP), DIMVARS_LIST), styles, blocks, ltypes)
+    read_dimvar_list(xdata_list(own_xdata(tags), DIMVARS_LIST), styles, blocks, ltypes)
 }
 
 /// `1070 <code>` / value pairs of dimension variables.
@@ -415,7 +454,7 @@ pub(crate) const PAPER_VIEW: &str = "PAPERVIEW";
 /// xdata, where the writer puts it. Later strings are layer names (VPFROZEN, VPCOLORS), so a layer
 /// called PAPERVIEW does not count.
 pub(crate) fn is_paper_view(tags: &[Tag]) -> bool {
-    xdata(tags, APP).iter().find(|t| t.code == 1000).is_some_and(|t| t.str().trim().eq_ignore_ascii_case(PAPER_VIEW))
+    own_xdata(tags).iter().find(|t| t.code == 1000).is_some_and(|t| t.str().trim().eq_ignore_ascii_case(PAPER_VIEW))
 }
 
 /// Snap kinds in AsenaCAD's ASSOC xdata.
@@ -455,7 +494,7 @@ pub(crate) fn assoc_xdata(assoc: &[DimAssoc]) -> Vec<Tag> {
 /// An arc-length dimension as AsenaCAD xdata: `1000 ARCLEN`, `1002 {`, the arc centre as an xdata
 /// point (`1010`/`1020`/`1030`), `1002 }`. The record itself stays a standard aligned dimension
 /// (DXF has no arc-length DIMENSION type), so other programs still read it.
-pub(crate) fn arclen_xdata(center: cadcraft_geom::Vec3) -> Vec<Tag> {
+pub(crate) fn arclen_xdata(center: asenacad_geom::Vec3) -> Vec<Tag> {
     vec![Tag::s(1000, "ARCLEN"), Tag::s(1002, "{"), Tag::f(1010, center.x), Tag::f(1020, center.y), Tag::f(1030, center.z), Tag::s(1002, "}")]
 }
 
@@ -463,8 +502,8 @@ pub(crate) fn arclen_xdata(center: cadcraft_geom::Vec3) -> Vec<Tag> {
 /// and a point; `1000 JOGGED`, the centre and the jog point; `1000 BREAK`, a point, `1040` size
 /// and `1070` auto; `1000 INSPECT`, `1070` shape, `1000` label and `1000` rate. Points are
 /// `1010/1020/1030`. The oblique angle is the standard group 52 instead.
-pub(crate) fn marks_xdata(m: &cadcraft_doc::DimMarks) -> Vec<Tag> {
-    let pt = |v: &mut Vec<Tag>, p: cadcraft_geom::Vec3| v.extend([Tag::f(1010, p.x), Tag::f(1020, p.y), Tag::f(1030, p.z)]);
+pub(crate) fn marks_xdata(m: &asenacad_doc::DimMarks) -> Vec<Tag> {
+    let pt = |v: &mut Vec<Tag>, p: asenacad_geom::Vec3| v.extend([Tag::f(1010, p.x), Tag::f(1020, p.y), Tag::f(1030, p.z)]);
     let mut v = Vec::new();
     if let Some(j) = m.jog_line {
         v.push(Tag::s(1000, "JOGLINE"));
@@ -494,12 +533,12 @@ pub(crate) fn marks_xdata(m: &cadcraft_doc::DimMarks) -> Vec<Tag> {
 
 /// The marks written by [`marks_xdata`] (no oblique angle); empty for other writers. Damaged
 /// items are skipped.
-pub(crate) fn read_marks(tags: &[Tag]) -> cadcraft_doc::DimMarks {
-    let list = xdata_list(xdata(tags, APP), "MARKS");
+pub(crate) fn read_marks(tags: &[Tag]) -> asenacad_doc::DimMarks {
+    let list = xdata_list(own_xdata(tags), "MARKS");
     let list = list.get(..list.len().min(MAX_XDATA_ITEMS)).unwrap_or(&[]);
-    let mut m = cadcraft_doc::DimMarks::default();
+    let mut m = asenacad_doc::DimMarks::default();
     let num = |i: usize, code: i32| list.get(i).filter(|t| t.code == code).map(Tag::f64).filter(|x| x.is_finite());
-    let point = |i: usize| Some(cadcraft_geom::Vec3::new(num(i, 1010)?, num(i + 1, 1020)?, num(i + 2, 1030)?));
+    let point = |i: usize| Some(asenacad_geom::Vec3::new(num(i, 1010)?, num(i + 1, 1020)?, num(i + 2, 1030)?));
     let text = |i: usize| list.get(i).filter(|t| t.code == 1000).map(Tag::str);
     for (i, t) in list.iter().enumerate() {
         if t.code != 1000 {
@@ -509,20 +548,20 @@ pub(crate) fn read_marks(tags: &[Tag]) -> cadcraft_doc::DimMarks {
             "JOGLINE" => m.jog_line = point(i + 1).or(m.jog_line),
             "JOGGED" => {
                 if let (Some(center), Some(jog)) = (point(i + 1), point(i + 4)) {
-                    m.jogged = Some(cadcraft_doc::JoggedRadius { center, jog });
+                    m.jogged = Some(asenacad_doc::JoggedRadius { center, jog });
                 }
             }
             "BREAK" => {
                 let size = list.get(i + 4).filter(|t| t.code == 1040).map(Tag::f64).filter(|x| x.is_finite() && *x > 0.0);
                 let auto = list.get(i + 5).filter(|t| t.code == 1070).is_some_and(|t| t.i64() != 0);
                 if let (Some(at), Some(size)) = (point(i + 1), size) {
-                    m.breaks.push(cadcraft_doc::DimBreak { at, size, auto });
+                    m.breaks.push(asenacad_doc::DimBreak { at, size, auto });
                 }
             }
             "INSPECT" => {
                 let shape = list.get(i + 1).filter(|t| t.code == 1070).and_then(|t| u8::try_from(t.i64()).ok()).filter(|s| *s <= 2);
                 if let (Some(shape), Some(label), Some(rate)) = (shape, text(i + 2), text(i + 3)) {
-                    m.inspect = Some(cadcraft_doc::Inspection { shape, label, rate });
+                    m.inspect = Some(asenacad_doc::Inspection { shape, label, rate });
                 }
             }
             _ => {}
@@ -532,10 +571,10 @@ pub(crate) fn read_marks(tags: &[Tag]) -> cadcraft_doc::DimMarks {
 }
 
 /// The arc centre written by [`arclen_xdata`]; None for other dimensions and other writers.
-pub(crate) fn read_arclen(tags: &[Tag]) -> Option<cadcraft_geom::Vec3> {
-    let list = xdata_list(xdata(tags, APP), "ARCLEN");
+pub(crate) fn read_arclen(tags: &[Tag]) -> Option<asenacad_geom::Vec3> {
+    let list = xdata_list(own_xdata(tags), "ARCLEN");
     let g = |c: i32| list.iter().find(|t| t.code == c).map(Tag::f64).filter(|v| v.is_finite());
-    Some(cadcraft_geom::Vec3::new(g(1010)?, g(1020)?, g(1030).unwrap_or(0.0)))
+    Some(asenacad_geom::Vec3::new(g(1010)?, g(1020)?, g(1030).unwrap_or(0.0)))
 }
 
 /// A viewport's frozen layer names as AsenaCAD xdata: `1000 VPFROZEN`, `1002 {`, one `1000` per layer, `1002 }`.
@@ -548,7 +587,7 @@ pub(crate) fn frozen_xdata(layers: &[String]) -> Vec<Tag> {
 
 /// The frozen layer names written by [`frozen_xdata`]; empty for files from other writers.
 pub(crate) fn read_frozen(tags: &[Tag]) -> Vec<String> {
-    let list = xdata_list(xdata(tags, APP), "VPFROZEN");
+    let list = xdata_list(own_xdata(tags), "VPFROZEN");
     list.iter().take(MAX_XDATA_ITEMS).filter(|t| t.code == 1000).map(Tag::str).collect()
 }
 
@@ -566,7 +605,7 @@ pub(crate) fn layer_colors_xdata(colors: &[(String, Color)]) -> Vec<Tag> {
 
 /// The overrides written by [`layer_colors_xdata`]; empty for files from other writers, bad pairs are skipped.
 pub(crate) fn read_layer_colors(tags: &[Tag]) -> Vec<(String, Color)> {
-    let list = xdata_list(xdata(tags, APP), "VPCOLORS");
+    let list = xdata_list(own_xdata(tags), "VPCOLORS");
     let names: Vec<String> = list.iter().take(MAX_XDATA_ITEMS * 2).filter(|t| t.code == 1000).map(Tag::str).collect();
     names.as_chunks::<2>().0.iter().filter_map(|[name, color]| Some((name.clone(), Color::parse(color)?))).collect()
 }
@@ -575,7 +614,7 @@ const POINT_NAMES: [&str; 5] = ["defpt", "p13", "p14", "p15", "p16"];
 
 /// Associativity links from AsenaCAD xdata; malformed links are skipped.
 pub(crate) fn read_assoc(tags: &[Tag]) -> Vec<DimAssoc> {
-    let list = xdata_list(xdata(tags, APP), "ASSOC");
+    let list = xdata_list(own_xdata(tags), "ASSOC");
     let mut out = Vec::new();
     let mut i = 0;
     while let Some(t) = list.get(i) {
@@ -618,7 +657,7 @@ pub(crate) fn read_assoc(tags: &[Tag]) -> Vec<DimAssoc> {
     out
 }
 
-/// The parametric payload stored in the `CADCRAFT_CONSTRAINTS` XRECORD.
+/// The parametric payload stored in the `ASENACAD_CONSTRAINTS` XRECORD.
 #[derive(Serialize, Deserialize)]
 struct Payload {
     version: u32,
@@ -688,7 +727,7 @@ pub(crate) fn array_xdata(p: &ArrayParams) -> Vec<Tag> {
 /// The array parameters written by [`array_xdata`]; `None` for other records and for
 /// parameters that are not usable.
 pub(crate) fn read_array(tags: &[Tag]) -> Option<ArrayParams> {
-    let list = xdata_list(xdata(tags, APP), "ARRAY");
+    let list = xdata_list(own_xdata(tags), "ARRAY");
     let mut text = String::new();
     for t in list.iter().take(MAX_XDATA_ITEMS).filter(|t| t.code == 1000) {
         text.push_str(&t.str());
@@ -697,7 +736,7 @@ pub(crate) fn read_array(tags: &[Tag]) -> Option<ArrayParams> {
     p.is_valid().then_some(p)
 }
 
-/// The saved layer states stored in the `CADCRAFT_LAYERSTATES` XRECORD.
+/// The saved layer states stored in the `ASENACAD_LAYERSTATES` XRECORD.
 #[derive(Serialize, Deserialize)]
 struct LayerStatesPayload {
     version: u32,
@@ -727,7 +766,7 @@ pub(crate) fn parse_layer_states(text: &str) -> Option<Vec<LayerState>> {
     Some(p.states)
 }
 
-/// The drawing's plot style tables stored in the `CADCRAFT_PLOTSTYLES` XRECORD.
+/// The drawing's plot style tables stored in the `ASENACAD_PLOTSTYLES` XRECORD.
 #[derive(Serialize, Deserialize)]
 struct PlotStylesPayload {
     version: u32,
@@ -757,7 +796,7 @@ pub(crate) fn parse_plot_styles(text: &str) -> Option<Vec<PlotStyleTable>> {
     Some(p.tables.into_iter().map(PlotStyleTable::sanitized).filter(|t| !t.name.is_empty()).collect())
 }
 
-/// Annotative scaling stored in the `CADCRAFT_ANNOTATION` XRECORD: the current annotation scale
+/// Annotative scaling stored in the `ASENACAD_ANNOTATION` XRECORD: the current annotation scale
 /// (CANNOSCALE), ANNOALLVISIBLE, the annotative blocks and the scales each annotative object
 /// supports, by handle. The DXF Reference doesn't document how objects refer to their scales,
 /// so this is AsenaCAD's own record; the scale list itself is the standard `ACAD_SCALELIST`.
@@ -777,7 +816,7 @@ pub(crate) struct AnnoPayload {
 #[derive(Serialize, Deserialize)]
 struct AnnoObject {
     handle: String,
-    scales: Vec<cadcraft_doc::AnnoScale>,
+    scales: Vec<asenacad_doc::AnnoScale>,
 }
 
 /// Most annotative objects read from one file.
@@ -785,7 +824,7 @@ const MAX_ANNO_OBJECTS: usize = 1_000_000;
 
 /// JSON chunks for the annotative scaling XRECORD, or `None` when nothing differs from a new
 /// drawing (1:1, ANNOALLVISIBLE 1, no annotative objects or blocks).
-pub(crate) fn anno_chunks(d: &cadcraft_doc::Drawing) -> Option<Vec<String>> {
+pub(crate) fn anno_chunks(d: &asenacad_doc::Drawing) -> Option<Vec<String>> {
     let cannoscale = d.header.str("CANNOSCALE", "1:1");
     let annoallvisible = d.header.i64("ANNOALLVISIBLE", 1);
     let blocks: Vec<String> = d.blocks.values().filter(|b| b.annotative).map(|b| b.name.clone()).collect();
@@ -793,7 +832,7 @@ pub(crate) fn anno_chunks(d: &cadcraft_doc::Drawing) -> Option<Vec<String>> {
         .model
         .iter()
         .chain(d.layouts.iter().flat_map(|l| l.entities.iter()))
-        .filter(|e| cadcraft_doc::is_annotative(e))
+        .filter(|e| asenacad_doc::is_annotative(e))
         .map(|e| AnnoObject { handle: e.handle.hex(), scales: e.common.anno_scales.clone() })
         .collect();
     if cannoscale == "1:1" && annoallvisible == 1 && blocks.is_empty() && objects.is_empty() {
@@ -814,7 +853,7 @@ pub(crate) fn parse_anno(text: &str) -> Option<AnnoPayload> {
 
 /// Apply a parsed annotative scaling record: variables, annotative blocks and each object's
 /// scales (invalid scales and objects that can't be annotative are skipped).
-pub(crate) fn apply_anno(d: &mut cadcraft_doc::Drawing, p: AnnoPayload) {
+pub(crate) fn apply_anno(d: &mut asenacad_doc::Drawing, p: AnnoPayload) {
     if let Some(c) = p.cannoscale.filter(|c| !c.trim().is_empty() && c.len() <= 255) {
         d.header.set_str("CANNOSCALE", &c);
     }
@@ -831,14 +870,14 @@ pub(crate) fn apply_anno(d: &mut cadcraft_doc::Drawing, p: AnnoPayload) {
     }
     for o in p.objects {
         let Some(h) = Handle::parse_hex(&o.handle) else { continue };
-        let mut scales: Vec<cadcraft_doc::AnnoScale> = Vec::new();
+        let mut scales: Vec<asenacad_doc::AnnoScale> = Vec::new();
         for s in o.scales.into_iter().filter(|s| s.is_valid() && !s.name.trim().is_empty()) {
-            if scales.len() < cadcraft_doc::MAX_SCALES && !scales.iter().any(|x| x.name.eq_ignore_ascii_case(&s.name)) {
+            if scales.len() < asenacad_doc::MAX_SCALES && !scales.iter().any(|x| x.name.eq_ignore_ascii_case(&s.name)) {
                 scales.push(s);
             }
         }
         let _ = d.modify_entity(h, |e| {
-            if cadcraft_doc::can_be_annotative(&e.kind) {
+            if asenacad_doc::can_be_annotative(&e.kind) {
                 e.common.anno_scales = scales;
             }
         });
@@ -847,10 +886,10 @@ pub(crate) fn apply_anno(d: &mut cadcraft_doc::Drawing, p: AnnoPayload) {
 
 /// A SCALE object (DXF Reference, OBJECTS section): name (300), paper units (140), drawing
 /// units (141); `None` when unusable.
-pub(crate) fn read_scale(tags: &[Tag]) -> Option<cadcraft_doc::AnnoScale> {
+pub(crate) fn read_scale(tags: &[Tag]) -> Option<asenacad_doc::AnnoScale> {
     let name = tags.iter().find(|t| t.code == 300).map(Tag::str)?;
     let num = |c: i32| tags.iter().find(|t| t.code == c).map(Tag::f64);
-    let s = cadcraft_doc::AnnoScale::new(name.trim(), num(140)?, num(141)?);
+    let s = asenacad_doc::AnnoScale::new(name.trim(), num(140)?, num(141)?);
     (s.is_valid() && !s.name.is_empty() && s.name.len() <= 255).then_some(s)
 }
 
@@ -872,7 +911,7 @@ mod tests {
 
     #[test]
     fn every_dimvar_has_a_code() {
-        for (_, field) in cadcraft_doc::DIMVARS {
+        for (_, field) in asenacad_doc::DIMVARS {
             assert!(dim_code(field).is_some(), "{field} has no DXF group code");
         }
     }

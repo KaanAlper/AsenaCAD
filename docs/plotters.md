@@ -32,17 +32,18 @@ settings directory:
 | macOS | `~/Library/Application Support/AsenaCAD/plotters` |
 | Windows | `%APPDATA%\AsenaCAD\plotters` |
 
-`CADCRAFT_CONFIG_DIR` replaces the settings directory. On the web, devices last for the
+`ASENACAD_CONFIG_DIR` replaces the settings directory. On the web, devices last for the
 session unless the host provides storage (`cmd::plotters::set_plotter_store`). Binary `.pc3`
 files are not read; we haven't found a public specification of that format.
 
 ## Files
 
-`<name>.plotter.json`, UTF-8 JSON with a format marker:
+`<name>.plotter.json`, UTF-8 JSON with a format marker (`cadcraftPlotter` in files written before
+the rename: still read, saved with the new marker):
 
 ```json
 {
-  "cadcraftPlotter": 1,
+  "asenacadPlotter": 1,
   "name": "Office A3",
   "description": "Raster proofs",
   "output": "png",

@@ -2,7 +2,7 @@
 //! the active viewport (MSPACE) or of the one selected viewport, and change it through
 //! `viewport.set`.
 
-use cadcraft_doc::{EntityKind, Handle, Space, Viewport};
+use asenacad_doc::{EntityKind, Handle, Space, Viewport};
 use egui::{Rect, Sense, pos2, vec2};
 use serde_json::json;
 
@@ -115,8 +115,8 @@ pub fn target(app: &CadApp) -> Option<(Handle, Viewport)> {
 const LOCK_W: f32 = 24.0;
 
 /// The scale list's text and the viewport's scale and paper units (metric).
-fn scale_text(app: &CadApp, vp: &cadcraft_doc::Viewport) -> (String, f64, bool) {
-    let metric = app.session.doc().is_ok_and(|d| cadcraft_render::paper::paper_unit_mm(d) == 1.0);
+fn scale_text(app: &CadApp, vp: &asenacad_doc::Viewport) -> (String, f64, bool) {
+    let metric = app.session.doc().is_ok_and(|d| asenacad_render::paper::paper_unit_mm(d) == 1.0);
     let scale = if vp.view_height > 0.0 { vp.height / vp.view_height } else { 0.0 };
     (label(scale, metric), scale, metric)
 }

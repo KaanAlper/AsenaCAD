@@ -2,9 +2,9 @@
 //! its Customize ▾ menu and Undo/Redo history splits, the centred title and the InfoCenter
 //! search and Help.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::chrome::titlerow;
-use cadcraft_ui_egui::{CadApp, Services, ribbon};
+use asenacad_engine::Session;
+use asenacad_ui_egui::chrome::titlerow;
+use asenacad_ui_egui::{CadApp, Services, ribbon};
 use egui::accesskit::{Role, Toggled};
 use egui::vec2;
 use egui_kittest::Harness;
@@ -271,7 +271,7 @@ fn the_application_button_lists_the_file_menu() {
     assert!(menu_item(&h, "New Drawing...").is_none(), "the menu closes");
 }
 
-/// `CRAFT_UI_VISUAL_DIR=/dir cargo test -p cadcraft-ui-egui --test titlerow title_row_visuals`
+/// `CRAFT_UI_VISUAL_DIR=/dir cargo test -p asenacad-ui-egui --test titlerow title_row_visuals`
 /// renders the title row over the ribbon at AutoCAD's window width for a visual check.
 #[test]
 fn title_row_visuals() {

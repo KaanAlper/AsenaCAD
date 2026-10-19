@@ -2,12 +2,12 @@
 //!
 //! Usage: `asenacad [--control <port>] [--sample] [files…]`
 //!
-//! `--control <port>` (or `CADCRAFT_CONTROL_PORT`) starts a localhost JSON-lines control server:
+//! `--control <port>` (or `ASENACAD_CONTROL_PORT`) starts a localhost JSON-lines control server:
 //! `{"id":1,"method":"cmdline.input","params":{"text":"circle 0,0 5"}}` → `{"id":1,"ok":true,…}`.
-//! See `cadcraft_ui_egui::control` for the methods.
+//! See `asenacad_ui_egui::control` for the methods.
 //!
-//! `CADCRAFT_VSYNC=1` presents with vsync on Linux/BSD, where the default is the low-latency
-//! present mode (`CADCRAFT_VSYNC=0` selects that elsewhere); see `cadcraft_ui_egui::gpu::surface_config`.
+//! `ASENACAD_VSYNC=1` presents with vsync on Linux/BSD, where the default is the low-latency
+//! present mode (`ASENACAD_VSYNC=0` selects that elsewhere); see `asenacad_ui_egui::gpu::surface_config`.
 //!
 //! `log` records go to standard error and `<settings dir>/logs/asenacad.log` (`RUST_LOG` sets the
 //! levels); see [`logging`] and [`config_dir`].
@@ -25,8 +25,8 @@ mod spacemouse;
 mod system_animations;
 mod workspace;
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::{CadApp, Services, i18n};
+use asenacad_engine::Session;
+use asenacad_ui_egui::{CadApp, Services, i18n};
 
 struct App {
     cad: CadApp,
@@ -68,7 +68,7 @@ impl eframe::App for App {
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         #[cfg(target_os = "macos")]
         {
-            if self.native_menu.is_none() && std::env::var_os("CADCRAFT_NO_NATIVE_MENU").is_none() {
+            if self.native_menu.is_none() && std::env::var_os("ASENACAD_NO_NATIVE_MENU").is_none() {
                 self.native_menu = Some(native_menu::NativeMenu::install(&mut self.cad));
             }
             if let Some(m) = &mut self.native_menu {
@@ -86,7 +86,7 @@ impl eframe::App for App {
     fn raw_input_hook(&mut self, ctx: &egui::Context, raw: &mut egui::RawInput) {
         follow_desktop(raw, self.desktop_theme.current());
         self.cad.raw_input_hook(raw);
-        cadcraft_ui_egui::cmdline::capture_tab(ctx, raw);
+        asenacad_ui_egui::cmdline::capture_tab(ctx, raw);
     }
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.cad.ui(ui);
@@ -100,9 +100,9 @@ impl eframe::App for App {
     }
     /// Preferences (the interface theme) survive restarts; window and egui state are not kept.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        storage.set_string(cadcraft_ui_egui::options::PROFILE_KEY, self.cad.profile_json());
-        storage.set_string(cadcraft_ui_egui::PREFS_KEY, self.cad.prefs_json());
-        storage.set_string(cadcraft_ui_egui::autosave::PREFS_KEY, cadcraft_ui_egui::autosave::prefs_json());
+        storage.set_string(asenacad_ui_egui::options::PROFILE_KEY, self.cad.profile_json());
+        storage.set_string(asenacad_ui_egui::PREFS_KEY, self.cad.prefs_json());
+        storage.set_string(asenacad_ui_egui::autosave::PREFS_KEY, asenacad_ui_egui::autosave::prefs_json());
     }
     fn persist_egui_memory(&self) -> bool {
         false
@@ -111,18 +111,18 @@ impl eframe::App for App {
 
 /// File format hooks for the engine (it stays I/O-agnostic).
 pub fn install_io() {
-    cadcraft_engine::cmd::file::set_io(cadcraft_engine::cmd::file::IoHooks {
-        read: |b, name| cadcraft_io::read(b, name).map_err(|e| e.to_string()),
-        write: |d, name| cadcraft_io::write(d, name).map_err(|e| e.to_string()),
-        plot: Some(|d, space, opts| cadcraft_io::plotter::plot(d, space, opts).map_err(|e| e.to_string())),
+    asenacad_engine::cmd::file::set_io(asenacad_engine::cmd::file::IoHooks {
+        read: |b, name| asenacad_io::read(b, name).map_err(|e| e.to_string()),
+        write: |d, name| asenacad_io::write(d, name).map_err(|e| e.to_string()),
+        plot: Some(|d, space, opts| asenacad_io::plotter::plot(d, space, opts).map_err(|e| e.to_string())),
     });
-    cadcraft_engine::cmd::file::set_write_as(|d, name, o| {
-        cadcraft_io::write_with(d, name, &cadcraft_io::SaveOptions { version: o.version, binary: o.binary }).map_err(|e| e.to_string())
+    asenacad_engine::cmd::file::set_write_as(|d, name, o| {
+        asenacad_io::write_with(d, name, &asenacad_io::SaveOptions { version: o.version, binary: o.binary }).map_err(|e| e.to_string())
     });
     // AutoLISP's entget, entmake and entmod see entities as DXF groups.
-    cadcraft_engine::cmd::file::set_entity_codec(cadcraft_engine::cmd::file::EntityCodec {
-        groups: cadcraft_io::entity_groups,
-        entity: cadcraft_io::entity_from_groups,
+    asenacad_engine::cmd::file::set_entity_codec(asenacad_engine::cmd::file::EntityCodec {
+        groups: asenacad_io::entity_groups,
+        entity: asenacad_io::entity_from_groups,
     });
 }
 
@@ -158,7 +158,7 @@ fn filters_for_save(name: &str) -> [(&'static str, &'static str); 6] {
     filters
 }
 
-/// The per-user settings directory (it holds `logs/` and `autosave/`): `CADCRAFT_CONFIG_DIR` if set, else
+/// The per-user settings directory (it holds `logs/` and `autosave/`): `ASENACAD_CONFIG_DIR` if set, else
 /// `$XDG_CONFIG_HOME/asenacad` or `~/.config/asenacad` on Linux and the BSDs,
 /// `~/Library/Application Support/AsenaCAD` on macOS, `%APPDATA%\AsenaCAD` on Windows.
 fn config_dir() -> Option<std::path::PathBuf> {
@@ -169,7 +169,7 @@ fn config_dir() -> Option<std::path::PathBuf> {
 /// counts as unset, so a blank value never means the working directory.
 fn config_dir_from(var: impl Fn(&str) -> Option<std::ffi::OsString>) -> Option<std::path::PathBuf> {
     let set = |k: &str| var(k).filter(|v| !v.is_empty()).map(std::path::PathBuf::from);
-    if let Some(dir) = set("CADCRAFT_CONFIG_DIR") {
+    if let Some(dir) = set("ASENACAD_CONFIG_DIR") {
         return Some(dir);
     }
     if cfg!(target_os = "macos") {
@@ -197,11 +197,11 @@ fn app_icon() -> Option<egui::IconData> {
 }
 
 fn version_string() -> String {
-    let sha = option_env!("CADCRAFT_BUILD_SHA").unwrap_or("dev");
+    let sha = option_env!("ASENACAD_BUILD_SHA").unwrap_or("dev");
     format!("asenacad {} ({sha})", env!("CARGO_PKG_VERSION"))
 }
 
-/// The control port from `--control <port>` or `CADCRAFT_CONTROL_PORT` (`source`); a value that is
+/// The control port from `--control <port>` or `ASENACAD_CONTROL_PORT` (`source`); a value that is
 /// not a port is logged and ignored instead of silently starting no control channel.
 fn control_port_from(source: &str, value: Option<String>) -> Option<u16> {
     let value = value?;
@@ -213,13 +213,13 @@ fn control_port_from(source: &str, value: Option<String>) -> Option<u16> {
 }
 
 /// `--control` followed by `value`: a bare `--control` (last argument) keeps the port already
-/// read from `CADCRAFT_CONTROL_PORT` (`current`) instead of turning the control channel off.
+/// read from `ASENACAD_CONTROL_PORT` (`current`) instead of turning the control channel off.
 fn control_flag(current: Option<u16>, value: Option<String>) -> Option<u16> {
     if value.is_some() {
         return control_port_from("--control", value);
     }
     match current {
-        Some(port) => log::warn!("--control: no port given; using CADCRAFT_CONTROL_PORT ({port})"),
+        Some(port) => log::warn!("--control: no port given; using ASENACAD_CONTROL_PORT ({port})"),
         None => log::warn!("--control: no port given; the control channel is off"),
     }
     current
@@ -230,7 +230,7 @@ fn main() -> eframe::Result {
     let logger = logging::install();
     // lossy, so a value that is not Unicode is reported like any other bad port instead of ignored
     let mut control_port =
-        control_port_from("CADCRAFT_CONTROL_PORT", std::env::var_os("CADCRAFT_CONTROL_PORT").map(|p| p.to_string_lossy().into_owned()));
+        control_port_from("ASENACAD_CONTROL_PORT", std::env::var_os("ASENACAD_CONTROL_PORT").map(|p| p.to_string_lossy().into_owned()));
     let mut files = Vec::new();
     let mut sample = false;
     let mut args = std::env::args().skip(1);
@@ -253,15 +253,15 @@ fn main() -> eframe::Result {
             Some(Err(e)) => log::warn!("no log file: {e}"),
             None => {
                 logger.stderr_only();
-                log::warn!("no log file: no settings directory (set CADCRAFT_CONFIG_DIR)");
+                log::warn!("no log file: no settings directory (set ASENACAD_CONFIG_DIR)");
             }
         }
     }
     install_io();
-    let surface = cadcraft_ui_egui::gpu::surface_config(std::env::var("CADCRAFT_VSYNC").ok().as_deref(), cfg!(all(unix, not(target_os = "macos"))));
+    let surface = asenacad_ui_egui::gpu::surface_config(std::env::var("ASENACAD_VSYNC").ok().as_deref(), cfg!(all(unix, not(target_os = "macos"))));
     let mut options = eframe::NativeOptions {
         // The crosshair is drawn by the app: present without a queue on Linux/BSD, where X11
-        // swapchains hold two frames back under vsync (`CADCRAFT_VSYNC=1` restores vsync).
+        // swapchains hold two frames back under vsync (`ASENACAD_VSYNC=1` restores vsync).
         wgpu_options: eframe::egui_wgpu::WgpuConfiguration::default().with_surface_config(surface),
         viewport: egui::ViewportBuilder::default()
             .with_title("AsenaCAD")
@@ -295,10 +295,10 @@ fn main() -> eframe::Result {
         });
     }
     // winit has no file drag-and-drop on Wayland (only on X11), so dropping files from the file
-    // manager showed a "no" cursor. Run through XWayland when it's there; CADCRAFT_WAYLAND=1
+    // manager showed a "no" cursor. Run through XWayland when it's there; ASENACAD_WAYLAND=1
     // keeps the native Wayland backend.
     #[cfg(all(unix, not(target_os = "macos")))]
-    if std::env::var_os("DISPLAY").is_some() && std::env::var_os("CADCRAFT_WAYLAND").is_none() {
+    if std::env::var_os("DISPLAY").is_some() && std::env::var_os("ASENACAD_WAYLAND").is_none() {
         options.event_loop_builder = Some(Box::new(|b| {
             use winit::platform::x11::EventLoopBuilderExtX11;
             b.with_x11();
@@ -317,16 +317,16 @@ fn main() -> eframe::Result {
                 eprintln!("AsenaCAD workspace: {error}");
                 app.set_status(error);
             }
-            app.system_languages = std::env::var("CADCRAFT_LOCALE").map(|s| vec![s]).unwrap_or_else(|_| sys_locale::get_locales().collect());
+            app.system_languages = std::env::var("ASENACAD_LOCALE").map(|s| vec![s]).unwrap_or_else(|_| sys_locale::get_locales().collect());
             // The user profile (Options): drafting settings, selection sizes, drawing-area colours.
-            if let Some(profile) = cc.storage.and_then(|s| s.get_string(cadcraft_ui_egui::options::PROFILE_KEY)) {
+            if let Some(profile) = cc.storage.and_then(|s| s.get_string(asenacad_ui_egui::options::PROFILE_KEY)) {
                 app.load_profile(&profile);
             }
-            if let Some(prefs) = cc.storage.and_then(|s| s.get_string(cadcraft_ui_egui::PREFS_KEY)) {
+            if let Some(prefs) = cc.storage.and_then(|s| s.get_string(asenacad_ui_egui::PREFS_KEY)) {
                 app.load_prefs(&prefs);
             }
-            if let Some(prefs) = cc.storage.and_then(|s| s.get_string(cadcraft_ui_egui::autosave::PREFS_KEY)) {
-                cadcraft_ui_egui::autosave::load_prefs(&prefs);
+            if let Some(prefs) = cc.storage.and_then(|s| s.get_string(asenacad_ui_egui::autosave::PREFS_KEY)) {
+                asenacad_ui_egui::autosave::load_prefs(&prefs);
             }
             // Autosave files (SAVEFILEPATH) default to `<settings dir>/autosave`.
             if let Some(dir) = config_dir() {
@@ -341,7 +341,7 @@ fn main() -> eframe::Result {
             }
             app.integrated_titlebar = cfg!(target_os = "macos");
             if surface.present_mode == eframe::wgpu::PresentMode::AutoNoVsync {
-                app.frame_cap = Some(cadcraft_ui_egui::gpu::FrameCap::new(240));
+                app.frame_cap = Some(asenacad_ui_egui::gpu::FrameCap::new(240));
             }
             if let Some(rs) = &cc.wgpu_render_state {
                 app.set_wgpu(rs, eframe::egui_wgpu::depth_format_from_bits(0, STENCIL_BITS));
@@ -415,7 +415,7 @@ mod tests {
 
     #[test]
     fn control_without_a_port_keeps_the_environment_port() {
-        // `CADCRAFT_CONTROL_PORT=47321 asenacad --control` (#844)
+        // `ASENACAD_CONTROL_PORT=47321 asenacad --control` (#844)
         assert_eq!(control_flag(Some(47321), None), Some(47321));
         assert_eq!(control_flag(None, None), None);
         // A port given on the command line still wins over the variable.
@@ -425,9 +425,9 @@ mod tests {
 
     #[test]
     fn the_override_variable_wins_and_empty_values_are_unset() {
-        let vars = [("CADCRAFT_CONFIG_DIR", "/tmp/cc"), ("HOME", "/home/u"), ("XDG_CONFIG_HOME", "/x"), ("APPDATA", "C:\\a")];
+        let vars = [("ASENACAD_CONFIG_DIR", "/tmp/cc"), ("HOME", "/home/u"), ("XDG_CONFIG_HOME", "/x"), ("APPDATA", "C:\\a")];
         assert_eq!(config_dir_from(env(&vars)), Some(PathBuf::from("/tmp/cc")));
-        let empty = [("CADCRAFT_CONFIG_DIR", ""), ("HOME", ""), ("XDG_CONFIG_HOME", ""), ("APPDATA", "")];
+        let empty = [("ASENACAD_CONFIG_DIR", ""), ("HOME", ""), ("XDG_CONFIG_HOME", ""), ("APPDATA", "")];
         assert_eq!(config_dir_from(env(&empty)), None, "no usable variable means no directory, not the working directory");
         assert_eq!(config_dir_from(env(&[])), None);
     }

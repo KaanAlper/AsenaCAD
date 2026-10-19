@@ -9,7 +9,7 @@
 
 use std::collections::{HashMap, VecDeque};
 
-use cadcraft_doc::{CellFormat, Table, TableStyle};
+use asenacad_doc::{CellFormat, Table, TableStyle};
 
 /// The longest formula accepted (characters).
 pub const MAX_FORMULA_LEN: usize = 1024;

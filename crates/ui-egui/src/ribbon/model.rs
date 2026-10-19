@@ -274,7 +274,7 @@ impl Panel {
     /// the panel's name.
     pub fn launcher_label(&self) -> Option<&'static str> {
         let cmd = self.launcher?;
-        Some(self.launcher_name.or_else(|| cadcraft_engine::find_command(cmd).map(|c| c.label)).unwrap_or(self.label))
+        Some(self.launcher_name.or_else(|| asenacad_engine::find_command(cmd).map(|c| c.label)).unwrap_or(self.label))
     }
 }
 

@@ -1,9 +1,9 @@
 //! Autosave and Drawing Recovery in the app. The engine decides what to write and writes it
-//! ([`cadcraft_engine::autosave`]); this runs it every frame, keeps SAVETIME and SAVEFILEPATH with
+//! ([`asenacad_engine::autosave`]); this runs it every frame, keeps SAVETIME and SAVEFILEPATH with
 //! the preferences, and shows the Drawing Recovery list after a crash: each autosaved drawing can
 //! be opened (as an unsaved copy) or discarded. On the web there is no autosave yet.
 
-use cadcraft_engine::autosave::{self, Recoverable};
+use asenacad_engine::autosave::{self, Recoverable};
 use egui::{RichText, vec2};
 use serde_json::{Value, json};
 

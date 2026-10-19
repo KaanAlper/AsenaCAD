@@ -3,8 +3,8 @@
 //! of running under the next tab and the close button (#513); the unsaved-changes mark stays
 //! visible.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::{CadApp, Services};
+use asenacad_engine::Session;
+use asenacad_ui_egui::{CadApp, Services};
 use egui::accesskit::Role;
 use egui::{Rect, Shape, vec2};
 use egui_kittest::Harness;

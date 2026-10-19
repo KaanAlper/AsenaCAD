@@ -15,7 +15,7 @@ fn painted_labels(tab: &str) -> Vec<String> {
     }
     let mut app = CadApp::new(Session::default(), Services::default());
     app.ui.ribbon_tab = tab.into();
-    let mut h = Harness::builder().with_size(vec2(1906.0, 300.0)).build_ui_state(|ui, app: &mut CadApp| cadcraft_ui_egui::ribbon::show(app, ui), app);
+    let mut h = Harness::builder().with_size(vec2(1906.0, 300.0)).build_ui_state(|ui, app: &mut CadApp| asenacad_ui_egui::ribbon::show(app, ui), app);
     h.run_steps(3);
     let mut out = Vec::new();
     h.output().shapes.iter().for_each(|s| collect(&s.shape, &mut out));

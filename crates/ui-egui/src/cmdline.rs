@@ -1,7 +1,7 @@
 //! The floating command line: history, the active prompt with clickable keywords, typed input
 //! (keyboard focus stays on the drawing — typing anywhere goes here) and AutoComplete.
 
-use cadcraft_engine::Input;
+use asenacad_engine::Input;
 use egui::{Key, Pos2, Rect, Sense, Stroke, pos2, vec2};
 
 use crate::CadApp;
@@ -15,7 +15,7 @@ use complete::suggestions;
 pub struct CmdLine {
     pub buffer: String,
     /// The selection as of the last frame, to notice when it changes.
-    seen_selection: Vec<cadcraft_doc::Handle>,
+    seen_selection: Vec<asenacad_doc::Handle>,
     /// Something was typed at the command line since the selection was made.
     typed_since_selection: bool,
     pub history: Vec<String>,
@@ -48,7 +48,7 @@ pub fn dyn_frame(app: &CadApp) -> Option<crate::dyninput::Frame> {
     if !st.dynmode || app.session.pending_window.is_some() {
         return None;
     }
-    let p = app.session.current_prompt().filter(cadcraft_engine::pointmod::accepts)?;
+    let p = app.session.current_prompt().filter(asenacad_engine::pointmod::accepts)?;
     Some(crate::dyninput::Frame { base: p.base, cartesian: st.dynpi_cartesian, absolute: st.dynpi_absolute })
 }
 
@@ -101,7 +101,7 @@ fn tab(app: &mut CadApp) {
 
 impl CmdLine {
     /// Track the selection: a new selection starts with nothing typed since.
-    pub fn watch_selection(&mut self, sel: &[cadcraft_doc::Handle]) {
+    pub fn watch_selection(&mut self, sel: &[asenacad_doc::Handle]) {
         if self.seen_selection != sel {
             self.seen_selection = sel.to_vec();
             self.typed_since_selection = false;
@@ -572,7 +572,7 @@ fn history_window(app: &CadApp, ui: &mut egui::Ui, r: Rect) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cadcraft_engine::Session;
+    use asenacad_engine::Session;
     use egui::{Event, PointerButton};
 
     #[test]
@@ -660,7 +660,7 @@ mod tests {
 #[cfg(test)]
 mod delete_key_tests {
     use super::*;
-    use cadcraft_doc::Handle;
+    use asenacad_doc::Handle;
 
     const PRESS: KeyPress = KeyPress { repeat: false, plain: true };
 
@@ -705,7 +705,7 @@ mod autocomplete_tests {
 
     #[test]
     fn tab_autocompletes_alias_to_resolved_command() {
-        let mut app = CadApp::new(cadcraft_engine::Session::empty(), crate::Services::default());
+        let mut app = CadApp::new(asenacad_engine::Session::empty(), crate::Services::default());
         app.cmd.buffer = "rec".to_string();
         tab(&mut app);
         assert_eq!(app.cmd.buffer, "RECTANG");

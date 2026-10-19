@@ -9,7 +9,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use cadcraft_geom::Vec3;
+use asenacad_geom::Vec3;
 use serde::Serialize;
 
 use super::{ActionKind, DynamicBlock, ParameterKind, dynamic_block};

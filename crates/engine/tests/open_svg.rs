@@ -1,9 +1,9 @@
 //! Opening a file that isn't a drawing (SVG, read into entities): the drawing gets no file name,
 //! so QSAVE asks for one instead of writing AsenaCAD's SVG export over the original.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::Drawing;
+use asenacad_engine::Session;
+use asenacad_engine::cmd::file::{IoHooks, set_io};
+use asenacad_engine::doc::Drawing;
 use serde_json::json;
 
 #[test]

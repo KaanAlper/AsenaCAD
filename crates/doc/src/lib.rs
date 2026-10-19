@@ -22,8 +22,8 @@ mod tables;
 use std::collections::{BTreeMap, BTreeSet};
 
 pub use array::*;
-pub use cadcraft_color as color;
-pub use cadcraft_geom as geom;
+pub use asenacad_color as color;
+pub use asenacad_geom as geom;
 pub use constraint::*;
 pub use entity::*;
 pub use extents::{MAX_BLOCK_DEPTH, entity_bounds};
@@ -350,8 +350,8 @@ impl Drawing {
     }
 
     /// Bounds of all visible entities in a space.
-    pub fn extents(&self, space: &Space) -> cadcraft_geom::Bounds2 {
-        let mut b = cadcraft_geom::Bounds2::EMPTY;
+    pub fn extents(&self, space: &Space) -> asenacad_geom::Bounds2 {
+        let mut b = asenacad_geom::Bounds2::EMPTY;
         if let Some(store) = self.space(space) {
             for e in store.iter() {
                 if self.is_visible(e) {

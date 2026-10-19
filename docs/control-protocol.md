@@ -1,6 +1,6 @@
 # AsenaCAD control protocol
 
-Start the desktop app with `--control PORT` (or `CADCRAFT_CONTROL_PORT=PORT`). It listens on
+Start the desktop app with `--control PORT` (or `ASENACAD_CONTROL_PORT=PORT`). It listens on
 `127.0.0.1:PORT` for JSON lines: one request per line, one reply per line. A port given with
 `--control` wins over the variable; a bare `--control` keeps the variable's port.
 
@@ -102,7 +102,7 @@ It stores palette/toolset visibility, selected toolset, collapsed groups, comman
 height and related chrome choices. It does not store drawings, command buffers, dialogs or the
 current Start tab. The default directory is `~/Library/Application Support/AsenaCAD` on macOS,
 `%APPDATA%/AsenaCAD` on Windows, and `$XDG_CONFIG_HOME/asenacad` or `~/.config/asenacad` elsewhere.
-Set `CADCRAFT_CONFIG_DIR` to a private directory for an isolated profile; an explicitly empty
+Set `ASENACAD_CONFIG_DIR` to a private directory for an isolated profile; an explicitly empty
 value disables workspace reads and writes. An invalid, oversized or newer-version file is
 reported and left untouched, with persistence disabled for that launch. Repair or move that
 file before restarting to resume saving workspace choices.

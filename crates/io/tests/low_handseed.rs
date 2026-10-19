@@ -5,7 +5,7 @@
 
 use std::collections::HashSet;
 
-use cadcraft_doc::{Drawing, EntityKind, Handle};
+use asenacad_doc::{Drawing, EntityKind, Handle};
 
 /// A block holding a polyface mesh of three triangles (handle 2000) and, in model space after it,
 /// lines with handles 2001–2003 (the next ones after the mesh's), under a $HANDSEED of 10. The
@@ -42,7 +42,7 @@ fn counts(d: &Drawing) -> (usize, usize) {
 
 #[test]
 fn faces_made_while_reading_do_not_take_the_files_handles() {
-    let d = cadcraft_io::read_dxf(dxf().as_bytes()).unwrap();
+    let d = asenacad_io::read_dxf(dxf().as_bytes()).unwrap();
     assert_eq!(counts(&d), (3, 3));
     let handles: Vec<Handle> = d.model.iter().chain(d.block("MESH").unwrap().entities.iter()).map(|e| e.handle).collect();
     let unique: HashSet<Handle> = handles.iter().copied().collect();
@@ -53,6 +53,6 @@ fn faces_made_while_reading_do_not_take_the_files_handles() {
         assert!(d.entity(Handle::parse_hex(h).unwrap()).is_some(), "{h}");
     }
     // Nothing is lost through a DWG.
-    let back = cadcraft_io::read(&cadcraft_io::write(&d, "a.dwg").unwrap(), "a.dwg").unwrap();
+    let back = asenacad_io::read(&asenacad_io::write(&d, "a.dwg").unwrap(), "a.dwg").unwrap();
     assert_eq!(counts(&back), (3, 3));
 }

@@ -1,9 +1,9 @@
 //! PEDIT Edit vertex Break / Straighten / Tangent / Regen and the SPLINEDIT Fit data and Edit
 //! vertex options, at the command line and in the JSON form (#554).
 
-use cadcraft_doc::{EntityKind, LwPolyline};
-use cadcraft_engine::Session;
-use cadcraft_geom::{Spline, Vec2};
+use asenacad_doc::{EntityKind, LwPolyline};
+use asenacad_engine::Session;
+use asenacad_geom::{Spline, Vec2};
 use serde_json::{Value, json};
 
 fn h(v: &Value) -> String {
@@ -11,7 +11,7 @@ fn h(v: &Value) -> String {
 }
 
 fn kind(s: &Session, hex: &str) -> EntityKind {
-    let h = cadcraft_doc::Handle::parse_hex(hex).unwrap();
+    let h = asenacad_doc::Handle::parse_hex(hex).unwrap();
     s.doc().unwrap().entity(h).unwrap().kind.clone()
 }
 

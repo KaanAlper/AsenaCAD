@@ -47,8 +47,8 @@ pub mod helpers;
 pub mod machines;
 pub mod options;
 
-use cadcraft_doc::Handle;
-use cadcraft_geom::Vec2;
+use asenacad_doc::Handle;
+use asenacad_geom::Vec2;
 use serde::Serialize;
 use serde_json::Value;
 

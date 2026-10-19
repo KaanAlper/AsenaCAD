@@ -3,8 +3,8 @@
 
 #![cfg(not(target_arch = "wasm32"))]
 
-use cadcraft_engine::Session;
-use cadcraft_engine::autosave;
+use asenacad_engine::Session;
+use asenacad_engine::autosave;
 use serde_json::json;
 
 #[test]

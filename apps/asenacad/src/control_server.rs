@@ -14,7 +14,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::mpsc::{Receiver, SyncSender, TrySendError, sync_channel};
 use std::time::Duration;
 
-use cadcraft_ui_egui::ControlRequest;
+use asenacad_ui_egui::ControlRequest;
 use serde_json::{Value, json};
 
 /// Resource bounds for the control server.
