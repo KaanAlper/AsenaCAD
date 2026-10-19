@@ -1,8 +1,7 @@
 //! AutoCAD's title row, 32 px tall: the Application button, the Quick Access Toolbar (`qat`),
 //! the window title centred between them and the InfoCenter (search box, Search button, Help).
 //!
-//! The Application button opens the File menu's entries for now; AutoCAD's full Application
-//! menu (recent documents, sub-panes, Options, Exit) comes in M1c. Autodesk's online controls
+//! The Application button opens the Application menu (`appmenu`). Autodesk's online controls
 //! (Sign In, App Store, Stay Connected) are not built.
 
 use egui::{Color32, Painter, Rect, Response, Sense, Stroke, Ui, Vec2, pos2, vec2};
@@ -118,7 +117,7 @@ fn hover_fill(ui: &Ui, rect: Rect, resp: &Response) {
     }
 }
 
-/// The Application button: the mark with a ▾, opening the File menu's entries.
+/// The Application button: the mark with a ▾, opening the Application menu under it.
 fn application_button(app: &mut CadApp, ui: &mut Ui, rect: Rect) {
     let resp = ui.interact(rect, ui.id().with("application-button"), Sense::click());
     hover_fill(ui, rect, &resp);
@@ -127,10 +126,8 @@ fn application_button(app: &mut CadApp, ui: &mut Ui, rect: Rect) {
     icons::paint(ui.painter(), Rect::from_center_size(pos2(mark.right() + 8.0, rect.center().y), Vec2::splat(9.0)), Icon::ChevronDown, false);
     let label = crate::tl!("Application Button");
     icons::describe_control(ui, &resp, label, None, false);
-    let resp = resp.on_hover_text(label);
-    let tree = crate::menus::tree(app);
-    let Some((_, file)) = tree.iter().find(|(name, _)| name == "File") else { return };
-    menu_popup(app, &resp, file);
+    let resp = if super::appmenu::is_open(ui.ctx()) { resp } else { resp.on_hover_text(label) };
+    super::appmenu::show(app, ui, &resp);
 }
 
 /// A popup under `resp` with `entries` (labels, shortcuts, enabled states, submenus); choosing

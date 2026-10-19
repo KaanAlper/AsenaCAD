@@ -10,7 +10,7 @@ use crate::theme::Tokens;
 
 impl Pen<'_> {
     /// A coloured badge with `text` in the panel colour, top-left at (x, y).
-    fn badge(&self, x: f32, y: f32, w: f32, h: f32, text: &str, c: Color32) {
+    pub(super) fn badge(&self, x: f32, y: f32, w: f32, h: f32, text: &str, c: Color32) {
         self.fill_rect(x, y, w, h, c);
         self.text(x + w / 2.0, y + h / 2.0, text, h * 0.78, Tokens::get().panel);
     }
@@ -23,7 +23,7 @@ impl Pen<'_> {
         }
     }
     /// A small printer, top-left at (x, y), 14 wide.
-    fn printer(&self, x: f32, y: f32, c: Color32) {
+    pub(super) fn printer(&self, x: f32, y: f32, c: Color32) {
         self.rect(x + 3.0, y, 8.0, 4.0, c);
         self.rect(x, y + 4.0, 14.0, 7.0, c);
         self.rect(x + 3.0, y + 8.0, 8.0, 5.0, c);

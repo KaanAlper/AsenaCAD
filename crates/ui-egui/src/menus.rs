@@ -189,7 +189,12 @@ fn run_ui_command_inner(app: &mut CadApp, id: &str, params: &Value) -> Option<Re
         }
         "ui.saveas" | "saveas" if no_path => {
             let title = app.session.state().map(|s| s.title.clone()).ok();
-            let name = app.ui.save_format.suggested_name(title.as_deref());
+            let mut name = app.ui.save_format.suggested_name(title.as_deref());
+            // `{ext}` (the Application menu's Save As ▸ Drawing and Drawing Template) suggests
+            // that file type instead.
+            if let Some(ext) = params.get("ext").and_then(Value::as_str).filter(|e| ["dwg", "dxf", "dwt"].contains(e)) {
+                name = std::path::Path::new(&name).with_extension(ext).to_string_lossy().to_string();
+            }
             if let Some(p) = app.services.pick_save.as_ref().and_then(|f| f(&name)) {
                 return Some(app.session.execute("saveas", &saveas_params(&app.ui, &app.session, &p)).map_err(|e| e.to_string()));
             }
