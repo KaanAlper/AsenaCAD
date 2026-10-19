@@ -118,6 +118,7 @@ fn insert_matches_autocad() {
                 label: "Import",
                 items: &[
                     sp("PDF Import", "large", 0, &[("PDF Import", "pdfimport"), ("DGN Import", "dgnimport"), ("Import", "import")], 0),
+                    BAR,
                     b("Recognize SHX Text", "small+label", 1, "pdfshxtext"),
                     b("Recognition Settings", "small+label", 2, "pdfshxtext.settings"),
                     b("Combine Text", "large", 0, "txt2mtxt"),

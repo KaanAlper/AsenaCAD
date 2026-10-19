@@ -73,6 +73,8 @@ const IMPORT: Panel = Panel {
     label: "Import",
     items: &[
         large_split(None, PDF_IMPORT),
+        // AutoCAD draws a thin line between PDF Import and the SHX text tools.
+        GROUP_SEP,
         labeled(Icon::RecognizeShx, "Recognize SHX Text", "pdfshxtext", 1),
         labeled(Icon::ShxSettings, "Recognition Settings", "pdfshxtext.settings", 2),
         large(Icon::CombineText, "Combine Text", "txt2mtxt"),
