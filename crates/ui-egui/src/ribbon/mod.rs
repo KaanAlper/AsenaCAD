@@ -242,7 +242,8 @@ fn panel_strip(app: &mut CadApp, ui: &mut Ui, strip: Rect, tab: &Tab) {
 /// `popup`: the panel is shown in its collapsed button's popup.
 fn show_panel(app: &mut CadApp, ui: &mut Ui, rect: Rect, key: &str, panel: &Panel, compact: bool, popup: bool) {
     let (_, content_w) = layout::place(ui, key, panel.items, compact, Pos2::ZERO);
-    render_items(ui, app, key, panel.items, compact, pos2(layout::content_left(rect, content_w), rect.top()));
+    let top = rect.top() + layout::rows_offset(panel.items);
+    render_items(ui, app, key, panel.items, compact, pos2(layout::content_left(rect, content_w), top));
     title_bar(app, ui, Rect::from_min_max(pos2(rect.left(), rect.bottom() - TITLE_H), rect.max), key, panel, popup);
 }
 

@@ -127,6 +127,22 @@ pub fn small_row(item: &Item) -> Option<u8> {
     }
 }
 
+/// Whether `item` is a large button, toggle, split or drop-down (not a separator).
+fn is_large(item: &Item) -> bool {
+    !matches!(item, Item::Separator) && small_row(item).is_none()
+}
+
+/// How far a panel's small rows move down from their usual places: a panel made only of small
+/// items in two rows has them centred in its height (Express Tools ▸ Modify); everything else
+/// keeps rows 1–3 at the top (two rows next to a large item stay up, as in Insert ▸ Import).
+pub fn rows_offset(items: &[Item]) -> f32 {
+    let rows: Option<Vec<u8>> = items.iter().map(small_row).collect();
+    match rows.and_then(|r| r.into_iter().max()) {
+        Some(2) => LARGE_TOP + (widgets::LARGE_H - (ROW_STEP + widgets::SMALL_H)) / 2.0 - SMALL_TOP,
+        _ => 0.0,
+    }
+}
+
 /// The model's columns: a large item is a column of its own; consecutive small items whose row
 /// never decreases form a block of rows. Each entry is (index in `list`, row).
 fn columns(list: &[Item]) -> Vec<Vec<(usize, Option<u8>)>> {
@@ -162,11 +178,13 @@ pub fn place(ui: &Ui, prefix: &str, list: &[Item], compact: bool, origin: Pos2) 
     for (n, column) in columns(list).iter().enumerate() {
         let mut column_w: f32 = 0.0;
         let rows = column.iter().filter_map(|(_, r)| *r).max().unwrap_or(0);
-        // Large buttons stand side by side with no gap (their labels already have room).
-        if n > 0 && !(prev_large && rows == 0) {
+        // Large buttons stand side by side with no gap (their labels already have room); a
+        // separator or a column of small items keeps its gaps.
+        let large = column.iter().all(|(i, _)| list.get(*i).is_some_and(is_large));
+        if n > 0 && !(prev_large && large) {
             x += GAP;
         }
-        prev_large = rows == 0;
+        prev_large = large;
         if rows == 0 {
             for (i, _) in column {
                 if let Some(it) = list.get(*i) {
@@ -240,6 +258,68 @@ mod tests {
 
     fn fit(full: &[f32], compact: &[f32], available: f32) -> Vec<Fit> {
         super::fit(full, compact, &BUTTONS[..full.len()], available)
+    }
+
+    /// `list` laid out from the origin in a fresh context: the items' rects in list order.
+    fn placed(list: &[Item]) -> Vec<Rect> {
+        let mut out = Vec::new();
+        let ctx = egui::Context::default();
+        for _ in 0..2 {
+            let mut frame = ctx.run_ui(egui::RawInput::default(), |ui| {
+                let (mut rects, _) = place(ui, "Test/Panel", list, false, Pos2::ZERO);
+                rects.sort_by_key(|(i, _)| *i);
+                out = rects.into_iter().map(|(_, r)| r).collect();
+            });
+            // The font atlas isn't uploaded anywhere: drop it so the next frame doesn't complain.
+            frame.textures_delta.clear();
+        }
+        out
+    }
+
+    use crate::icons::Icon;
+    use crate::ribbon::build::{GROUP_SEP, labeled, large};
+
+    #[test]
+    fn adjacent_large_items_stand_side_by_side() {
+        let r = placed(&[large(Icon::Line, "Line", "line"), large(Icon::Circle, "Circle", "circle")]);
+        assert_eq!(r.len(), 2);
+        assert_eq!(r[1].left(), r[0].right(), "no gap between two large buttons");
+    }
+
+    #[test]
+    fn a_small_column_after_a_large_item_keeps_its_gap() {
+        let r = placed(&[large(Icon::Line, "Line", "line"), labeled(Icon::Move, "Move", "move", 1)]);
+        assert_eq!(r[1].left(), r[0].right() + GAP);
+    }
+
+    #[test]
+    fn a_separator_next_to_large_items_keeps_its_gaps() {
+        let r = placed(&[large(Icon::Line, "Line", "line"), GROUP_SEP, large(Icon::Circle, "Circle", "circle")]);
+        assert_eq!(r[1].left(), r[0].right() + GAP, "gap before the separator");
+        assert_eq!(r[2].left(), r[1].right() + GAP, "gap after the separator");
+    }
+
+    #[test]
+    fn only_a_panel_of_two_small_rows_is_centred() {
+        let two = [labeled(Icon::Move, "Move", "move", 1), labeled(Icon::Copy, "Copy", "copy", 2)];
+        let (top, height) = (LARGE_TOP, widgets::LARGE_H);
+        let offset = rows_offset(&two);
+        let middle = SMALL_TOP + offset + (ROW_STEP + widgets::SMALL_H) / 2.0;
+        assert!((middle - (top + height / 2.0)).abs() < 0.01, "two rows centred in the content: offset {offset}");
+        let three = [labeled(Icon::Move, "Move", "move", 1), labeled(Icon::Copy, "Copy", "copy", 2), labeled(Icon::Erase, "Erase", "erase", 3)];
+        assert_eq!(rows_offset(&three), 0.0, "three rows fill the height");
+        let with_large = [large(Icon::Line, "Line", "line"), two[0], two[1]];
+        assert_eq!(rows_offset(&with_large), 0.0, "next to a large item two rows stay at the top (Insert ▸ Import)");
+        assert_eq!(rows_offset(&[]), 0.0);
+    }
+
+    #[test]
+    fn of_the_ribbon_only_express_tools_modify_has_centred_rows() {
+        let centred: Vec<String> = crate::ribbon::model::tabs()
+            .iter()
+            .flat_map(|t| t.panels.iter().filter(|p| rows_offset(p.items) != 0.0).map(move |p| format!("{}/{}", t.label, p.label)))
+            .collect();
+        assert_eq!(centred, ["Express Tools/Modify"]);
     }
 
     #[test]

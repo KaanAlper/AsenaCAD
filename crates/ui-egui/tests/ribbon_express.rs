@@ -71,3 +71,16 @@ fn the_splits_keep_a_fixed_face_and_are_disabled_while_no_entry_has_a_command() 
         assert!(disabled(&h, &format!("{face} options")), "{face}: no entry of its list has a command yet");
     }
 }
+
+#[test]
+fn the_modify_panels_two_rows_are_centred_in_its_height() {
+    let h = harness("Modify");
+    let (a, b) = (h.get_by_label("Move/Copy/Rotate").rect(), h.get_by_label("Stretch Multiple").rect());
+    let title = h.get_by_label("Modify").rect();
+    // AutoCAD's content area is the 72 px above the title bar (less a 3 px top margin); the two
+    // rows sit in its middle, one row step apart.
+    let top = title.top() - 7.0 - 72.0 + 3.0;
+    assert!((b.top() - a.top() - 24.0).abs() < 0.5, "one row step apart: {a:?} {b:?}");
+    let middle = (a.top() + b.bottom()) / 2.0;
+    assert!((middle - (top + 36.0)).abs() < 1.0, "centred: rows {a:?} {b:?}, content top {top}");
+}

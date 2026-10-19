@@ -90,7 +90,7 @@ panels and a screenshot of each tab at 1906 px (layout and labels only).
 | Collaborate ▸ Compare | ✅ | DWG Compare (large) | Same button; it runs COMPARE |
 | Express Tools ▸ Blocks | ◐ | Explode Attributes, Replace Block (large); List Properties, Import Attributes, Export Attributes; slide-out with Convert block to xref, Copy Nested Objects, Extend to Nested Objects, Trim to Nested Objects | Same layout and slide-out; Copy Nested Objects runs NCOPY, the other eight have no command yet |
 | Express Tools ▸ Text | ◐ | Arc Aligned, Modify Text ▾ (Explode, Change Case, Rotate, Fit, Justify) (large); Convert to Mtext, Auto Number, Enclose in Object; slide-out with Remote Text, Text Mask, Unmask Text | Same layout, list and slide-out; none of the tools has a command yet, so Modify Text and its ▾ are disabled |
-| Express Tools ▸ Modify | ◐ | Move/Copy/Rotate, Stretch Multiple, centred in the panel's height; slide-out with Flatten objects, Extended Clip, Extended Offset, Convert Shape to Block | Same items and slide-out, but the two tools sit in the first two rows instead of centred; Flatten objects runs FLATTEN, the other five have no command yet |
+| Express Tools ▸ Modify | ◐ | Move/Copy/Rotate, Stretch Multiple, centred in the panel's height; slide-out with Flatten objects, Extended Clip, Extended Offset, Convert Shape to Block | Same layout (the two rows centred) and slide-out; Flatten objects runs FLATTEN, the other five have no command yet |
 | Express Tools ▸ Layout | ◐ | Align Space, Synchronize Viewports, Merge Layout; slide-out with List Viewport Scale | Same layout and slide-out; none of the four has a command yet |
 | Express Tools ▸ Draw | ◐ | Break-line Symbol, Super Hatch (large) | Same buttons, disabled: neither has a command yet |
 | Express Tools ▸ Dimension | ◐ | Annotation Attachment ▾ (Attach Leader to Annotation, Global Attach Leader to Annotation, Detach Leaders from Annotation) (large); Reset Text, Import Style, Export Style | Same layout and list; none of the tools has a command yet |
@@ -472,6 +472,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | Express Tools ▸ Modify's two rows are centred in the panel as in AutoCAD; adjacent-large-button rule no longer treats separators as large buttons |
 | 2026-10-19 | trivial | Only large toggles are at least 38 px wide (AutoCAD's View Cube); other large buttons keep the 42 px minimum, which keeps Home, Insert and Annotate at their measured widths |
 | 2026-10-19 | minor | Manage ▸ Action Recorder has its slide-out (the Action Tree, disabled); the Named Views list stays enabled with no views; View Manager's row notes that VIEW asks on the command line |
 | 2026-10-19 | minor | Ribbon palette toggles (Home and View, Parametric's Parameters Manager) close their palette when clicked while pressed; View ▸ Palettes ▸ Count starts COUNT; Parametric ▸ Manage becomes ✅ |
