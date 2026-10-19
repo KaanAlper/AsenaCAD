@@ -158,7 +158,7 @@ pub fn body(ui: &mut Ui, app: &mut CadApp, rect: Rect, key: &str, panel: &Panel)
     ui.painter().rect_filled(rect, 0.0, t.ribbon_bg);
     ui.painter().rect_stroke(rect, 0.0, egui::Stroke::new(1.0, t.border), egui::StrokeKind::Inside);
     let prefix = format!("{key}/slideout");
-    super::render_items(ui, app, &prefix, panel.slideout, false, pos2(rect.left() + layout::PAD, rect.top()));
+    super::render_items(ui, app, &prefix, panel.slideout, false, pos2(rect.left() + layout::PAD_LEFT, rect.top()));
     let bar = Rect::from_min_max(pos2(rect.left(), rect.bottom() - SLIDEOUT_BAR_H), rect.max);
     ui.painter().rect_filled(bar.shrink(1.0), 0.0, t.ribbon_panel_title);
     let pin_rect = Rect::from_min_size(pos2(bar.left() + 3.0, bar.center().y - 8.0), Vec2::splat(16.0));

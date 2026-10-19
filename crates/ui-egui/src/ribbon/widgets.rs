@@ -23,10 +23,13 @@ const LARGE_ICON: f32 = 32.0;
 const SMALL_ICON: f32 = 16.0;
 /// Icon-only small buttons are this wide.
 const SMALL_W: f32 = 24.0;
-/// A large split with a two-line label: room either side of its widest line, and what its ▾
-/// adds to its last line (the gap and the ▾).
-const LARGE_SPLIT_PAD: f32 = 12.0;
-const LARGE_SPLIT_CHEVRON: f32 = 16.0;
+/// A large button is at least this wide: AutoCAD's are 3 px wider than the icon either side
+/// when the label is short (Line, Clip, Field, Run Script, File Tabs are 38 px).
+const LARGE_MIN_W: f32 = LARGE_ICON + 6.0;
+/// What a large split (and a drop-down with a two-line label) adds to its widest label line:
+/// AutoCAD leaves room for the ▾ on both sides (Circle 52 px, Measure 67, Detect and Convert 79,
+/// Set Location 64).
+const LARGE_DROP_PAD: f32 = 20.0;
 /// The lower part of a large split button that opens its menu (label and ▾).
 const LARGE_SPLIT_ARROW_H: f32 = 35.0;
 /// The ▾ part of a small split button.
@@ -192,23 +195,20 @@ fn paint_large(ui: &Ui, rect: Rect, icon: Icon, label: &str, enabled: bool, chev
 /// Properties" is its "Properties" line plus about that), and never narrower than the icon
 /// with 5 px either side.
 fn large_width(ui: &Ui, label: &str) -> f32 {
-    (large_label(ui, label, true).size().x + 6.0).max(LARGE_ICON + 10.0)
+    (large_label(ui, label, true).size().x + 6.0).max(LARGE_MIN_W)
 }
 
-/// A large toggle's width: as a large button's, but AutoCAD's toggles are only 3 px wider than
-/// the icon either side (View ▸ Viewport Tools' UCS Icon and View Cube are 38 px).
-fn large_toggle_width(ui: &Ui, label: &str) -> f32 {
-    (large_label(ui, label, true).size().x + 6.0).max(LARGE_ICON + 6.0)
-}
-
-/// A large split button's width. With a two-line label AutoCAD's button is wider than the
-/// label ("Revision / Cloud ▾", "Set / Location ▾") and its ▾ sits right of the last line.
+/// A large split button's width: its widest label line and room for the ▾ either side, whether
+/// the ▾ sits under a one-line label (Circle ▾) or right of the second line (Revision / Cloud ▾).
 fn large_split_width(ui: &Ui, label: &str) -> f32 {
-    let galley = large_label(ui, label, true);
-    match galley.rows.as_slice() {
-        [_, .., last] => (galley.size().x + LARGE_SPLIT_PAD).max(last.rect().width() + LARGE_SPLIT_CHEVRON).max(LARGE_ICON + 10.0),
-        _ => large_width(ui, label),
-    }
+    (large_label(ui, label, true).size().x + LARGE_DROP_PAD).max(LARGE_MIN_W)
+}
+
+/// A large drop-down button's width: with a two-line label as a split's (Set / Location ▾);
+/// with a one-line label as a plain button's, its ▾ under the label (Insert's block gallery is
+/// 38 px).
+fn large_menu_width(ui: &Ui, label: &str) -> f32 {
+    if large_label(ui, label, true).rows.len() > 1 { large_split_width(ui, label) } else { large_width(ui, label) }
 }
 
 /// Paint a small face (16 px icon, optionally the label right of it) into `rect`.
@@ -267,7 +267,6 @@ fn plain_button(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd: &st
     let enabled = why.is_ready();
     let shown = crate::i18n::t(label);
     let (w, h) = match size {
-        Size::Large if on.is_some() => (large_toggle_width(ui, shown), LARGE_H),
         Size::Large => (large_width(ui, shown), LARGE_H),
         Size::Small { label } => (small_width(ui, label.then_some(shown)), SMALL_H),
     };
@@ -379,7 +378,7 @@ pub fn menu_button(ui: &mut Ui, app: &mut CadApp, key: &str, icon: Icon, label: 
     let enabled = menu.iter().any(|e| matches!(e, Entry::Command { cmd, .. } if availability(ui, app, cmd).is_known()));
     let shown = crate::i18n::t(label);
     let (w, h) = match size {
-        Size::Large => (large_split_width(ui, shown), LARGE_H),
+        Size::Large => (large_menu_width(ui, shown), LARGE_H),
         Size::Small { label } => (small_width(ui, label.then_some(shown)) + SMALL_SPLIT_ARROW_W, SMALL_H),
     };
     let (_, rect) = ui.allocate_space(vec2(w, h));
@@ -426,7 +425,6 @@ pub fn item_width(ui: &Ui, key: &str, item: &Item, compact: bool) -> f32 {
         Size::Small { label: shown } => small_width(ui, shown.then(|| crate::i18n::t(label))),
     };
     match *item {
-        Item::Toggle { label, size: Size::Large, .. } => large_toggle_width(ui, crate::i18n::t(label)),
         Item::Button { label, size, .. } | Item::Toggle { label, size, .. } => width(size, label),
         Item::Split { label, size, menu, default, .. } => {
             let face = label.unwrap_or(split_face(ui.ctx(), key, menu, default).1);
@@ -436,7 +434,7 @@ pub fn item_width(ui: &Ui, key: &str, item: &Item, compact: bool) -> f32 {
             }
         }
         Item::Menu { label, size, .. } => match shown_size(size, compact) {
-            Size::Large => large_split_width(ui, crate::i18n::t(label)),
+            Size::Large => large_menu_width(ui, crate::i18n::t(label)),
             Size::Small { .. } => width(size, label) + SMALL_SPLIT_ARROW_W,
         },
         Item::Combo { width, .. } | Item::Slider { width, .. } => width,

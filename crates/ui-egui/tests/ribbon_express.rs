@@ -89,10 +89,12 @@ fn the_modify_panels_two_rows_are_centred_in_its_height() {
     let h = harness("Modify");
     let (a, b) = (h.get_by_label("Move/Copy/Rotate").rect(), h.get_by_label("Stretch Multiple").rect());
     let title = h.get_by_label("Modify").rect();
-    // AutoCAD's content area is the 72 px above the title bar (less a 3 px top margin); the two
-    // rows sit in its middle, one row step apart.
-    let top = title.top() - 7.0 - 72.0 + 3.0;
+    // AutoCAD's large items stand 4 px below the panel's top, 79 px above its title bar, and
+    // fill 72 px; the two rows sit in the middle of that, one row step apart (observed: the
+    // panel at y 57, the rows at 74 and 98, the title bar at 136).
+    let top = title.top() - 79.0 + 4.0;
     assert!((b.top() - a.top() - 24.0).abs() < 0.5, "one row step apart: {a:?} {b:?}");
     let middle = (a.top() + b.bottom()) / 2.0;
     assert!((middle - (top + 36.0)).abs() < 1.0, "centred: rows {a:?} {b:?}, content top {top}");
+    assert!((a.top() - (title.top() - 62.0)).abs() < 0.5, "AutoCAD's row 1 is 62 px above the title bar: {a:?}");
 }
