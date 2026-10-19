@@ -1136,7 +1136,7 @@
 	Viewport {id}	Výřez {id}
 	Viewports	Výřezy
 	W	Z
-	WCS ⌄	GSS ⌄
+	WCS	GSS
 	White	Bílá
 	Width factor	Faktor šířky
 	Window	Okno
@@ -1233,3 +1233,4 @@ menu	Modify	Modifikace
 	Layer States Manager	Layer States Manager
 	Rename	Rename
 	{filter}: {shown} layers displayed of {total} total layers	{filter}: {shown} layers displayed of {total} total layers
+	Analyze Shapes	Analyzovat tvary

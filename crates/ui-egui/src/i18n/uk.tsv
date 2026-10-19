@@ -171,6 +171,7 @@
 	Contributors	Учасники
 	Control Vertices	Керувальні вершини
 	Convert	Перетворити
+	Convert Text to Mtext	Перетворити текст на багаторядковий текст
 	Copy	Копіювати
 	Copy Full File Path	Копіювати повний шлях до файлу
 	Copy History	Копіювати історію
@@ -323,6 +324,7 @@
 	Evaluate LISP	Обчислити LISP
 	Exclude from new selection set	Виключити з нового набору вибраних об'єктів
 	Explode	Розчленувати
+	Explode Attributes to Text	Розчленувати атрибути в текст
 	Export	Експортувати
 	Export Table	Експортувати таблицю
 	Export to PDF...	Експортувати в PDF...
@@ -1176,7 +1178,7 @@
 	Viewport {id}	Видовий екран {id}
 	Viewports	Видові екрани
 	W	Зх
-	WCS ⌄	ССК ⌄
+	WCS	ССК
 	White	Білий
 	Width factor	Коефіцієнт ширини
 	Window	Вікно
@@ -1271,6 +1273,7 @@
 	Search for pattern	Пошук зразка
 	Run Script...	Виконати сценарій...
 	Query Texts	Запит текстів
+	Analyze Shapes	Аналіз фігур
 	Hatch Pick	Вибір для штрихування
 # Hatch and Gradient dialog
 	Hatch and Gradient	Штрихування та градієнт
@@ -1295,6 +1298,8 @@
 	Add: Pick points	Додати: вказати точки
 	Add: Select objects	Додати: вибрати об'єкти
 	Boundaries picked: {n}	Вибрано контурів: {n}
+	Select boundaries to remove	Виберіть контури для видалення
+	Island	Острів
 	Associative	Асоціативне
 	Create separate hatches	Створити окремі штрихування
 	Island detection	Виявлення островів
@@ -1792,3 +1797,21 @@
 	List the backup and autosave copies to recover from.	Показати резервні й автозбережені копії для відновлення.
 	Close this drawing.	Закрити це креслення.
 	Close every open drawing.	Закрити всі відкриті креслення.
+	Select using two clicks only	Вибирати лише двома клацаннями
+	Define each corner of the selection window with a separate click.	Задайте кожен кут рамки вибору окремим клацанням.
+	Type an alias name.	Введіть назву псевдоніма.
+	Choose the command the alias starts.	Виберіть команду, яку запускає псевдонім.
+	{command} is an unknown command.	{command} — невідома команда.
+	{alias} is already defined; select it and use Edit.	{alias} уже визначено; виберіть його та натисніть «Змінити».
+	More than {n} aliases.	Понад {n} псевдонімів.
+	Alias file: {file}	Файл псевдонімів: {file}
+	No alias file loaded. REINIT replaces these aliases with a file's.	Файл псевдонімів не завантажено. REINIT замінює ці псевдоніми псевдонімами з файлу.
+	Alias	Псевдонім
+	Command	Команда
+	overrides built-in	замінює вбудований
+	built-in	вбудований
+	Add…	Додати…
+	Edit…	Змінити…
+	Save alias	Зберегти псевдонім
+	Discard	Скасувати зміни
+	Edit Command Aliases (PGP)...	Редагувати псевдоніми команд (PGP)...

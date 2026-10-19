@@ -959,7 +959,7 @@
 	Viewport {id}	Видовой экран {id}
 	Viewports	Видовые экраны
 	W	З
-	WCS ⌄	МСК ⌄
+	WCS	МСК
 	White	Белый
 	Width factor	Коэффициент ширины
 	Window	Окно
@@ -1024,3 +1024,4 @@
 	Layer States Manager	Layer States Manager
 	Rename	Rename
 	{filter}: {shown} layers displayed of {total} total layers	{filter}: {shown} layers displayed of {total} total layers
+	Analyze Shapes	Анализ фигур

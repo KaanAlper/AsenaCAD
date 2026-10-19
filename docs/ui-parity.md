@@ -1,6 +1,6 @@
 # UI parity
 
-> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-19 · **Change:** minor (Windows baseline: the Application menu, the Properties palette and the Layer Properties Manager) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0); the Windows baseline section: Autodesk AutoCAD 2026 (Windows)
+> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-19 · **Change:** minor (upstream commits cherry-picked: selection cycling, status bar toggles keep the command, Command Aliases dialog, menu bar hover; Express Tools: Explode Attributes, Convert to Mtext, Move/Copy/Rotate and Break-line Symbol run their commands) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0); the Windows baseline section: Autodesk AutoCAD 2026 (Windows)
 
 How AsenaCAD's interaction compares with AutoCAD's: point entry, object snaps, tracking, dynamic
 input, grips, selection, the command line, chrome and navigation. A drafter's speed in AutoCAD
@@ -66,7 +66,7 @@ the read, so its rows come from the screenshot), against AsenaCAD rendered by th
 | Insert ▸ Block | ◐ | Insert ▾ (large drop-down, a gallery of the drawing's blocks), Detect and Convert ▾ (large), Edit Attribute ▾, the attribute display list, Replace | Same layout and lists. Insert is a drop-down whose list has only More Options..., which starts INSERT (no gallery of blocks yet); Detect and Convert, Search and Convert and Replace have no command yet. The attribute display drop-down is a plain list box (AutoCAD's has an icon in front) |
 | Insert ▸ Block Definition | ✅ | Create Block ▾ (Create Block, Write Block), Define Attributes, Manage Attributes, Block Editor (large); slide-out with Set Base Point and Synchronize | Same items, sizes, list and slide-out; every item runs its command |
 | Insert ▸ Reference | ◐ | Attach, Clip, Adjust (large); Underlay Layers, the frame display list, the underlay snap list; slide-out with Edit Reference and the xref fading toggle and slider; External References launcher | Same layout and launcher (it opens the External References palette). Attach is a placeholder; Clip, Adjust, Underlay Layers and the fading toggle have no command yet. The frame and underlay snap lists show AutoCAD's defaults but are disabled (frame display and underlay snapping are not modelled); the fading slider shows its value but is disabled. Both lists are plain list boxes (AutoCAD's have an icon in front) |
-| Insert ▸ Import | ◐ | PDF Import ▾ (PDF Import, DGN Import, Import), Recognize SHX Text, Recognition Settings, Combine Text (large) | Same layout and list. Only Import has a command: the face (PDF Import), DGN Import, both SHX text tools and Combine Text are disabled |
+| Insert ▸ Import | ◐ | PDF Import ▾ (PDF Import, DGN Import, Import), Recognize SHX Text, Recognition Settings, Combine Text (large) | Same layout and list. Import and Combine Text (TXT2MTXT) have a command: the face (PDF Import), DGN Import and both SHX text tools are disabled |
 | Insert ▸ Data | ◐ | Field (large), Update Fields, OLE Object, Hyperlink | Same layout; none of the four has a command yet, so all are disabled |
 | Insert ▸ Linking & Extraction | ◐ | Data Link (large), Download from Source, Upload to Source, Extract Data | Same layout; Upload to Source has no command yet |
 | Insert ▸ Location | ◐ | Set Location ▾ (large drop-down button: the whole button opens From Esri Maps, From File, —, From Bing Maps) | Same drop-down button and list. None of the entries has a command yet (Esri and Bing are online map services), so it is disabled |
@@ -99,11 +99,11 @@ the read, so its rows come from the screenshot), against AsenaCAD rendered by th
 | Collaborate ▸ Autodesk Docs | ◐ | Push to Autodesk Docs (large toggle) | Same toggle, disabled: it needs Autodesk Docs |
 | Collaborate ▸ Traces | ◐ | Traces Palette (large toggle), Markup Import (large) | Same items, disabled: both need Autodesk's online services |
 | Collaborate ▸ Compare | ✅ | DWG Compare (large) | Same button; it runs COMPARE |
-| Express Tools ▸ Blocks | ◐ | Explode Attributes, Replace Block (large); List Properties, Import Attributes, Export Attributes; slide-out with Convert block to xref, Copy Nested Objects, Extend to Nested Objects, Trim to Nested Objects | Same layout and slide-out; Copy Nested Objects runs NCOPY, the other eight have no command yet |
-| Express Tools ▸ Text | ◐ | Arc Aligned, Modify Text ▾ (Explode, Change Case, Rotate, Fit, Justify) (large); Convert to Mtext, Auto Number, Enclose in Object; slide-out with Remote Text, Text Mask, Unmask Text | Same layout, list and slide-out; none of the tools has a command yet, so Modify Text and its ▾ are disabled |
-| Express Tools ▸ Modify | ◐ | Move/Copy/Rotate, Stretch Multiple, centred in the panel's height; slide-out with Flatten objects, Extended Clip, Extended Offset, Convert Shape to Block | Same layout (the two rows centred) and slide-out; Flatten objects runs FLATTEN, the other five have no command yet |
+| Express Tools ▸ Blocks | ◐ | Explode Attributes, Replace Block (large); List Properties, Import Attributes, Export Attributes; slide-out with Convert block to xref, Copy Nested Objects, Extend to Nested Objects, Trim to Nested Objects | Same layout and slide-out; Explode Attributes runs BURST and Copy Nested Objects runs NCOPY, the other seven have no command yet |
+| Express Tools ▸ Text | ◐ | Arc Aligned, Modify Text ▾ (Explode, Change Case, Rotate, Fit, Justify) (large); Convert to Mtext, Auto Number, Enclose in Object; slide-out with Remote Text, Text Mask, Unmask Text | Same layout, list and slide-out; Convert to Mtext runs TXT2MTXT, the other tools have no command yet, so Modify Text and its ▾ are disabled |
+| Express Tools ▸ Modify | ◐ | Move/Copy/Rotate, Stretch Multiple, centred in the panel's height; slide-out with Flatten objects, Extended Clip, Extended Offset, Convert Shape to Block | Same layout (the two rows centred) and slide-out; Move/Copy/Rotate runs MOCORO and Flatten objects runs FLATTEN, the other four have no command yet |
 | Express Tools ▸ Layout | ◐ | Align Space, Synchronize Viewports, Merge Layout; slide-out with List Viewport Scale | Same layout and slide-out; none of the four has a command yet |
-| Express Tools ▸ Draw | ◐ | Break-line Symbol, Super Hatch (large) | Same buttons, disabled: neither has a command yet |
+| Express Tools ▸ Draw | ◐ | Break-line Symbol, Super Hatch (large) | Same buttons; Break-line Symbol runs BREAKLINE, Super Hatch is disabled: it has no command yet |
 | Express Tools ▸ Dimension | ◐ | Annotation Attachment ▾ (Attach Leader to Annotation, Global Attach Leader to Annotation, Detach Leaders from Annotation) (large); Reset Text, Import Style, Export Style | Same layout and list; none of the tools has a command yet |
 | Express Tools ▸ Tools | ◐ | Command Aliases (large); Attach Xdata, List Xdata, System Variables; slide-out with Extended Plan, Make Linetype, Make Shape | Same layout and slide-out; Command Aliases runs ALIASEDIT, the other six have no command yet |
 | Express Tools ▸ Web | ◐ | URL Options ▾ (large drop-down button: the whole button opens Show URLs, Change URLs, Find and Replace URLs) | Same drop-down button and list; none of the entries has a command yet, so it is disabled |
@@ -192,7 +192,6 @@ differ.
 | `dgnimport` | Insert ▸ Import ▸ PDF Import ▸ DGN Import |
 | `pdfshxtext` | Insert ▸ Import ▸ Recognize SHX Text |
 | `pdfshxtext.settings` | Insert ▸ Import ▸ Recognition Settings |
-| `txt2mtxt` | Insert ▸ Import ▸ Combine Text; Express Tools ▸ Text ▸ Convert to Mtext |
 | `field` | Insert ▸ Data ▸ Field |
 | `updatefield` | Insert ▸ Data ▸ Update Fields |
 | `insertobj` | Insert ▸ Data ▸ OLE Object |
@@ -263,7 +262,6 @@ differ.
 | `pushtodocsopen` | Collaborate ▸ Autodesk Docs ▸ Push to Autodesk Docs (Autodesk online service) |
 | `tracepaletteopen` | Collaborate ▸ Traces ▸ Traces Palette (Autodesk online service) |
 | `markupimport` | Collaborate ▸ Traces ▸ Markup Import (Autodesk online service) |
-| `burst` | Express Tools ▸ Blocks ▸ Explode Attributes (explodes blocks, keeping attribute values as text) |
 | `blockreplace` | Express Tools ▸ Blocks ▸ Replace Block |
 | `xlist` | Express Tools ▸ Blocks ▸ List Properties (of a nested object) |
 | `attin` | Express Tools ▸ Blocks ▸ Import Attributes |
@@ -281,7 +279,6 @@ differ.
 | `rtext` | Express Tools ▸ Text ▸ Remote Text (slide-out) |
 | `textmask` | Express Tools ▸ Text ▸ Text Mask (slide-out) |
 | `textunmask` | Express Tools ▸ Text ▸ Unmask Text (slide-out) |
-| `mocoro` | Express Tools ▸ Modify ▸ Move/Copy/Rotate |
 | `mstretch` | Express Tools ▸ Modify ▸ Stretch Multiple |
 | `clipit` | Express Tools ▸ Modify ▸ Extended Clip (slide-out) |
 | `exoffset` | Express Tools ▸ Modify ▸ Extended Offset (slide-out) |
@@ -290,7 +287,6 @@ differ.
 | `vpsync` | Express Tools ▸ Layout ▸ Synchronize Viewports |
 | `layoutmerge` | Express Tools ▸ Layout ▸ Merge Layout |
 | `vpscale` | Express Tools ▸ Layout ▸ List Viewport Scale (slide-out) |
-| `breakline` | Express Tools ▸ Draw ▸ Break-line Symbol |
 | `superhatch` | Express Tools ▸ Draw ▸ Super Hatch |
 | `qlattach` | Express Tools ▸ Dimension ▸ Annotation Attachment ▸ Attach Leader to Annotation |
 | `qlattachset` | Express Tools ▸ Dimension ▸ Annotation Attachment ▸ Global Attach Leader to Annotation |
@@ -406,7 +402,7 @@ fails when the two differ. Email's and Edit Plot Style Tables' command names wer
 
 | Feature | AutoCAD | AsenaCAD |
 |---|---|---|
-| Ortho (F8) | yes | yes (`snap.rs:503`) |
+| Ortho (F8) | yes, Shift overrides it while held | yes; holding Shift turns it on or off while held (`Session::snap_cursor`, `snap/tracking.rs`) |
 | Polar tracking increment | yes | yes, measured from ANGBASE; dotted path and "Polar: d < a°" tooltip (`snap/tracking.rs`, `canvas.rs` `draw_tracking`) |
 | Additional polar angles, relative to last segment | yes | additional angles yes (POLARADDANG with POLARMODE 4); **relative to the last segment no** |
 | Polar distance snap (PolarSnap) | yes | **no** |
@@ -415,7 +411,7 @@ fails when the two differ. Email's and Edit Plot Style Tables' command names wer
 | Snap (rectangular, isometric, polar snap) | yes | rectangular and isometric (SNAPSTYL 1: the snap Y spacing along the isometric axes), from SNAPBASE turned by SNAPANG |
 | Isometric drafting (ISODRAFT, isoplanes F5) | yes | yes (#556): ISODRAFT and the status-bar toggle set SNAPSTYL and the plane; ISOPLANE / F5 / Ctrl+E cycle Left, Top, Right (SNAPISOPAIR); ortho, direct distance entry and the crosshair follow the plane's axes; ELLIPSE Isocircle (radius or Diameter, also for elliptical arcs); Drafting Settings snap style radio. Engine: `snap/iso.rs`, `cmd/settings/iso.rs` |
 | Drafting Settings dialog | yes | yes (`dialogs.rs:36-80`) |
-| Hatch and Gradient / Hatch Edit dialogs | yes | yes (`hatchdlg.rs`): pattern swatches, gradient colours and shapes, origin, pick points or objects, associative, separate, island detection; opened by HATCH, GRADIENT (HPDLGMODE), HATCHEDIT, right-click or double-clicking a hatch; no Preview or Inherit Properties |
+| Hatch and Gradient / Hatch Edit dialogs | yes | yes (`hatchdlg.rs`): pattern swatches, gradient colours and shapes, origin, pick points or objects, associative, separate, island detection; Hatch Edit adds boundaries from points or closed objects and removes selected loops; opened by HATCH, GRADIENT (HPDLGMODE), HATCHEDIT, right-click or double-clicking a hatch; no Preview or Inherit Properties |
 
 ## Dynamic input (≈ 45%)
 
@@ -450,11 +446,12 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 |---|---|---|
 | Pick, implied window (left→right) and crossing (right→left) | yes | yes, coloured and dashed rectangles (`lib.rs:576-589`, `canvas.rs:823-836`), filled as SELECTIONAREA, WINDOWAREACOLOR, CROSSINGAREACOLOR and SELECTIONAREAOPACITY say (Visual Effect Settings) |
 | Keywords W, C, WP, CP, F, BOX, AU, SI, M, G (group), CL (class) | yes | yes except CLass: W, C, F, WP, CP (#226); BOX, AUto, SIngle, Multiple, Group, Add, Remove, Undo (#428); ALL, Last, Previous |
-| Press-drag selection windows (PICKDRAG) | yes | yes (#63, PICKDRAG = 2) |
+| Press-drag selection windows (PICKDRAG) | yes | clicks or drag (2, default), or two clicks only (0); Options ▸ Selection ▸ Select using two clicks only, saved in the profile; drag-only mode (1) is unavailable |
 | Lasso | yes | **no** |
-| Selection cycling (SELECTIONCYCLING) | yes | toggle nothing reads |
+| Selection cycling (SELECTIONCYCLING) | yes | yes (#1143): SELECTIONCYCLING 2 lists the objects under a click (type, layer; the row under the pointer highlights its object), 1 the badge; Shift+Space steps the highlight through them (#1145); no Ctrl+W |
 | Selection preview, hover highlight | yes | selected and hovered objects redrawn in the selection colour, fills half see-through (SELECTIONEFFECT 1; 0 dashed), selection effect color; HIGHLIGHT (not saved), SELECTIONPREVIEW, PREVIEWEFFECT, PREVIEWFILTER (Visual Effect Settings) |
 | PICKADD, PICKFIRST, PICKAUTO | yes | PICKADD (Shift), PICKFIRST |
+| Stability of outlined fill highlights | yes | closed contours keep the same start, direction and ordering on repaints and GPU rebuilds; dashed filled glyphs, hatch/solid regions, arrowheads and wipeout outlines no longer shift with pointer movement |
 | QSELECT, SELECTSIMILAR, FILTER | yes | QSELECT dialog; SELECTSIMILAR with SELECTSIMILARMODE (#428, SEttings asks for the bit code; no dialog); no FILTER |
 | Object isolate/hide (ISOLATEOBJECTS, HIDEOBJECTS) | yes | yes, temporary (OBJECTISOLATIONMODE 0; #428): Tools > Isolate, UNISOLATEOBJECTS; no status-bar button |
 | Groups selectable as one (PICKSTYLE) | yes | yes (PICKSTYLE 1, #417), Object grouping on Options ▸ Selection; associative hatch selection (bit 2) is stored, not used |
@@ -478,7 +475,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Feature | AutoCAD for Mac | AsenaCAD |
 |---|---|---|
-| Menu bar | 11 menus, 491 leaf items | same 11 menus; 245/491 items covered (233 by `cargo xtask parity`, which counts engine commands only, plus 12 UI-only items: see [parity-checklist.md](parity-checklist.md)) |
+| Menu bar | 11 menus, 491 leaf items | same 11 menus; 245/491 items covered (233 by `cargo xtask parity`, which counts engine commands only, plus 12 UI-only items: see [parity-checklist.md](parity-checklist.md)); once a menu is open, pointing at another title opens that menu (#1567) |
 | Tool Bar, File tabs, Start tab, layout tabs | yes | yes |
 | Tool Sets palette (Drafting, Modeling, … with flyouts) | yes | yes for 2D groups |
 | Properties Inspector, Quick Properties | yes | yes (every control acts or is visibly unavailable, #182); block references show read-only Position X/Y/Z from their stored insertion point; coordinate editing is still missing. The Properties palette is laid out as AutoCAD's for Windows: see [Windows baseline](#windows-autocad-2026-baseline) |
@@ -489,7 +486,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 | Navigation bar, SteeringWheels | yes | the Windows navigation bar: see [Windows baseline](#windows-autocad-2026-baseline); no SteeringWheels |
 | Workspaces | Drafting & Annotation, 3D Modeling | no |
 | Options / Preferences dialog | many tabs | **no** (issue #23) |
-| Customisation (CUI, aliases editor, tool palettes) | yes | no |
+| Customisation (CUI, aliases editor, tool palettes) | yes | Command Aliases dialog (ALIASEDIT, #1381); no CUI or tool palettes |
 | Themes | Dark, Light | Dark, Light, System (#179) |
 | Accessibility | VoiceOver basics | AccessKit through eframe; screen-reader coverage untested; magnifier issue #39; animation effects follow the OS setting (View ▸ Accessibility ▸ Animation Effects: System, On, Off) |
 
@@ -525,6 +522,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | Upstream commits cherry-picked (714111d..0b32c2e); BURST, TXT2MTXT, MOCORO and BREAKLINE leave "Ribbon items without a command" and the Express Tools rows name them; the upstream rows below keep their dates |
 | 2026-10-19 | minor | M1d: the Properties palette (docked at the drawing's left with a title strip, the object list and its three buttons, AutoCAD's groups and rows, read-only values greyed) and the Layer Properties Manager (a palette at the drawing area's top left with a title strip, AutoCAD's toolbar, filter tree with Invert, grid columns and status line) compared with AutoCAD's screenshots and UI Automation reads; two ◐ rows (74 rows: 16 ✅, 58 ◐, 0 ✗) |
 | 2026-10-19 | minor | Windows baseline: the Application menu (M1c) replaces the File menu's entries under the Application button: AutoCAD's size and place, first-level entries and separators, every sub-pane with our own descriptions, Recent and Open Documents, command search, Options and Exit; the ✗ row becomes four ◐ rows (16 ✅, 56 ◐, 0 ✗); its online entries listed as intentionally absent but shown disabled; 19 entries without a command listed (checked by a test) |
 | 2026-10-19 | minor | Side-by-side pass of all nine tabs at 1906 px against AutoCAD's screenshots and UI Automation rectangles: large buttons are at least 38 px wide (not 42), large splits and two-line drop-downs leave room for the ▾ either side of the label (Circle 52 px, Measure 67, Set Location 64), items of one row stand with no gap, a large item and a small column are 1 px apart and two small columns 5 px, panels pad 3 px on the left and 2 px on the right, large items stand 4 px below the panel's top; Insert ▸ Import has AutoCAD's line after PDF Import; a large button's list has 40 px rows with large icons, as wide as its longest entry; the tab row becomes ✅ (16 ✅, 52 ◐, 1 ✗, recounted); differences left: Base's ▾, the icons and swatches in front of some lists, Find Text's search button, Annotation Text Height's ▾ |
@@ -548,6 +546,13 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 | 2026-10-18 | minor | Navigation bar below the ViewCube (Pan, Zoom and its variants, Orbit; NAVBAR) and the drawing window's buttons at the top-right corner |
 | 2026-10-18 | minor | Command line bar as AutoCAD 2026 for Windows: grip, close (COMMANDLINEHIDE), Customize, recent commands, history toggle |
 | 2026-10-18 | minor | Status bar row as AutoCAD 2026 for Windows: layout bar (≡ · Model · layouts · +), separator band, default items in order, ▾ menus, Customization list |
+| 2026-10-18 | minor | In-window menu bar: once a menu is open, pointing at another title closes it and opens that one (#1567) |
+| 2026-10-16 | minor | ALIASEDIT opens the Command Aliases dialog (#1381) |
+| 2026-10-14 | minor | Selection cycling (#1143): the list and badge of SELECTIONCYCLING, Shift+Space through overlapping objects (#1145) |
+| 2026-10-14 | minor | Hatch Edit dialog adds boundaries from picked points or closed objects and removes selected loops |
+| 2026-10-14 | minor | Holding Shift overrides ortho while it is held (on when ORTHOMODE is off, off when it is on), as in AutoCAD |
+| 2026-10-13 | minor | Filled-region highlight boundaries are traversed in deterministic coordinate order, fixing dash-phase jumps on CPU hover/selection redraws and GPU highlight rebuilds; CPU dash-position, pixel and GPU mesh regressions |
+| 2026-10-13 | minor | Options ▸ Selection adds Select using two clicks only; PICKDRAG 0 disables drag-window creation/completion, 2 preserves clicks or drag, and the preference survives restart; UI pointer and profile regressions |
 | 2026-10-12 | minor | Selected and hovered objects redrawn in the selection colour (text and arrowheads included); Options ▸ Selection laid out as AutoCAD's: Object grouping, Show grips, grip object limit, selection preview, Visual Effect Settings (selection area, preview filter) |
 | 2026-10-12 | minor | Animation effects (dialog and menu fades, smoothed wheel scrolling and ⌘/Ctrl+wheel zoom) follow the operating system's setting; View ▸ Accessibility ▸ Animation Effects chooses System, On or Off |
 | 2026-10-12 | minor | Hatch and Gradient / Hatch Edit dialogs (HATCH, GRADIENT, HATCHEDIT, double-click a hatch; HPDLGMODE) |

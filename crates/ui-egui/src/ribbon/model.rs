@@ -403,7 +403,6 @@ mod tests {
         "dgnimport",               // Import ▸ PDF Import ▸ DGN Import
         "pdfshxtext",              // Import ▸ Recognize SHX Text
         "pdfshxtext.settings",     // Import ▸ Recognition Settings
-        "txt2mtxt",                // Import ▸ Combine Text
         "field",                   // Data ▸ Field
         "updatefield",             // Data ▸ Update Fields
         "insertobj",               // Data ▸ OLE Object
@@ -480,9 +479,7 @@ mod tests {
         "pushtodocsopen",   // Autodesk Docs ▸ Push to Autodesk Docs (toggle) (id unverified)
         "tracepaletteopen", // Traces ▸ Traces Palette (toggle) (id unverified)
         "markupimport",     // Traces ▸ Markup Import (id unverified)
-        // ---- Express Tools ---- (Convert to Mtext and Modify Text ▸ Justify reuse `txt2mtxt` and
-        // `justifytext`, listed under Insert and Annotate)
-        "burst",        // Blocks ▸ Explode Attributes
+        // ---- Express Tools ---- (Modify Text ▸ Justify reuses `justifytext`, listed under Annotate)
         "blockreplace", // Blocks ▸ Replace Block
         "xlist",        // Blocks ▸ List Properties
         "attin",        // Blocks ▸ Import Attributes
@@ -500,7 +497,6 @@ mod tests {
         "rtext",        // Text ▸ Remote Text (slide-out)
         "textmask",     // Text ▸ Text Mask (slide-out)
         "textunmask",   // Text ▸ Unmask Text (slide-out)
-        "mocoro",       // Modify ▸ Move/Copy/Rotate
         "mstretch",     // Modify ▸ Stretch Multiple
         "clipit",       // Modify ▸ Extended Clip (slide-out)
         "exoffset",     // Modify ▸ Extended Offset (slide-out)
@@ -509,7 +505,6 @@ mod tests {
         "vpsync",       // Layout ▸ Synchronize Viewports
         "layoutmerge",  // Layout ▸ Merge Layout
         "vpscale",      // Layout ▸ List Viewport Scale (slide-out)
-        "breakline",    // Draw ▸ Break-line Symbol
         "superhatch",   // Draw ▸ Super Hatch
         "qlattach",     // Dimension ▸ Annotation Attachment ▸ Attach Leader to Annotation
         "qlattachset",  // Dimension ▸ Annotation Attachment ▸ Global Attach Leader to Annotation

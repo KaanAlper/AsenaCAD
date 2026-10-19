@@ -1,5 +1,5 @@
-//! The Express Tools ribbon's controls: the Express Tools commands AsenaCAD has (NCOPY, FLATTEN,
-//! ALIASEDIT) are enabled and start, the others are disabled, and the Modify Text, Annotation
+//! The Express Tools ribbon's controls: the Express Tools commands AsenaCAD has (NCOPY, BURST,
+//! TXT2MTXT, MOCORO, FLATTEN, BREAKLINE, ALIASEDIT) are enabled and start, the others are disabled, and the Modify Text, Annotation
 //! Attachment splits keep their face's label and are disabled, URL Options is a drop-down button
 //! disabled until one of its entries has a command.
 
@@ -33,7 +33,14 @@ fn running(h: &Harness<'_, CadApp>) -> Option<String> {
 
 #[test]
 fn copy_nested_objects_and_flatten_start_their_commands() {
-    for (panel, label, cmd) in [("Blocks", "Copy Nested Objects", "ncopy"), ("Modify", "Flatten objects", "flatten")] {
+    for (panel, label, cmd) in [
+        ("Blocks", "Copy Nested Objects", "ncopy"),
+        ("Blocks", "Explode Attributes", "burst"),
+        ("Text", "Convert to Mtext", "txt2mtxt"),
+        ("Modify", "Move/Copy/Rotate", "mocoro"),
+        ("Modify", "Flatten objects", "flatten"),
+        ("Draw", "Break-line Symbol", "breakline"),
+    ] {
         let mut h = harness(panel);
         h.get_by_label(label).click();
         h.run_steps(3);
@@ -45,14 +52,11 @@ fn copy_nested_objects_and_flatten_start_their_commands() {
 #[test]
 fn express_tools_without_a_command_are_disabled() {
     for (panel, labels) in [
-        (
-            "Blocks",
-            &["Explode Attributes", "Replace Block", "List Properties", "Import Attributes", "Export Attributes", "Convert block to xref"][..],
-        ),
-        ("Text", &["Arc Aligned", "Convert to Mtext", "Auto Number", "Enclose in Object", "Remote Text", "Text Mask", "Unmask Text"][..]),
-        ("Modify", &["Move/Copy/Rotate", "Stretch Multiple", "Extended Clip", "Extended Offset", "Convert Shape to Block"][..]),
+        ("Blocks", &["Replace Block", "List Properties", "Import Attributes", "Export Attributes", "Convert block to xref"][..]),
+        ("Text", &["Arc Aligned", "Auto Number", "Enclose in Object", "Remote Text", "Text Mask", "Unmask Text"][..]),
+        ("Modify", &["Stretch Multiple", "Extended Clip", "Extended Offset", "Convert Shape to Block"][..]),
         ("Layout", &["Align Space", "Synchronize Viewports", "Merge Layout", "List Viewport Scale"][..]),
-        ("Draw", &["Break-line Symbol", "Super Hatch"][..]),
+        ("Draw", &["Super Hatch"][..]),
         ("Dimension", &["Reset Text", "Import Style", "Export Style"][..]),
         ("Tools", &["Attach Xdata", "List Xdata", "System Variables", "Extended Plan", "Make Linetype", "Make Shape"][..]),
     ] {
