@@ -1445,6 +1445,11 @@ fn table(b: &mut Builder, ctx: &Ctx, t: &asenacad_doc::Table, rgb: Ink, lw: f32)
     table::draw(b, ctx, t, rgb, lw);
 }
 
+/// A TEXT's justification as the fonts' alignment (used where text is placed outside a build).
+pub fn text_align(h: asenacad_doc::HAlign, v: asenacad_doc::VAlign) -> (asenacad_fonts::Align, asenacad_fonts::VAlign) {
+    align(h, v)
+}
+
 fn align(h: asenacad_doc::HAlign, v: asenacad_doc::VAlign) -> (asenacad_fonts::Align, asenacad_fonts::VAlign) {
     use asenacad_fonts::{Align as A, VAlign as V};
     let ha = match h {
