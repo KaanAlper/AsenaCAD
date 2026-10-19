@@ -82,7 +82,7 @@ panels and a screenshot of each tab at 1906 px (layout and labels only).
 | Manage ▸ CAD Standards | ◐ | Layer Translator, Check, Configure | Same layout; none of the three has a command yet |
 | Manage ▸ Cleanup | ◐ | Find Non-Purgeable Items (large); Purge, Overkill, Audit | Same layout; Purge, Overkill and Audit run their commands, Find Non-Purgeable Items has no command yet |
 | Manage ▸ Performance | ◐ | Performance Analyzer (large) | Same button, disabled: no performance analyzer yet |
-| Output ▸ Plot | ✅ | Plot, Batch Plot, Preview (large); Page Setup Manager, View Details, Plotter Manager; the Plot launcher | Same layout and launcher. Plot and the launcher open the Plot dialog, Batch Plot opens Publish, Preview, Page Setup Manager and Plotter Manager run their commands; View Details (the last plot's report) has no command yet |
+| Output ▸ Plot | ◐ | Plot, Batch Plot, Preview (large); Page Setup Manager, View Details, Plotter Manager; the Plot launcher | Same layout and launcher, but View Details is disabled. Plot and the launcher open the Plot dialog, Batch Plot opens Publish, Preview, Page Setup Manager and Plotter Manager run their commands; View Details (the last plot's report) has no command yet |
 | Output ▸ Export to DWF/PDF | ◐ | Export ▾ (DWFx, DWF, PDF) (large); the export area list ("Export: Display") with Export Window; the page setup list ("Page Setup: Current") with Page Setup; Preview, DWF options and PDF options icons | Same layout and list. The PDF entry runs EXPORTPDF; DWFx and DWF export, the two lists and the five small tools have no command yet, so the lists show AutoCAD's defaults disabled |
 | Collaborate ▸ Share | ◐ | Share Drawing (large), Shared Views (large toggle) | Same items, disabled: both use Autodesk's online services ([below](#intentionally-absent-autodesk-online-services)) |
 | Collaborate ▸ Autodesk Docs | ◐ | Push to Autodesk Docs (large toggle) | Same toggle, disabled: it needs Autodesk Docs |
@@ -472,6 +472,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | Output ▸ Plot drops to ◐: View Details has no command |
 | 2026-10-19 | minor | Express Tools ▸ Web ▸ URL Options is a drop-down button with Show URLs, Change URLs and Find and Replace URLs (observed) |
 | 2026-10-19 | minor | Express Tools ▸ Modify's two rows are centred in the panel as in AutoCAD; adjacent-large-button rule no longer treats separators as large buttons |
 | 2026-10-19 | trivial | Only large toggles are at least 38 px wide (AutoCAD's View Cube); other large buttons keep the 42 px minimum, which keeps Home, Insert and Annotate at their measured widths |

@@ -470,17 +470,18 @@ mod tests {
         "viewplotdetails",       // Plot ▸ View Details
         "exportdwfx",            // Export to DWF/PDF ▸ Export ▸ DWFx
         "exportdwf",             // Export to DWF/PDF ▸ Export ▸ DWF
-        "eplotexport.window",    // Export to DWF/PDF ▸ Export Window
-        "eplotexport.pagesetup", // Export to DWF/PDF ▸ Page Setup (override)
-        "eplotexport.preview",   // Export to DWF/PDF ▸ Preview
-        "exportsettings.dwf",    // Export to DWF/PDF ▸ Export to DWF Options
-        "exportsettings.pdf",    // Export to DWF/PDF ▸ Export to PDF Options
+        "eplotexport.window",    // Export to DWF/PDF ▸ Export Window (id unverified)
+        "eplotexport.pagesetup", // Export to DWF/PDF ▸ Page Setup (override) (id unverified)
+        "eplotexport.preview",   // Export to DWF/PDF ▸ Preview (id unverified)
+        "exportsettings.dwf",    // Export to DWF/PDF ▸ Export to DWF Options (id unverified)
+        "exportsettings.pdf",    // Export to DWF/PDF ▸ Export to PDF Options (id unverified)
         // ---- Collaborate (Autodesk online services) ----
-        "sharedviews",      // Share ▸ Shared Views (toggle)
-        "pushtodocsopen",   // Autodesk Docs ▸ Push to Autodesk Docs (toggle)
-        "tracepaletteopen", // Traces ▸ Traces Palette (toggle)
-        "markupimport",     // Traces ▸ Markup Import
-        // ---- Express Tools ----
+        "sharedviews",      // Share ▸ Shared Views (toggle) (id unverified)
+        "pushtodocsopen",   // Autodesk Docs ▸ Push to Autodesk Docs (toggle) (id unverified)
+        "tracepaletteopen", // Traces ▸ Traces Palette (toggle) (id unverified)
+        "markupimport",     // Traces ▸ Markup Import (id unverified)
+        // ---- Express Tools ---- (Convert to Mtext and Modify Text ▸ Justify reuse `txt2mtxt` and
+        // `justifytext`, listed under Insert and Annotate)
         "burst",        // Blocks ▸ Explode Attributes
         "blockreplace", // Blocks ▸ Replace Block
         "xlist",        // Blocks ▸ List Properties
@@ -519,7 +520,7 @@ mod tests {
         "xdata",        // Tools ▸ Attach Xdata
         "xdlist",       // Tools ▸ List Xdata
         "sysvdlg",      // Tools ▸ System Variables
-        "explan",       // Tools ▸ Extended Plan (slide-out)
+        "explan",       // Tools ▸ Extended Plan (slide-out) (id unverified)
         "mkltype",      // Tools ▸ Make Linetype (slide-out)
         "mkshape",      // Tools ▸ Make Shape (slide-out)
         "showurls",     // Web ▸ URL Options ▸ Show URLs
