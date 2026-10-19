@@ -1,44 +1,9 @@
 //! The Home tab: AutoCAD 2026's ten panels with their items in AutoCAD's order (column by
 //! column, top to bottom), sizes, rows, split menus, slide-outs and dialog launchers.
 
-use super::model::{Combo, Entry, Item, Panel, Size, Slider, Tab, Toggle};
+use super::build::*;
+use super::model::{Combo, Entry, Panel, Size, Slider, Tab, Toggle};
 use crate::icons::Icon;
-
-const SEP: Entry = Entry::Separator;
-
-const fn e(icon: Icon, label: &'static str, cmd: &'static str) -> Entry {
-    Entry::Command { icon, label, cmd }
-}
-
-const fn large(icon: Icon, label: &'static str, cmd: &'static str) -> Item {
-    Item::Button { icon, label, cmd, size: Size::Large, row: 0 }
-}
-
-/// Small, icon only.
-const fn icon(icon: Icon, label: &'static str, cmd: &'static str, row: u8) -> Item {
-    Item::Button { icon, label, cmd, size: Size::Small { label: false }, row }
-}
-
-/// Small, icon and label.
-const fn labeled(icon: Icon, label: &'static str, cmd: &'static str, row: u8) -> Item {
-    Item::Button { icon, label, cmd, size: Size::Small { label: true }, row }
-}
-
-const fn toggle(icon: Icon, label: &'static str, cmd: &'static str, size: Size, row: u8, state: Toggle) -> Item {
-    Item::Toggle { icon, label, cmd, size, row, state }
-}
-
-const fn large_split(label: Option<&'static str>, menu: &'static [Entry]) -> Item {
-    Item::Split { label, size: Size::Large, row: 0, menu, default: 0 }
-}
-
-const fn small_split(label: Option<&'static str>, show_label: bool, row: u8, menu: &'static [Entry]) -> Item {
-    Item::Split { label, size: Size::Small { label: show_label }, row, menu, default: 0 }
-}
-
-const fn combo(kind: Combo, width: f32, row: u8) -> Item {
-    Item::Combo { kind, width, row }
-}
 
 // ---- Draw ----
 
@@ -82,7 +47,7 @@ const ELLIPSE: &[Entry] = &[
 
 const HATCH: &[Entry] = &[e(Icon::Hatch, "Hatch", "hatch"), e(Icon::Gradient, "Gradient", "gradient"), e(Icon::Boundary, "Boundary", "boundary")];
 
-const REVCLOUD: &[Entry] = &[
+pub(super) const REVCLOUD: &[Entry] = &[
     e(Icon::RevCloud, "Rectangular", "revcloud"),
     e(Icon::RevCloudPolygonal, "Polygonal", "revcloud.polygonal"),
     e(Icon::RevCloudFreehand, "Freehand", "revcloud.freehand"),
@@ -115,6 +80,7 @@ const DRAW: Panel = Panel {
         small_split(Some("Revision Cloud"), false, 2, REVCLOUD),
     ],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Modify ----
@@ -176,6 +142,7 @@ const MODIFY: Panel = Panel {
         small_split(None, false, 2, DRAWORDER),
     ],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Annotation ----
@@ -225,6 +192,7 @@ const ANNOTATION: Panel = Panel {
         combo(Combo::TableStyle, 200.0, 4),
     ],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Layers ----
@@ -255,9 +223,10 @@ const LAYERS: Panel = Panel {
         icon(Icon::LayerMerge, "Merge", "laymrg", 2),
         icon(Icon::LayerDelete, "Delete", "laydel", 2),
         toggle(Icon::LockedLayerFade, "Locked Layer fading", "laylockfadectl", Size::Small { label: false }, 3, Toggle::LockedLayerFade),
-        Item::Slider { kind: Slider::LockedLayerFade, width: 200.0, row: 3 },
+        slider(Slider::LockedLayerFade, 200.0, 3),
     ],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Block ----
@@ -269,7 +238,7 @@ const EDIT_ATTRIBUTES: &[Entry] = &[e(Icon::AttEdit, "Single", "attedit"), e(Ico
 const BLOCK: Panel = Panel {
     label: "Block",
     items: &[
-        large(Icon::Insert, "Insert", "insert"),
+        large_menu(Icon::Insert, "Insert", INSERT_GALLERY),
         large_split(None, DETECT),
         labeled(Icon::BlockCreate, "Create", "block", 1),
         labeled(Icon::BlockEdit, "Edit", "bedit", 2),
@@ -284,6 +253,7 @@ const BLOCK: Panel = Panel {
         icon(Icon::BasePoint, "Set Base Point", "base", 1),
     ],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Properties ----
@@ -299,10 +269,11 @@ const PROPERTIES: Panel = Panel {
     slideout: &[
         combo(Combo::PlotStyle, 200.0, 1),
         combo(Combo::Transparency, 35.0, 2),
-        Item::Slider { kind: Slider::Transparency, width: 158.0, row: 2 },
+        slider(Slider::Transparency, 158.0, 2),
         labeled(Icon::List, "List", "list", 3),
     ],
     launcher: Some("properties"),
+    launcher_name: Some("Properties"),
 };
 
 // ---- Groups ----
@@ -320,6 +291,7 @@ const GROUPS: Panel = Panel {
         toggle(Icon::GroupBox, "Group Bounding Box", "groupdisplaymode", Size::Small { label: true }, 2, Toggle::GroupBox),
     ],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Utilities ----
@@ -343,6 +315,7 @@ const UTILITIES: Panel = Panel {
     ],
     slideout: &[labeled(Icon::IdPoint, "ID Point", "id", 1), labeled(Icon::PointStyle, "Point Style...", "ddptype", 2)],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- Clipboard ----
@@ -362,6 +335,7 @@ const CLIPBOARD: Panel = Panel {
     items: &[large_split(None, PASTE), icon(Icon::Cut, "Cut", "cutclip", 1), icon(Icon::CopyClip, "Copy Clip", "copyclip", 2)],
     slideout: &[],
     launcher: None,
+    launcher_name: None,
 };
 
 // ---- View ----
@@ -376,6 +350,7 @@ const VIEW: Panel = Panel {
         combo(Combo::DetailViewStyle, 140.0, 2),
     ],
     launcher: Some("viewstd"),
+    launcher_name: Some("Drafting Standard"),
 };
 
 pub const HOME: Tab = Tab { label: "Home", panels: &[DRAW, MODIFY, ANNOTATION, LAYERS, BLOCK, PROPERTIES, GROUPS, UTILITIES, CLIPBOARD, VIEW] };

@@ -6,12 +6,20 @@
 //! wherever the panel is shown (strip, collapsed-panel popup, slide-out): split buttons remember
 //! their last entry by it, and its egui id scope keeps equally named items apart.
 
+pub mod annotate;
 pub(crate) mod avail;
 mod bind;
+mod build;
+pub mod express;
 pub mod home;
+pub mod insert;
 pub mod layout;
+pub mod manage;
 pub mod model;
+pub mod output;
+pub mod parametric;
 pub mod slideout;
+pub mod view;
 pub mod widgets;
 
 pub use bind::{combo, slider};
@@ -26,8 +34,6 @@ use crate::CadApp;
 use crate::icons::{self, Icon};
 use crate::theme::Tokens;
 
-/// What a tab whose panels are not built yet shows in the strip.
-pub const UNBUILT_TAB_NOTE: &str = "This tab is not built yet (M1b)";
 /// A collapsed panel's face is inset this much in its panel.
 const PANEL_BUTTON_INSET: f32 = 2.0;
 
@@ -200,10 +206,6 @@ fn tab_row(app: &mut CadApp, ui: &mut Ui, row: Rect, current: &Tab) {
 fn panel_strip(app: &mut CadApp, ui: &mut Ui, strip: Rect, tab: &Tab) {
     let t = Tokens::get();
     let left = strip.left() + 2.0;
-    if tab.panels.is_empty() {
-        unbuilt_note(ui, Rect::from_min_size(pos2(left, strip.top() + PANEL_TOP), vec2(strip.right() - 2.0 - left, PANEL_H)));
-        return;
-    }
     let full: Vec<f32> = tab.panels.iter().map(|p| layout::panel_width(ui, tab.label, p, false) + DIVIDER).collect();
     let compact: Vec<f32> = tab.panels.iter().map(|p| layout::panel_width(ui, tab.label, p, true) + DIVIDER).collect();
     let buttons: Vec<f32> = tab.panels.iter().map(|p| layout::panel_button_width(ui, p) + DIVIDER).collect();
@@ -236,24 +238,12 @@ fn panel_strip(app: &mut CadApp, ui: &mut Ui, strip: Rect, tab: &Tab) {
     });
 }
 
-/// The strip of a tab whose panels are not built yet: one dim, centred note.
-fn unbuilt_note(ui: &mut Ui, rect: Rect) {
-    let t = Tokens::get();
-    ui.painter().rect_filled(rect, 0.0, t.ribbon_bg);
-    let text = crate::tl!("This tab is not built yet (M1b)");
-    let galley = label_galley(ui, text, t.text_faint);
-    let at = rect.center() - galley.size() / 2.0;
-    let resp = ui.interact(Rect::from_min_size(at, galley.size()), ui.id().with("ribbon-unbuilt-tab"), Sense::hover());
-    ui.painter().galley(at, galley, t.text_faint);
-    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Label, true, text));
-    crate::control::record_widget(ui, &resp, UNBUILT_TAB_NOTE, "label", None);
-}
-
 /// One expanded panel in `rect`: its items and its title bar (slide-out "▾", launcher).
 /// `popup`: the panel is shown in its collapsed button's popup.
 fn show_panel(app: &mut CadApp, ui: &mut Ui, rect: Rect, key: &str, panel: &Panel, compact: bool, popup: bool) {
     let (_, content_w) = layout::place(ui, key, panel.items, compact, Pos2::ZERO);
-    render_items(ui, app, key, panel.items, compact, pos2(layout::content_left(rect, content_w), rect.top()));
+    let top = rect.top() + layout::rows_offset(panel.items);
+    render_items(ui, app, key, panel.items, compact, pos2(layout::content_left(rect, content_w), top));
     title_bar(app, ui, Rect::from_min_max(pos2(rect.left(), rect.bottom() - TITLE_H), rect.max), key, panel, popup);
 }
 
@@ -289,7 +279,7 @@ fn title_bar(app: &mut CadApp, ui: &mut Ui, bar: Rect, key: &str, panel: &Panel,
     }
     ui.painter().galley(pos2(x, bar.center().y - galley.size().y / 2.0), galley, t.text);
     if let Some((cmd, rect)) = launcher {
-        let label = widgets::command_label(ui, app, cmd).unwrap_or(panel.label);
+        let label = panel.launcher_name.or_else(|| widgets::command_label(ui, app, cmd)).unwrap_or(panel.label);
         widgets::launcher(ui, app, rect, key, label, cmd);
     }
 }
@@ -316,16 +306,18 @@ fn item(ui: &mut Ui, app: &mut CadApp, key: &str, item: &Item, compact: bool) ->
         Item::Toggle { icon, label, cmd, size: s, state, .. } => widgets::toggle(ui, app, icon, label, cmd, size(s), state),
         Item::Split { label, size: s, menu, default, .. } => widgets::split_button(ui, app, key, label, size(s), menu, default),
         Item::Combo { kind, width, .. } => combo(ui, app, kind, width),
+        Item::Menu { icon, label, size: s, menu, .. } => widgets::menu_button(ui, app, key, icon, label, size(s), menu),
         Item::Slider { kind, width, .. } => slider(ui, app, kind, width),
+        Item::Separator => widgets::separator(ui),
     }
 }
 
 /// A panel's own icon (its panel button's): the first large item's icon, else the first item's.
 pub fn panel_icon(ctx: &egui::Context, key: &str, panel: &Panel) -> Icon {
     let icon_of = |(i, it): (usize, &Item)| match *it {
-        Item::Button { icon, .. } | Item::Toggle { icon, .. } => Some(icon),
+        Item::Button { icon, .. } | Item::Toggle { icon, .. } | Item::Menu { icon, .. } => Some(icon),
         Item::Split { menu, default, .. } => Some(widgets::split_face(ctx, &layout::item_key(key, i), menu, default).0),
-        Item::Combo { .. } | Item::Slider { .. } => None,
+        Item::Combo { .. } | Item::Slider { .. } | Item::Separator => None,
     };
     let items = || panel.items.iter().enumerate();
     items().filter(|(_, it)| layout::small_row(it).is_none()).find_map(icon_of).or_else(|| items().find_map(icon_of)).unwrap_or(Icon::Menu)

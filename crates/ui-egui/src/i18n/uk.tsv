@@ -1413,7 +1413,6 @@
 	Collaborate	Співпраця
 	Express Tools	Експрес-інструменти
 	File Tabs	Вкладки файлів
-	This tab is not built yet (M1b)	Ця вкладка ще не готова (M1b)
 	2D Object Snap	2D об'єктна прив'язка
 	3D Object Snap	3D об'єктна прив'язка
 	Annotation Monitor	Монітор анотацій
@@ -1465,3 +1464,220 @@
 	Fractional	Дробові
 	Scientific	Наукові
 	The drawing has no layout to switch to.	У кресленні немає аркуша, на який можна перейти.
+	Adjust	Коригувати
+	Block Definition	Визначення блока
+	Combine Text	Об'єднати текст
+	DGN Import	Імпорт DGN
+	Data	Дані
+	Data Link	Зв'язок даних
+	Download from Source	Завантажити з джерела
+	Edit Attribute	Редагувати атрибут
+	Edit Reference	Редагувати посилання
+	Extract  Data	Видобути  дані
+	Field	Поле
+	From File	Із файлу
+	Hyperlink	Гіперпосилання
+	Linking & Extraction	Зв'язування й видобування
+	Location	Розташування
+	OLE Object	Об'єкт OLE
+	PDF Import	Імпорт PDF
+	Recognition Settings	Параметри розпізнавання
+	Recognize SHX Text	Розпізнати текст SHX
+	Reference	Посилання
+	Set Location	Задати розташування
+	Synchronize	Синхронізувати
+	Underlay Layers	Шари підкладки
+	Update Fields	Оновити поля
+	Upload to Source	Вивантажити в джерело
+	Xref fading	Приглушення посилань
+	*Frames vary*	*Рамки різні*
+	Snap to Underlays ON	Прив'язка до підкладок УВІМК
+	Add/Delete Scales	Додати/видалити масштаби
+	Adjust Space	Вирівняти інтервал
+	Annotation Scaling	Масштабування анотацій
+	Annotation Text Height	Висота тексту анотацій
+	Center Justify	Вирівняти по центру
+	Center Layer Gallery	Шар осьових ліній
+	Centerline	Осьова лінія
+	Centerlines	Осьові лінії
+	Check Spelling	Перевірити орфографію
+	Dim Layer Gallery	Шар розмірів
+	Dimensions	Розміри
+	Extract Data	Видобути дані
+	Find Text	Пошук тексту
+	Inspect	Контроль
+	Jog Line	Лінія зламу
+	Leaders	Виноски
+	Left Justify	Вирівняти ліворуч
+	Link Data	Зв'язати дані
+	Markup	Розмітка
+	Mleader Layer Gallery	Шар мультивиносок
+	Reassociate	Пов'язати знову
+	Right Justify	Вирівняти праворуч
+	Scale List	Список масштабів
+	Sync Scale Positions	Синхронізувати положення масштабів
+	Text Align	Вирівняти текст
+	Text Angle	Кут тексту
+	Text Layer Gallery	Шар тексту
+	Tolerance	Допуск
+	Find text	Пошук тексту
+	Use Current	Поточний
+	Dimension, Dimension Style...	Розмір, розмірний стиль...
+	Drafting Standard	Стандарт оформлення
+	From Bing Maps	Із карт Bing
+	From Esri Maps	Із карт Esri
+	More Options...	Інші параметри...
+	Multileader Style Manager	Диспетчер стилів мультивиносок
+	Xref Fading Toggle Button	Приглушення зовнішніх посилань (перемикач)
+	Geometric	Геометричні
+	Dimensional	Розмірні
+	Show/Hide	Показати/приховати
+	Dynamic Constraint Mode	Режим динамічних обмежень
+	Annotational Constraint Mode	Режим анотативних обмежень
+	Constraint Settings, Geometric	Налаштування обмежень, геометричні
+	Constraint Settings, Dimensional	Налаштування обмежень, розмірні
+	Viewport Tools	Інструменти видового екрана
+	View Cube	Видовий куб
+	Show Motion	Показ руху
+	Named Views	Іменовані види
+	New View	Новий вид
+	View Manager	Диспетчер видів
+	Unsaved View	Незбережений вид
+	Model Viewports	Видові екрани моделі
+	Viewport Configuration	Конфігурація видових екранів
+	Two: Vertical	Два: вертикально
+	Two: Horizontal	Два: горизонтально
+	Three: Right	Три: праворуч
+	Three: Left	Три: ліворуч
+	Three: Above	Три: зверху
+	Three: Below	Три: знизу
+	Three: Vertical	Три: вертикально
+	Three: Horizontal	Три: горизонтально
+	Four: Equal	Чотири: рівні
+	Four: Right	Чотири: праворуч
+	Four: Left	Чотири: ліворуч
+	Review	Перевірка
+	DWG Compare	Порівняння DWG
+	Activity Insights	Огляд дій
+	Palettes	Палітри
+	Tool Palettes	Палітри інструментів
+	Command Macros	Макроси команд
+	Markup Set Manager	Диспетчер наборів позначок
+	Design Center	Центр керування
+	Text Window	Текстове вікно
+	Materials Browser	Оглядач матеріалів
+	Materials Editor	Редактор матеріалів
+	Visual Styles	Візуальні стилі
+	Render Settings	Параметри візуалізації
+	Lights in Model	Джерела світла в моделі
+	Sun Properties	Властивості сонця
+	Interface	Інтерфейс
+	Switch Windows	Перемкнути вікна
+	Layout Tabs	Вкладки аркушів
+	Tile Horizontally	Розташувати горизонтально
+	Tile Vertically	Розташувати вертикально
+	Cascade	Каскадом
+	Options, Display Tab	Параметри, вкладка «Екран»
+	Action Recorder	Записувач дій
+	Record	Записати
+	Insert Message	Вставити повідомлення
+	Insert Base Point	Вставити базову точку
+	Pause for User Input	Пауза для введення
+	Play	Відтворити
+	Preference	Налаштування
+	Manage Action Macros	Керування макросами дій
+	Available Action Macro	Доступний макрос дій
+	User Interface	Інтерфейс користувача
+	Edit Aliases	Редагувати псевдоніми
+	Applications	Застосунки
+	Load Application	Завантажити застосунок
+	Run Script	Виконати сценарій
+	Visual Basic Editor	Редактор Visual Basic
+	Visual LISP Editor	Редактор Visual LISP
+	Run VBA Macro	Виконати макрос VBA
+	Load Project	Завантажити проєкт
+	VBA Manager	Диспетчер VBA
+	CAD Standards	Стандарти САПР
+	Layer Translator	Перетворювач шарів
+	Check	Перевірити
+	Configure	Налаштувати
+	Cleanup	Очищення
+	Find Non-Purgeable Items	Знайти неочищувані елементи
+	Overkill	Видалити дублікати
+	Performance	Продуктивність
+	Performance Analyzer	Аналізатор продуктивності
+	View Details	Подробиці друку
+	Plot, Plot Options Dialog	Друк, діалог параметрів друку
+	Export to DWF/PDF	Експорт у DWF/PDF
+	DWFx	DWFx
+	DWF	DWF
+	PDF	PDF
+	EplotExport	EplotExport
+	Export Window	Рамка експорту
+	Page Setup	Параметри аркуша
+	Export to DWF Options	Параметри експорту в DWF
+	Export to PDF Options	Параметри експорту в PDF
+	Export: Display	Експорт: екран
+	Page Setup: Current	Параметри аркуша: поточні
+	Share Drawing	Поділитися кресленням
+	Shared Views	Спільні види
+	Autodesk Docs	Autodesk Docs
+	Push to Autodesk Docs	Надіслати в Autodesk Docs
+	Traces	Накладки
+	Traces Palette	Палітра накладок
+	Markup Import	Імпорт поміток
+	Compare	Порівняння
+	Explode Attributes	Розчленити з атрибутами
+	Replace Block	Замінити блок
+	List Properties	Список властивостей
+	Import Attributes	Імпортувати атрибути
+	Export Attributes	Експортувати атрибути
+	Convert block to xref	Перетворити блок на зовнішнє посилання
+	Extend to Nested Objects	Подовжити до вкладених об'єктів
+	Trim to Nested Objects	Обрізати по вкладених об'єктах
+	Arc Aligned	Текст по дузі
+	Modify Text	Змінити текст
+	Change Case	Змінити регістр
+	Fit	Вписати
+	Convert to Mtext	Перетворити на багаторядковий текст
+	Auto Number	Автонумерація
+	Enclose in Object	Обвести об'єктом
+	Remote Text	Віддалений текст
+	Text Mask	Маска тексту
+	Unmask Text	Зняти маску тексту
+	Move/Copy/Rotate	Перемістити/копіювати/повернути
+	Stretch Multiple	Розтягнути кілька
+	Flatten objects	Сплющити об'єкти
+	Extended Clip	Розширене підрізання
+	Extended Offset	Розширена подібність
+	Convert Shape to Block	Перетворити форму на блок
+	Align Space	Вирівняти простір
+	Synchronize Viewports	Синхронізувати видові екрани
+	Merge Layout	Об'єднати аркуші
+	List Viewport Scale	Масштаб видового екрана
+	Break-line Symbol	Символ лінії розриву
+	Super Hatch	Суперштрихування
+	Annotation Attachment	Прикріплення виносок
+	Attach Leader to Annotation	Прикріпити виноску до примітки
+	Global Attach Leader to Annotation	Прикріпити всі виноски до приміток
+	Detach Leaders from Annotation	Відкріпити виноски від приміток
+	Reset Text	Відновити текст
+	Import Style	Імпортувати стиль
+	Export Style	Експортувати стиль
+	Attach Xdata	Додати розширені дані
+	List Xdata	Список розширених даних
+	System Variables	Системні змінні
+	Extended Plan	Розширений план
+	Make Linetype	Створити тип лінії
+	Make Shape	Створити форму
+	Web	Веб
+	URL Options	Параметри URL
+	Show URLs	Показати URL
+	Change URLs	Змінити URL
+	Find and Replace URLs	Знайти та замінити URL
+	Close Properties	Закрити властивості
+	Close Layer Properties Manager	Закрити диспетчер властивостей шарів
+	Close QuickCalc	Закрити калькулятор
+	Close External References	Закрити зовнішні посилання
+	Close Blocks Palette	Закрити палітру блоків
+	Action Tree	Дерево дій

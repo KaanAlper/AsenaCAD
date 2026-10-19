@@ -1,6 +1,6 @@
 # UI parity
 
-> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-18 · **Change:** major (Windows AutoCAD 2026 baseline for the shell and the Home tab) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0); the Windows baseline section: Autodesk AutoCAD 2026 (Windows)
+> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-19 · **Change:** minor (Windows baseline: side-by-side pass of all nine ribbon tabs) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0); the Windows baseline section: Autodesk AutoCAD 2026 (Windows)
 
 How AsenaCAD's interaction compares with AutoCAD's: point entry, object snaps, tracking, dynamic
 input, grips, selection, the command line, chrome and navigation. A drafter's speed in AutoCAD
@@ -15,11 +15,11 @@ ignored; there are no context menus. Remaining: **≈ 110–170 Opus 5.5 hours**
 
 ## Windows AutoCAD 2026 baseline
 
-> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-18 · **Change:** major (first side-by-side pass of the Windows shell and the Home tab) · **Target:** Autodesk AutoCAD 2026 (Windows)
+> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** minor (side-by-side pass of all nine ribbon tabs at 1906 px: item widths and spacing, large drop-down lists, the tab row) · **Target:** Autodesk AutoCAD 2026 (Windows)
 
 The rest of this doc still measures against AutoCAD 2027 for Mac; this section is the first part
 re-measured against the Windows target (milestone M1a: title row, ribbon, document tabs and the
-shell around the drawing).
+shell around the drawing; M1b: the other ribbon tabs).
 
 **How this was measured.** AutoCAD 2026 for Windows was observed on the reference PC on
 2026-10-18: an empty Drawing1 in the default workspace with the Home tab open, in a 1906 × 1026
@@ -30,8 +30,17 @@ drop-down lists were compared against the observed item lists (structure, order,
 types), not against screenshots. "Matches" means what the [parity method](../.claude/rules/parity-method.md)
 says: position and order, label text, control type and when an item is enabled. Pixels, icons
 and colours are ours by design.
+The other tabs (M1b) were compared the same way, against a UI Automation read of each tab's
+panels and a screenshot of each tab at 1906 px (layout and labels only). A final pass put all
+nine tabs side by side at 1906 × 1026 (AsenaCAD rendered by the headless harness) and compared
+every item's position and size with the rectangles of the UI Automation read, and the open Circle,
+Set Location and URL Options lists with screenshots of them. Items now sit within a few pixels
+of AutoCAD's and panels are within 6 px of AutoCAD's widths, except Home ▸ Clipboard (its row
+says why), Home ▸ Draw (8 px narrower), and View ▸ Model Viewports and Output ▸ Export to
+DWF/PDF (7 and 10 px narrower: AutoCAD leaves 4–5 px gaps there where its other panels leave
+none or 1 px). Our font is not AutoCAD's, so labels differ by a pixel or two.
 
-**Measured: 25 rows, 9 ✅, 15 ◐, 1 ✗.**
+**Measured: 69 rows, 16 ✅, 52 ◐, 1 ✗.**
 
 | Element | Status | AutoCAD 2026 (Windows) | AsenaCAD and the differences |
 |---|---|---|---|
@@ -39,17 +48,61 @@ and colours are ours by design.
 | Title row: Quick Access Toolbar | ✅ | New, Open, Save, Save As, two Web & Mobile buttons, Plot, Undo and Redo split buttons, Customize ▾, Share; the Customize list has 17 commands, More Commands, Show Menu Bar, Show Below the Ribbon | Same buttons in the same order without the Autodesk online ones ([below](#intentionally-absent-autodesk-online-services)); same Customize list and options |
 | Title row: title | ✅ | Product and drawing name, centred | "AsenaCAD  <drawing>.dwg", centred; it slides or is cut short to stay between the toolbar and the InfoCenter |
 | Title row: InfoCenter | ✅ | Hide-search ▸, search box, Search, Sign In ▾, App Store, Stay Connected ▾, Help split | Hide-search ▸, search box with the same placeholder, Search, Help split; the online items are left out on purpose. Search starts a command whose name or alias is typed, else opens our Command Reference (AutoCAD searches its online help) |
-| Ribbon tab row | ◐ | Home, Insert, Annotate, Parametric, View, Manage, Output, Collaborate, Express Tools; then the minimize button (cycles Full, Panel Buttons, Panel Titles, Tabs) and its ▾ menu | Same nine tabs in order and the same minimize button and menu. Only Home has panels: the other eight show a "not built yet" note until M1b |
+| Ribbon tab row | ✅ | Home, Insert, Annotate, Parametric, View, Manage, Output, Collaborate, Express Tools; then the minimize button (cycles Full, Panel Buttons, Panel Titles, Tabs) and its ▾ menu | Same nine tabs in order, each within 2 px of AutoCAD's width, and the same minimize button and menu. Every tab has its panels, all fully expanded at 1906 px as in AutoCAD |
 | Home ▸ Draw | ✅ | Line, Polyline, Circle ▾, Arc ▾ (large); Rectangle ▾, Ellipse ▾ (its face reads "Center"), Hatch ▾ (small, icons only); 13-item slide-out ending with Revision Cloud ▾ | Same items, sizes, rows, list entries and separators; every item runs its command |
 | Home ▸ Modify | ◐ | Move/Copy/Stretch, Rotate/Mirror/Scale, Trim ▾/Fillet ▾/Array ▾ with labels, Erase/Explode/Offset as icons; 15-item slide-out ending with the draw-order split | Same layout and lists; Set to ByLayer has no command yet, so it is disabled |
-| Home ▸ Annotation | ✅ | Text ▾ and Dimension (large); Linear ▾, Leader ▾, Table (small, labelled); slide-out of four style buttons, each with its style list | Same items, lists and four-row slide-out; the style lists set the current style |
+| Home ▸ Annotation | ◐ | Text ▾ and Dimension (large); Linear ▾, Leader ▾, Table (small, labelled); slide-out of four style buttons, each with its style list | Same items, lists and four-row slide-out; the style lists set the current style. Dimension starts our DIM, which makes only linear dimensions (AutoCAD's DIM picks the kind from the object under the cursor) |
 | Home ▸ Layers | ◐ | Layer Properties (large toggle), the layer list, two rows of layer tools ending with Make Current and Match Layer; slide-out with Layer State, eight tools and the locked-layer fading toggle and slider | Same layout. The layer list shows only the layer's name (AutoCAD's also shows its on, freeze, lock and colour states); Copy Objects to New Layer, Layer Walk, VP Freeze in All Viewports except Current and Locked Layer fading have no command yet; the fading slider shows its value but is disabled |
-| Home ▸ Block | ◐ | Insert (large, opens a gallery of the drawing's blocks), Detect and Convert ▾ (large), Create, Edit, Edit Attributes ▾; slide-out of six | Same layout and lists. Insert is a plain button that starts INSERT, with no gallery; Detect and Convert, Search and Convert and Replace have no command yet |
+| Home ▸ Block | ◐ | Insert ▾ (large drop-down, a gallery of the drawing's blocks), Detect and Convert ▾ (large), Create, Edit, Edit Attributes ▾; slide-out of six | Same layout and lists. Insert is a drop-down whose list has only More Options..., which starts INSERT (no gallery of blocks yet); Detect and Convert, Search and Convert and Replace have no command yet |
 | Home ▸ Properties | ◐ | Match Properties; Object Color, Lineweight and Linetype lists, each with a small icon on its left and a colour swatch or line preview in the box; slide-out with Plot Style, transparency mode and slider, List; dialog launcher | Same layout, lists and launcher. The lists have no row icons, swatches or line previews; the transparency mode and slider are disabled (new objects' transparency is not modelled yet). Plot Style is disabled with ByColor in a colour-dependent drawing, as in AutoCAD |
 | Home ▸ Groups | ◐ | Group (large), Ungroup, Group Edit, Group Selection toggle; slide-out with Group Manager and the Group Bounding Box toggle | Same layout; Group Manager and Group Bounding Box have no command yet |
 | Home ▸ Utilities | ◐ | Measure ▾ (Quick, Distance, Radius, Angle, Area, Volume), Quick Select, Select All, Quick Calculator toggle; slide-out with ID Point and Point Style | Same layout and list. The Measure face runs Quick, which has no command yet, so the face is disabled (its ▾ list works); Volume has no command yet |
 | Home ▸ Clipboard | ◐ | Paste ▾ (five entries), Cut and Copy Clip as icons, each drawn with a small ▾ mark | Same layout and Paste list; Paste as Hyperlink and Paste Special have no command yet. Cut and Copy Clip are plain icon buttons: what AutoCAD's ▾ marks open wasn't captured. Paste is disabled while there is nothing to paste |
-| Home ▸ View | ◐ | Base (large); slide-out with Section and Detail View Style buttons and lists; Drafting Standard launcher | Same layout, but model documentation isn't built: Base, both styles and the launcher are disabled |
+| Home ▸ View | ◐ | Base (large, drawn with a ▾ under its label); slide-out with Section and Detail View Style buttons and lists; Drafting Standard launcher | Same layout, but model documentation isn't built: Base, both styles and the launcher are disabled. Base is a plain button: what AutoCAD's ▾ opens wasn't captured |
+| Insert ▸ Block | ◐ | Insert ▾ (large drop-down, a gallery of the drawing's blocks), Detect and Convert ▾ (large), Edit Attribute ▾, the attribute display list, Replace | Same layout and lists. Insert is a drop-down whose list has only More Options..., which starts INSERT (no gallery of blocks yet); Detect and Convert, Search and Convert and Replace have no command yet. The attribute display drop-down is a plain list box (AutoCAD's has an icon in front) |
+| Insert ▸ Block Definition | ✅ | Create Block ▾ (Create Block, Write Block), Define Attributes, Manage Attributes, Block Editor (large); slide-out with Set Base Point and Synchronize | Same items, sizes, list and slide-out; every item runs its command |
+| Insert ▸ Reference | ◐ | Attach, Clip, Adjust (large); Underlay Layers, the frame display list, the underlay snap list; slide-out with Edit Reference and the xref fading toggle and slider; External References launcher | Same layout and launcher (it opens the External References palette). Attach is a placeholder; Clip, Adjust, Underlay Layers and the fading toggle have no command yet. The frame and underlay snap lists show AutoCAD's defaults but are disabled (frame display and underlay snapping are not modelled); the fading slider shows its value but is disabled. Both lists are plain list boxes (AutoCAD's have an icon in front) |
+| Insert ▸ Import | ◐ | PDF Import ▾ (PDF Import, DGN Import, Import), Recognize SHX Text, Recognition Settings, Combine Text (large) | Same layout and list. Only Import has a command: the face (PDF Import), DGN Import, both SHX text tools and Combine Text are disabled |
+| Insert ▸ Data | ◐ | Field (large), Update Fields, OLE Object, Hyperlink | Same layout; none of the four has a command yet, so all are disabled |
+| Insert ▸ Linking & Extraction | ◐ | Data Link (large), Download from Source, Upload to Source, Extract Data | Same layout; Upload to Source has no command yet |
+| Insert ▸ Location | ◐ | Set Location ▾ (large drop-down button: the whole button opens From Esri Maps, From File, —, From Bing Maps) | Same drop-down button and list. None of the entries has a command yet (Esri and Bing are online map services), so it is disabled |
+| Annotate ▸ Text | ◐ | Multiline Text ▾ (Multiline Text, Single Line) (large); Check Spelling, Text Align, Justify (icons); the text style list, the Find Text box and the Annotation Text Height box; slide-out with Scale and the text layer list; Text Style launcher | Same layout and launcher. The style list sets the current style; Enter in Find Text finds the text and selects the objects it is in; Annotation Text Height is an editable list: Enter or an entry sets TEXTSIZE; its entries are the drawing's text heights and a few common sizes (our own choice, not AutoCAD's list). Check Spelling, Text Align, Justify and Scale have no command yet; the text layer list shows "Use Current" but is disabled (a layer for new text isn't modelled yet). The Find Text box has no search button inside it, and Annotation Text Height's ▾ sits beside its box (AutoCAD draws both inside the box) |
+| Annotate ▸ Dimensions | ◐ | Dimension (large); the dimension style list with Break, Adjust Space and Jog Line; the dimension layer list with Inspect, Update and Reassociate; Linear ▾, Quick, Continue ▾; slide-out of seven text and edit tools; Dimension Style launcher | Same layout, lists and launcher; every button runs its command. Dimension starts our DIM, which makes only linear dimensions (AutoCAD's DIM picks the kind from the object). The dimension layer list shows "Use Current" but is disabled, without the layer icon and colour swatch AutoCAD draws in front of it |
+| Annotate ▸ Centerlines | ◐ | Center Mark, Centerline (large); slide-out with the centerline layer list | Same items; the layer list shows "Use Current" but is disabled |
+| Annotate ▸ Leaders | ◐ | Multileader (large); the multileader style and layer lists; Align, Collect, Add Leader, Remove Leader (icons); Multileader Style Manager launcher | Same layout and launcher; the style list sets the current style; the layer list shows "Use Current" but is disabled, without AutoCAD's layer icon and colour swatch |
+| Annotate ▸ Tables | ◐ | Table (large); the table style list; Download from Source, Extract Data, Upload to Source, Link Data; Table Style launcher | Same layout and launcher; Upload to Source has no command yet |
+| Annotate ▸ Markup | ✅ | Wipeout, Revision Cloud ▾ (Rectangular, Polygonal, Freehand) (large) | Same items and list; both run their commands |
+| Annotate ▸ Annotation Scaling | ✅ | Add Current Scale ▾ (Add Current Scale, Delete Current Scale) (large); Scale List, Add/Delete Scales, Sync Scale Positions | Same items and list; every item runs its command |
+| Parametric ▸ Geometric | ✅ | Auto Constrain (large); the twelve geometric constraints as icons in three rows of four; Show/Hide, Show All, Hide All; Constraint Settings launcher | Same layout and launcher; every item runs its command. The launcher opens our Constraint Settings dialog, which shows its geometric, dimensional and AutoConstrain settings on one page (AutoCAD's dialog has a tab for each) |
+| Parametric ▸ Dimensional | ◐ | Linear ▾ (Linear, Horizontal, Vertical), Aligned (large); Radius, Diameter, Angular, Convert (icons); Show/Hide, Show All, Hide All; slide-out with the Dynamic and Annotational Constraint Mode toggles; Constraint Settings launcher | Same layout, list, slide-out and launcher. Convert has no command yet. Both mode toggles are disabled: annotational constraints aren't modelled (CCONSTRAINTFORM), every constraint is dynamic, so Dynamic Constraint Mode shows pressed as in AutoCAD's default |
+| Parametric ▸ Manage | ✅ | Delete Constraints (large), Parameters Manager (large toggle) | Same items; both run their commands. The toggle shows pressed while the Parameters Manager is open and closes it when clicked again (PARAMETERSCLOSE) |
+| View ▸ Viewport Tools | ◐ | UCS Icon, View Cube, Navigation Bar (large toggles); slide-out with the Show Motion toggle | Same layout. The three toggles show and hide the UCS icon, the ViewCube and the navigation bar and show pressed while they are on; Show Motion is disabled (no ShowMotion) |
+| View ▸ Named Views | ◐ | The named views list ("Unsaved View"); New View, View Manager | Same layout. The list shows "Unsaved View" and lists the views of the current space; choosing one restores it (VIEW Restore); with no views it holds only "Unsaved View". The list has no icon in front of the view name (AutoCAD's has). New View has no command yet. View Manager runs VIEW, which works like -VIEW here: its options are asked on the command line (AutoCAD opens the View Manager dialog) |
+| View ▸ Model Viewports | ◐ | Viewport Configuration ▾ (large; Single, two, three and four-viewport arrangements); Named, Join, Restore | Same layout and list. Single, the two and three-viewport arrangements and Four: Equal tile the model space (in a layout they make layout viewports), and Join joins two tiles; Four: Right, Four: Left and Restore (-VPORTS Toggle) have no command yet. Named runs VPORTS, which asks on the command line (AutoCAD opens the Viewports dialog's Named Viewports tab) |
+| View ▸ Review | ✅ | DWG Compare (large) | Same button; it runs COMPARE |
+| View ▸ History | ◐ | Activity Insights (large toggle) | Same toggle, disabled: there is no Activity Insights palette |
+| View ▸ Palettes | ◐ | Tool Palettes, Properties, Blocks, Count, Command Macros, Sheet Set Manager (large toggles); Command Line, Markup Set Manager, Layer Properties, Quick Calculator, Design Center, External References (icon toggles); slide-out with Text Window and six rendering palette toggles | Same layout and slide-out. Properties, Blocks, Command Line, Layer Properties, Quick Calculator and External References open their palettes and show pressed while open; Text Window opens the command history (TEXTSCR); Count starts COUNT (pick an object, its kind is counted; there is no Count palette, so it never shows pressed); Blocks opens a plain list of the drawing's blocks. Tool Palettes, Command Macros, Sheet Set Manager, Markup Set Manager, Design Center and the six rendering palettes aren't built. Clicking a pressed palette toggle closes its palette (PROPERTIESCLOSE, LAYERCLOSE, QCCLOSE, EXTERNALREFERENCESCLOSE, BLOCKSPALETTECLOSE), as in AutoCAD |
+| View ▸ Interface | ◐ | Switch Windows ▾ (large drop-down listing the open drawings), File Tabs, Layout Tabs (large toggles); Tile Horizontally, Tile Vertically, Cascade; Options launcher (Display tab) | Same layout and launcher. File Tabs and Layout Tabs show and hide the drawing tabs and the layout tabs. Switch Windows is a drop-down without the list of drawings, so it is disabled; the three window arrangements are disabled (AsenaCAD shows one drawing at a time). The launcher opens Options on its Display tab |
+| Manage ▸ Action Recorder | ◐ | Record (large); Insert Message, Insert Base Point, Pause for User Input (icons, disabled while not recording); Play, Preference, Manage Action Macros and the action macro list; a slide-out with the Action Tree | Same layout, the separator after the first three icons and the slide-out; everything is disabled (no Action Recorder yet). The slide-out's Action Tree (a tree of the macro's steps) is an empty, disabled box of its width |
+| Manage ▸ Customization | ◐ | User Interface, Tool Palettes (large); Import, Export, Edit Aliases ▾ | Same layout; Edit Aliases is a split as in AutoCAD, but only its face entry is listed (the ▾ list wasn't captured). None of the five has a command yet |
+| Manage ▸ Applications | ◐ | Load Application, Run Script (large); Visual Basic Editor, Visual LISP Editor, Run VBA Macro; slide-out with Load Project and VBA Manager | Same layout and slide-out. Load Application (APPLOAD, LISP files) and Run Script (SCRIPT) run; the VBA and Visual LISP tools have no command yet |
+| Manage ▸ CAD Standards | ◐ | Layer Translator, Check, Configure | Same layout; none of the three has a command yet |
+| Manage ▸ Cleanup | ◐ | Find Non-Purgeable Items (large); Purge, Overkill, Audit | Same layout; Purge, Overkill and Audit run their commands, Find Non-Purgeable Items has no command yet |
+| Manage ▸ Performance | ◐ | Performance Analyzer (large) | Same button, disabled: no performance analyzer yet |
+| Output ▸ Plot | ◐ | Plot, Batch Plot, Preview (large); Page Setup Manager, View Details, Plotter Manager; the Plot launcher | Same layout and launcher, but View Details is disabled. Plot and the launcher open the Plot dialog, Batch Plot opens Publish, Preview, Page Setup Manager and Plotter Manager run their commands; View Details (the last plot's report) has no command yet |
+| Output ▸ Export to DWF/PDF | ◐ | Export ▾ (DWFx, DWF, PDF) (large); the export area list ("Export: Display") with Export Window; the page setup list ("Page Setup: Current") with Page Setup; Preview, DWF options and PDF options icons | Same layout and list. The PDF entry runs EXPORTPDF; DWFx and DWF export, the two lists and the five small tools have no command yet, so the lists show AutoCAD's defaults disabled |
+| Collaborate ▸ Share | ◐ | Share Drawing (large), Shared Views (large toggle) | Same items, disabled: both use Autodesk's online services ([below](#intentionally-absent-autodesk-online-services)) |
+| Collaborate ▸ Autodesk Docs | ◐ | Push to Autodesk Docs (large toggle) | Same toggle, disabled: it needs Autodesk Docs |
+| Collaborate ▸ Traces | ◐ | Traces Palette (large toggle), Markup Import (large) | Same items, disabled: both need Autodesk's online services |
+| Collaborate ▸ Compare | ✅ | DWG Compare (large) | Same button; it runs COMPARE |
+| Express Tools ▸ Blocks | ◐ | Explode Attributes, Replace Block (large); List Properties, Import Attributes, Export Attributes; slide-out with Convert block to xref, Copy Nested Objects, Extend to Nested Objects, Trim to Nested Objects | Same layout and slide-out; Copy Nested Objects runs NCOPY, the other eight have no command yet |
+| Express Tools ▸ Text | ◐ | Arc Aligned, Modify Text ▾ (Explode, Change Case, Rotate, Fit, Justify) (large); Convert to Mtext, Auto Number, Enclose in Object; slide-out with Remote Text, Text Mask, Unmask Text | Same layout, list and slide-out; none of the tools has a command yet, so Modify Text and its ▾ are disabled |
+| Express Tools ▸ Modify | ◐ | Move/Copy/Rotate, Stretch Multiple, centred in the panel's height; slide-out with Flatten objects, Extended Clip, Extended Offset, Convert Shape to Block | Same layout (the two rows centred) and slide-out; Flatten objects runs FLATTEN, the other five have no command yet |
+| Express Tools ▸ Layout | ◐ | Align Space, Synchronize Viewports, Merge Layout; slide-out with List Viewport Scale | Same layout and slide-out; none of the four has a command yet |
+| Express Tools ▸ Draw | ◐ | Break-line Symbol, Super Hatch (large) | Same buttons, disabled: neither has a command yet |
+| Express Tools ▸ Dimension | ◐ | Annotation Attachment ▾ (Attach Leader to Annotation, Global Attach Leader to Annotation, Detach Leaders from Annotation) (large); Reset Text, Import Style, Export Style | Same layout and list; none of the tools has a command yet |
+| Express Tools ▸ Tools | ◐ | Command Aliases (large); Attach Xdata, List Xdata, System Variables; slide-out with Extended Plan, Make Linetype, Make Shape | Same layout and slide-out; Command Aliases runs ALIASEDIT, the other six have no command yet |
+| Express Tools ▸ Web | ◐ | URL Options ▾ (large drop-down button: the whole button opens Show URLs, Change URLs, Find and Replace URLs) | Same drop-down button and list; none of the entries has a command yet, so it is disabled |
 | Ribbon collapse | ✅ | At 1906 px every Home panel is full. At 1280 px Modify, Annotation, Layers and Block drop their small items' labels, and Properties, Groups, Utilities, Clipboard and View become panel buttons (icon, name on one line, ▾) that open the panel below them | Same panels shrink and collapse at both widths, at any display scale. Narrower windows collapse more panels from the right. A panel button never breaks a word of its name: it gets wider when a word doesn't fit (Annotation in a 900-point window) |
 | Document tab bar | ✅ | File-tabs menu ≡, Start (no close button), drawing tabs with × and a * while unsaved, + | Same controls in the same order |
 | Viewport controls | ✅ | [−][Top][2D Wireframe] menus at the top left; minimize, restore and close at the top right | Same controls and places |
@@ -76,6 +129,17 @@ are left out of the shell rather than shown disabled:
 - **Open from Web & Mobile** and **Save to Web & Mobile** (Quick Access Toolbar): drawings stored
   in Autodesk's online storage.
 
+The Collaborate tab's tools are such services too. Unlike the items above they stay in the
+ribbon, disabled, so the tab has AutoCAD's panels and buttons; only DWG Compare works:
+
+- **Share Drawing**: hands out a link to the drawing kept in Autodesk's cloud.
+- **Shared Views**: publishes views of the drawing for others to look at and comment on in a web
+  browser.
+- **Push to Autodesk Docs**: sends layouts as PDF sheets to an Autodesk Docs project.
+- **Traces Palette**: overlays for reviewing a drawing, kept with Autodesk's online services.
+- **Markup Import**: brings marks made on a printed or PDF sheet into the drawing through
+  Autodesk's markup service.
+
 ### Ribbon items without a command
 
 Ribbon items that name an AutoCAD command AsenaCAD doesn't have yet. They are shown disabled with
@@ -89,9 +153,9 @@ differ.
 | `laywalk` | Layers ▸ Layer Walk |
 | `layvpi` | Layers ▸ VP Freeze in All Viewports except Current |
 | `laylockfadectl` | Layers ▸ Locked Layer fading (toggle) |
-| `bdetect` | Block ▸ Detect and Convert |
-| `bconvert` | Block ▸ Search and Convert |
-| `breplace` | Block ▸ Replace |
+| `bdetect` | Block ▸ Detect and Convert (also Insert ▸ Block) |
+| `bconvert` | Block ▸ Search and Convert (also Insert ▸ Block) |
+| `breplace` | Block ▸ Replace (also Insert ▸ Block) |
 | `classicgroup` | Groups ▸ Group Manager |
 | `groupdisplaymode` | Groups ▸ Group Bounding Box (toggle) |
 | `measuregeom.quick` | Utilities ▸ Measure ▸ Quick |
@@ -102,6 +166,129 @@ differ.
 | `viewsectionstyle` | View ▸ Section View Style |
 | `viewdetailstyle` | View ▸ Detail View Style |
 | `viewstd` | View ▸ Drafting Standard (dialog launcher) |
+| `clip` | Insert ▸ Reference ▸ Clip |
+| `adjust` | Insert ▸ Reference ▸ Adjust |
+| `ulayers` | Insert ▸ Reference ▸ Underlay Layers |
+| `xdwgfadectl` | Insert ▸ Reference ▸ Xref Fading (toggle) |
+| `pdfimport` | Insert ▸ Import ▸ PDF Import |
+| `dgnimport` | Insert ▸ Import ▸ PDF Import ▸ DGN Import |
+| `pdfshxtext` | Insert ▸ Import ▸ Recognize SHX Text |
+| `pdfshxtext.settings` | Insert ▸ Import ▸ Recognition Settings |
+| `txt2mtxt` | Insert ▸ Import ▸ Combine Text; Express Tools ▸ Text ▸ Convert to Mtext |
+| `field` | Insert ▸ Data ▸ Field |
+| `updatefield` | Insert ▸ Data ▸ Update Fields |
+| `insertobj` | Insert ▸ Data ▸ OLE Object |
+| `hyperlink` | Insert ▸ Data ▸ Hyperlink |
+| `datalinkupdate.write` | Insert ▸ Linking & Extraction ▸ Upload to Source (also Annotate ▸ Tables) |
+| `geographiclocation.esri` | Insert ▸ Location ▸ Set Location ▸ From Esri Maps (an online map service) |
+| `geographiclocation.file` | Insert ▸ Location ▸ Set Location ▸ From File |
+| `geographiclocation.bing` | Insert ▸ Location ▸ Set Location ▸ From Bing Maps (an online map service) |
+| `spell` | Annotate ▸ Text ▸ Check Spelling |
+| `textalign` | Annotate ▸ Text ▸ Text Align |
+| `justifytext` | Annotate ▸ Text ▸ Justify; Express Tools ▸ Text ▸ Modify Text ▸ Justify |
+| `scaletext` | Annotate ▸ Text ▸ Scale (slide-out) |
+| `dcconvert` | Parametric ▸ Dimensional ▸ Convert |
+| `cconstraintform.dynamic` | Parametric ▸ Dimensional ▸ Dynamic Constraint Mode (toggle, slide-out; sets CCONSTRAINTFORM to 0) |
+| `cconstraintform.annotational` | Parametric ▸ Dimensional ▸ Annotational Constraint Mode (toggle, slide-out; sets CCONSTRAINTFORM to 1) |
+| `navsmotion` | View ▸ Viewport Tools ▸ Show Motion (toggle, slide-out; also the navigation bar's ShowMotion) |
+| `newview` | View ▸ Named Views ▸ New View |
+| `vports.4r` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Four: Right (an arrangement -VPORTS doesn't have yet) |
+| `vports.4l` | View ▸ Model Viewports ▸ Viewport Configuration ▸ Four: Left (an arrangement -VPORTS doesn't have yet) |
+| `vports.toggle` | View ▸ Model Viewports ▸ Restore (-VPORTS Toggle) |
+| `activityinsights` | View ▸ History ▸ Activity Insights (toggle) |
+| `toolpalettes` | View ▸ Palettes ▸ Tool Palettes (toggle) |
+| `commandmacros` | View ▸ Palettes ▸ Command Macros (toggle) |
+| `sheetset` | View ▸ Palettes ▸ Sheet Set Manager (toggle) |
+| `markup` | View ▸ Palettes ▸ Markup Set Manager (toggle) |
+| `adcenter` | View ▸ Palettes ▸ Design Center (toggle) |
+| `matbrowseropen` | View ▸ Palettes ▸ Materials Browser (toggle, slide-out) |
+| `mateditoropen` | View ▸ Palettes ▸ Materials Editor (toggle, slide-out) |
+| `visualstyles` | View ▸ Palettes ▸ Visual Styles (toggle, slide-out) |
+| `rpref` | View ▸ Palettes ▸ Render Settings (toggle, slide-out) |
+| `lightlist` | View ▸ Palettes ▸ Lights in Model (toggle, slide-out) |
+| `sunproperties` | View ▸ Palettes ▸ Sun Properties (toggle, slide-out) |
+| `switchwindows` | View ▸ Interface ▸ Switch Windows (the list of open drawings) |
+| `syswindows.tilehorz` | View ▸ Interface ▸ Tile Horizontally |
+| `syswindows.tilevert` | View ▸ Interface ▸ Tile Vertically |
+| `syswindows.cascade` | View ▸ Interface ▸ Cascade |
+| `actrecord` | Manage ▸ Action Recorder ▸ Record |
+| `actusermessage` | Manage ▸ Action Recorder ▸ Insert Message |
+| `actbasepoint` | Manage ▸ Action Recorder ▸ Insert Base Point |
+| `actuserinput` | Manage ▸ Action Recorder ▸ Pause for User Input |
+| `actplay` | Manage ▸ Action Recorder ▸ Play (plays the macro chosen in the list) |
+| `actpreferences` | Manage ▸ Action Recorder ▸ Preference (the Action Recorder's preferences) |
+| `actmanager` | Manage ▸ Action Recorder ▸ Manage Action Macros |
+| `cui` | Manage ▸ Customization ▸ User Interface |
+| `customize` | Manage ▸ Customization ▸ Tool Palettes (customizes the tool palettes) |
+| `cuiimport` | Manage ▸ Customization ▸ Import |
+| `cuiexport` | Manage ▸ Customization ▸ Export |
+| `editaliases` | Manage ▸ Customization ▸ Edit Aliases (edits the command alias file) |
+| `vbaide` | Manage ▸ Applications ▸ Visual Basic Editor |
+| `vlisp` | Manage ▸ Applications ▸ Visual LISP Editor |
+| `vbarun` | Manage ▸ Applications ▸ Run VBA Macro |
+| `vbaload` | Manage ▸ Applications ▸ Load Project (slide-out) |
+| `vbaman` | Manage ▸ Applications ▸ VBA Manager (slide-out) |
+| `laytrans` | Manage ▸ CAD Standards ▸ Layer Translator |
+| `checkstandards` | Manage ▸ CAD Standards ▸ Check |
+| `standards` | Manage ▸ CAD Standards ▸ Configure |
+| `purge.nonpurgeable` | Manage ▸ Cleanup ▸ Find Non-Purgeable Items (PURGE on its non-purgeable items view) |
+| `performanceanalyzer` | Manage ▸ Performance ▸ Performance Analyzer |
+| `viewplotdetails` | Output ▸ Plot ▸ View Details (the report of the last plots) |
+| `exportdwfx` | Output ▸ Export to DWF/PDF ▸ Export ▸ DWFx |
+| `exportdwf` | Output ▸ Export to DWF/PDF ▸ Export ▸ DWF |
+| `eplotexport.window` | Output ▸ Export to DWF/PDF ▸ Export Window (picks the area to export) |
+| `eplotexport.pagesetup` | Output ▸ Export to DWF/PDF ▸ Page Setup (overrides the page setup for the export) |
+| `eplotexport.preview` | Output ▸ Export to DWF/PDF ▸ Preview (of the export) |
+| `exportsettings.dwf` | Output ▸ Export to DWF/PDF ▸ Export to DWF Options |
+| `exportsettings.pdf` | Output ▸ Export to DWF/PDF ▸ Export to PDF Options |
+| `sharedviews` | Collaborate ▸ Share ▸ Shared Views (Autodesk online service) |
+| `pushtodocsopen` | Collaborate ▸ Autodesk Docs ▸ Push to Autodesk Docs (Autodesk online service) |
+| `tracepaletteopen` | Collaborate ▸ Traces ▸ Traces Palette (Autodesk online service) |
+| `markupimport` | Collaborate ▸ Traces ▸ Markup Import (Autodesk online service) |
+| `burst` | Express Tools ▸ Blocks ▸ Explode Attributes (explodes blocks, keeping attribute values as text) |
+| `blockreplace` | Express Tools ▸ Blocks ▸ Replace Block |
+| `xlist` | Express Tools ▸ Blocks ▸ List Properties (of a nested object) |
+| `attin` | Express Tools ▸ Blocks ▸ Import Attributes |
+| `attout` | Express Tools ▸ Blocks ▸ Export Attributes |
+| `blocktoxref` | Express Tools ▸ Blocks ▸ Convert block to xref (slide-out) |
+| `bextend` | Express Tools ▸ Blocks ▸ Extend to Nested Objects (slide-out) |
+| `btrim` | Express Tools ▸ Blocks ▸ Trim to Nested Objects (slide-out) |
+| `arctext` | Express Tools ▸ Text ▸ Arc Aligned |
+| `txtexp` | Express Tools ▸ Text ▸ Modify Text ▸ Explode |
+| `tcase` | Express Tools ▸ Text ▸ Modify Text ▸ Change Case |
+| `torient` | Express Tools ▸ Text ▸ Modify Text ▸ Rotate |
+| `textfit` | Express Tools ▸ Text ▸ Modify Text ▸ Fit |
+| `tcount` | Express Tools ▸ Text ▸ Auto Number |
+| `tcircle` | Express Tools ▸ Text ▸ Enclose in Object |
+| `rtext` | Express Tools ▸ Text ▸ Remote Text (slide-out) |
+| `textmask` | Express Tools ▸ Text ▸ Text Mask (slide-out) |
+| `textunmask` | Express Tools ▸ Text ▸ Unmask Text (slide-out) |
+| `mocoro` | Express Tools ▸ Modify ▸ Move/Copy/Rotate |
+| `mstretch` | Express Tools ▸ Modify ▸ Stretch Multiple |
+| `clipit` | Express Tools ▸ Modify ▸ Extended Clip (slide-out) |
+| `exoffset` | Express Tools ▸ Modify ▸ Extended Offset (slide-out) |
+| `shp2blk` | Express Tools ▸ Modify ▸ Convert Shape to Block (slide-out) |
+| `alignspace` | Express Tools ▸ Layout ▸ Align Space |
+| `vpsync` | Express Tools ▸ Layout ▸ Synchronize Viewports |
+| `layoutmerge` | Express Tools ▸ Layout ▸ Merge Layout |
+| `vpscale` | Express Tools ▸ Layout ▸ List Viewport Scale (slide-out) |
+| `breakline` | Express Tools ▸ Draw ▸ Break-line Symbol |
+| `superhatch` | Express Tools ▸ Draw ▸ Super Hatch |
+| `qlattach` | Express Tools ▸ Dimension ▸ Annotation Attachment ▸ Attach Leader to Annotation |
+| `qlattachset` | Express Tools ▸ Dimension ▸ Annotation Attachment ▸ Global Attach Leader to Annotation |
+| `qldetachset` | Express Tools ▸ Dimension ▸ Annotation Attachment ▸ Detach Leaders from Annotation |
+| `dimreassoc` | Express Tools ▸ Dimension ▸ Reset Text (puts back the measured value of overridden dimension text) |
+| `dimim` | Express Tools ▸ Dimension ▸ Import Style |
+| `dimex` | Express Tools ▸ Dimension ▸ Export Style |
+| `xdata` | Express Tools ▸ Tools ▸ Attach Xdata |
+| `xdlist` | Express Tools ▸ Tools ▸ List Xdata |
+| `sysvdlg` | Express Tools ▸ Tools ▸ System Variables (the system variable editor) |
+| `explan` | Express Tools ▸ Tools ▸ Extended Plan (slide-out) |
+| `mkltype` | Express Tools ▸ Tools ▸ Make Linetype (slide-out) |
+| `mkshape` | Express Tools ▸ Tools ▸ Make Shape (slide-out) |
+| `showurls` | Express Tools ▸ Web ▸ URL Options ▸ Show URLs |
+| `churls` | Express Tools ▸ Web ▸ URL Options ▸ Change URLs |
+| `repurls` | Express Tools ▸ Web ▸ URL Options ▸ Find and Replace URLs |
 
 ## How this was measured
 
@@ -292,6 +479,22 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | Side-by-side pass of all nine tabs at 1906 px against AutoCAD's screenshots and UI Automation rectangles: large buttons are at least 38 px wide (not 42), large splits and two-line drop-downs leave room for the ▾ either side of the label (Circle 52 px, Measure 67, Set Location 64), items of one row stand with no gap, a large item and a small column are 1 px apart and two small columns 5 px, panels pad 3 px on the left and 2 px on the right, large items stand 4 px below the panel's top; Insert ▸ Import has AutoCAD's line after PDF Import; a large button's list has 40 px rows with large icons, as wide as its longest entry; the tab row becomes ✅ (16 ✅, 52 ◐, 1 ✗, recounted); differences left: Base's ▾, the icons and swatches in front of some lists, Find Text's search button, Annotation Text Height's ▾ |
+| 2026-10-19 | minor | Output ▸ Plot drops to ◐: View Details has no command |
+| 2026-10-19 | minor | Express Tools ▸ Web ▸ URL Options is a drop-down button with Show URLs, Change URLs and Find and Replace URLs (observed) |
+| 2026-10-19 | minor | Express Tools ▸ Modify's two rows are centred in the panel as in AutoCAD; adjacent-large-button rule no longer treats separators as large buttons |
+| 2026-10-19 | trivial | Only large toggles are at least 38 px wide (AutoCAD's View Cube); other large buttons keep the 42 px minimum, which keeps Home, Insert and Annotate at their measured widths |
+| 2026-10-19 | minor | Manage ▸ Action Recorder has its slide-out (the Action Tree, disabled); the Named Views list stays enabled with no views; View Manager's row notes that VIEW asks on the command line |
+| 2026-10-19 | minor | Ribbon palette toggles (Home and View, Parametric's Parameters Manager) close their palette when clicked while pressed; View ▸ Palettes ▸ Count starts COUNT; Parametric ▸ Manage becomes ✅ |
+| 2026-10-19 | minor | View ▸ Model Viewports: the two and three-viewport arrangements and Join are commands of their own (`vports.2v` … `vports.3h`, `vports.join`); nine fewer ribbon items without a command |
+| 2026-10-19 | minor | Windows baseline: the Express Tools tab's eight panels (8 rows, all ◐); every ribbon tab is built; 44 more ribbon items without a command |
+| 2026-10-19 | minor | Windows baseline: the Output tab's two panels and the Collaborate tab's four (6 rows: 2 ✅, 4 ◐); Collaborate's online tools listed as intentionally absent but shown disabled; 12 more ribbon items without a command; adjacent large buttons stand with no gap between them, as in AutoCAD |
+| 2026-10-19 | minor | Windows baseline: the Manage tab's six panels (6 rows, all ◐); 22 more ribbon items without a command |
+| 2026-10-19 | minor | Windows baseline: the View tab's seven panels (7 rows: 1 ✅, 6 ◐); Layout Tabs shows and hides the layout tabs; TEXTSCR is a known command; large buttons are at least 38 px wide and panels can draw AutoCAD's thin separators between groups (Parametric's Geometric and Dimensional panels) |
+| 2026-10-19 | minor | Windows baseline: the Parametric tab's three panels (3 rows: 1 ✅, 2 ◐); three more ribbon items without a command |
+| 2026-10-19 | minor | Review fixes: Set Location and the block gallery (Home and Insert) are drop-down buttons; launchers carry AutoCAD's names; Home ▸ Annotation drops to ◐ (DIM makes only linear dimensions); Annotation Text Height drops down a list of heights; TEXTSIZE is capped at 1,000,000 |
+| 2026-10-19 | minor | Windows baseline: the Annotate tab's seven panels (7 rows: 2 ✅, 5 ◐); Find Text finds and selects text, Annotation Text Height sets TEXTSIZE (now checked by SETVAR) |
+| 2026-10-18 | minor | Windows baseline: the Insert tab's seven panels (7 rows: 1 ✅, 6 ◐); large labels of two or more words always take two lines, and a large split's ▾ sits right of the second line |
 | 2026-10-18 | major | Windows AutoCAD 2026 baseline: side-by-side rows for the title row, tab row, each Home panel, ribbon collapse, document tabs, viewport controls, ViewCube, navigation bar, command line, layout bar, status bar and Application menu (9 ✅, 15 ◐, 1 ✗); Autodesk online items listed as intentionally absent; ribbon items without a command listed (checked by a test); collapsed panel buttons keep whole words; ViewCube Home on hover; ZOOM prompt comma. The Mac table's command line, status bar and navigation bar rows point to it |
 | 2026-10-18 | minor | Status bar fits narrow windows; placeholder commands (ATTACH, SHARE, 3DORBIT) show disabled; 2D Object Snap with no modes opens Drafting Settings |
 | 2026-10-18 | minor | Navigation bar below the ViewCube (Pan, Zoom and its variants, Orbit; NAVBAR) and the drawing window's buttons at the top-right corner |

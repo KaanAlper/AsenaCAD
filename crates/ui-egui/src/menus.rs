@@ -35,11 +35,20 @@ pub const UI_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
     ("ui.animations", "Animation Effects", &[], None),
     ("ui.toggle.toolbar", "Tool Bar", &["Window", "Tool Bar"], None),
     ("ui.toggle.filetabs", "File Tab", &["Window", "File Tab"], None),
+    // View ▸ Interface ▸ Layout Tabs: `{on?: bool}` shows or hides the layout tabs on the status
+    // bar (no `on`: flips them) → `{on}`.
+    ("ui.toggle.layouttabs", "Layout Tabs", &[], None),
     ("ui.toggle.statusbar", "Status Bar", &["Window", "Status Bar"], None),
     ("ui.toggle.cmdline", "Command Line", &["Window", "Command Line"], Some("Cmd+9")),
     // AutoCAD's COMMANDLINE and COMMANDLINEHIDE (the command line's ×).
     ("commandline", "Command Line", &[], None),
     ("commandlinehide", "Hide Command Line", &[], None),
+    // AutoCAD's commands that close a palette (a pressed palette toggle on the ribbon runs them).
+    ("propertiesclose", "Close Properties", &[], None),
+    ("layerclose", "Close Layer Properties Manager", &[], None),
+    ("qcclose", "Close QuickCalc", &[], None),
+    ("externalreferencesclose", "Close External References", &[], None),
+    ("blockspaletteclose", "Close Blocks Palette", &[], None),
     // NAVBAR: the navigation bar on or off (`{on?: bool}`; its ⊗ turns it off).
     ("navbar", "Navigation Bar", &[], None),
     // The status bar's Customization menu: `{item, on?}` shows or hides one item.
@@ -73,6 +82,8 @@ pub const UI_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
     ("ui.dialog.about", "About AsenaCAD", &["Help", "About AsenaCAD"], None),
     ("ui.dialog.commands", "Command Reference", &["Help", "AsenaCAD Help"], Some("F1")),
     ("ui.toggle.history", "Command History", &["Window", "Command History"], Some("F2")),
+    // AutoCAD's TEXTSCR: opens the command history (its text window).
+    ("textscr", "Text Window", &[], None),
     ("ui.cmdline.lines", "Command Line History Lines", &[], None),
     ("ui.cmdline.clear", "Clear Command History", &[], None),
     ("ui.dialog.language", "Interface Language", &["Edit", "Interface Language"], None),
@@ -225,6 +236,10 @@ fn run_ui_command_inner(app: &mut CadApp, id: &str, params: &Value) -> Option<Re
         "ui.toggle.filetabs" => {
             toggle(&mut app.ui.show_file_tabs, params);
             Ok(Value::Null)
+        }
+        "ui.toggle.layouttabs" => {
+            toggle(&mut app.ui.show_layout_tabs, params);
+            Ok(json!({ "on": app.ui.show_layout_tabs }))
         }
         // Typed or chosen from a menu or the tool bar: ask for the file (or show the preview).
         "export" | "exp" | "import" | "imp" | "publish" | "preview" | "pre" if params.is_null() && app.session.state().is_ok() => {
@@ -396,6 +411,21 @@ fn run_ui_command_inner(app: &mut CadApp, id: &str, params: &Value) -> Option<Re
         }
         "parameters" | "par" if params.is_null() => {
             app.ui.dialog = Some("parameters".into());
+            Ok(Value::Null)
+        }
+        "propertiesclose" | "qcclose" | "externalreferencesclose" => {
+            let panel = match id {
+                "propertiesclose" => "properties",
+                "qcclose" => "quickCalc",
+                _ => "externalReferences",
+            };
+            crate::docking::command(app, false, &json!({ "operation": "close", "panel": panel }))
+        }
+        "layerclose" | "blockspaletteclose" => {
+            let dialog = if id == "layerclose" { "layers" } else { "blocks" };
+            if app.ui.dialog.as_deref() == Some(dialog) {
+                app.ui.dialog = None;
+            }
             Ok(Value::Null)
         }
         "parametersclose" if params.is_null() => {

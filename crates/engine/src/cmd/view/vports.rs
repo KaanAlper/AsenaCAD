@@ -36,6 +36,10 @@ pub fn specs() -> Vec<CommandSpec> {
             )
             .interactive(vports_factory),
         CommandSpec::new("vports.activate", "Set Current Viewport", run_activate).params("{index: tile number from 1}").noundo(),
+        // -VPORTS Join as a command of its own (View ▸ Model Viewports ▸ Join).
+        CommandSpec::new("vports.join", "Join", |s, p| run_vports(s, &with_option(p, "join")))
+            .params("{dominant?, join?} (tile numbers from 1; dominant defaults to the current tile; Model tab only)")
+            .interactive(|_| Ok(Box::new(VportsM { stage: Stage::Dominant, ..Default::default() }))),
     ]
 }
 
@@ -55,6 +59,15 @@ pub(in crate::cmd) fn model_vports(s: &Session, count: Option<usize>) -> Option<
         return None;
     }
     Some(Box::new(VportsM { count, ..Default::default() }))
+}
+
+/// The tile machine for `count` tiles in `arrangement` (the ribbon's Viewport Configuration
+/// list): it asks nothing. `None` outside the Model tab.
+pub(in crate::cmd) fn model_vports_arranged(s: &Session, count: usize, arrangement: &'static str) -> Option<Box<dyn Interactive>> {
+    if s.layout_space() != Space::Model {
+        return None;
+    }
+    Some(Box::new(VportsM { count: Some(count), arrangement: Some(arrangement), ..Default::default() }))
 }
 
 /// The JSON form of VPORTS / View > Viewports > n in the Model tab: `count` tiles (1: single).
@@ -448,6 +461,8 @@ struct VportsM {
     stage: Stage,
     /// View > Viewports > n: start at that count.
     count: Option<usize>,
+    /// The arrangement for 2 or 3 tiles, when the command names it (`vports.2v` …).
+    arrangement: Option<&'static str>,
 }
 
 impl VportsM {
@@ -467,6 +482,9 @@ impl VportsM {
         if n <= 1 {
             return Self::run(s, json!({ "option": "single" }));
         }
+        if let Some(arrangement) = self.arrangement {
+            return Self::run(s, json!({ "option": n.to_string(), "arrangement": arrangement }));
+        }
         self.stage = Stage::Arrange(n);
         Ok(Step::Continue)
     }
@@ -477,6 +495,9 @@ impl Interactive for VportsM {
         "VPORTS"
     }
     fn begin(&mut self, s: &mut Session) -> Result<Step> {
+        if self.stage == Stage::Dominant {
+            model_only(s)?;
+        }
         match self.count {
             Some(n) => self.count(s, n),
             None => Ok(Step::Continue),

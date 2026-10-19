@@ -23,6 +23,13 @@ const LARGE_ICON: f32 = 32.0;
 const SMALL_ICON: f32 = 16.0;
 /// Icon-only small buttons are this wide.
 const SMALL_W: f32 = 24.0;
+/// A large button is at least this wide: AutoCAD's are 3 px wider than the icon either side
+/// when the label is short (Line, Clip, Field, Run Script, File Tabs are 38 px).
+const LARGE_MIN_W: f32 = LARGE_ICON + 6.0;
+/// What a large split (and a drop-down with a two-line label) adds to its widest label line:
+/// AutoCAD leaves room for the ▾ on both sides (Circle 52 px, Measure 67, Detect and Convert 79,
+/// Set Location 64).
+const LARGE_DROP_PAD: f32 = 20.0;
 /// The lower part of a large split button that opens its menu (label and ▾).
 const LARGE_SPLIT_ARROW_H: f32 = 35.0;
 /// The ▾ part of a small split button.
@@ -81,6 +88,22 @@ pub fn is_on(app: &CadApp, state: Toggle) -> bool {
         Toggle::GroupSelection => app.session.settings.pickstyle & 1 != 0,
         Toggle::GroupBox => var("GROUPDISPLAYMODE") == Some(2),
         Toggle::QuickCalcPalette => app.ui.docking.layout.contains(&crate::docking::Panel::QuickCalc),
+        // No xref fading is drawn yet: the button only reflects XDWGFADECTL as the drawing has it.
+        Toggle::XrefFade => var("XDWGFADECTL").is_some_and(|v| v > 0),
+        Toggle::ParametersPalette => app.ui.dialog.as_deref() == Some("parameters"),
+        // CCONSTRAINTFORM isn't modelled yet: every constraint is dynamic, AutoCAD's default.
+        Toggle::DynamicConstraints => var("CCONSTRAINTFORM").unwrap_or(0) != 1,
+        Toggle::AnnotationalConstraints => var("CCONSTRAINTFORM") == Some(1),
+        Toggle::UcsIcon => app.ui.show_ucs_icon,
+        Toggle::ViewCube => app.ui.show_viewcube,
+        Toggle::NavBar => app.ui.show_navbar,
+        Toggle::CommandLine => app.ui.show_command_line,
+        Toggle::FileTabs => app.ui.show_file_tabs,
+        Toggle::LayoutTabs => app.ui.show_layout_tabs,
+        Toggle::PropertiesPalette => app.ui.docking.layout.contains(&crate::docking::Panel::Properties),
+        Toggle::BlocksPalette => app.ui.dialog.as_deref() == Some("blocks"),
+        Toggle::XrefPalette => app.ui.docking.layout.contains(&crate::docking::Panel::ExternalRefs),
+        Toggle::NotBuilt => false,
     }
 }
 
@@ -116,16 +139,15 @@ fn large_label(ui: &Ui, text: &str, enabled: bool) -> std::sync::Arc<egui::Galle
     ui.painter().layout_job(job)
 }
 
-/// `text` as AutoCAD lays a large label out: one line when it fits [`LARGE_WRAP`], else two,
-/// broken at the last space that keeps the first line within it ("Detect and / Convert",
-/// "Layer / Properties"), or after the first word when even that is wider.
+/// `text` as AutoCAD lays a large label out: a single word on one line; more words on two,
+/// broken at the last space that keeps the first line within [`LARGE_WRAP`] ("Detect and /
+/// Convert", "Layer / Properties", "Data / Link"), or after the first word when even that is
+/// wider ("Add / Current Scale"). Balancing the two lines would give "Add Current / Scale",
+/// which AutoCAD doesn't (`tests/ribbon_tabs/labels.rs` lists every large label of the built tabs).
 fn large_lines(ui: &Ui, text: &str) -> String {
     let width = |s: &str| ui.painter().layout_no_wrap(s.to_string(), crate::theme::ribbon_font(ui.ctx()), text_color(true)).size().x;
     let spaces = text.match_indices(' ').map(|(i, _)| i);
     let Some(first) = spaces.clone().next() else { return text.to_string() };
-    if width(text) <= LARGE_WRAP {
-        return text.to_string();
-    }
     let at = spaces.take_while(|&i| width(&text[..i]) <= LARGE_WRAP).last().unwrap_or(first);
     format!("{}\n{}", &text[..at], text[at..].trim_start())
 }
@@ -151,15 +173,19 @@ fn paint_large(ui: &Ui, rect: Rect, icon: Icon, label: &str, enabled: bool, chev
     let top = rect.top() + 4.0 + LARGE_ICON + 3.0;
     let bottom = top + galley.size().y;
     // Centre-aligned rows are laid out around x = 0. Under a one-line label the ▾ goes below
-    // it; a two-line label ("Detect and / Convert") has it right of its last line.
-    let chevron_at = match galley.rows.as_slice() {
-        [_, .., last] => {
+    // it; a two-line label ("Detect and / Convert") has it right of its last line, and moves
+    // the label left as far as the ▾ needs room in the button.
+    let (shift, chevron_at) = match galley.rows.as_slice() {
+        [_, .., last] if chevron => {
             let row = last.rect();
-            pos2((rect.center().x + row.right() + 7.0).min(rect.right() - 5.0), top + row.center().y)
+            let at = rect.center().x + row.right() + 7.0;
+            let room = ((rect.width() - galley.size().x) / 2.0).max(0.0);
+            let shift = (at + 5.0 - rect.right()).clamp(0.0, room);
+            (shift, pos2((at - shift).min(rect.right() - 5.0), top + row.center().y))
         }
-        _ => pos2(rect.center().x, (bottom + 5.0).min(rect.bottom() - 5.0)),
+        _ => (0.0, pos2(rect.center().x, (bottom + 5.0).min(rect.bottom() - 5.0))),
     };
-    ui.painter().galley(pos2(rect.center().x, top), galley, text_color(enabled));
+    ui.painter().galley(pos2(rect.center().x - shift, top), galley, text_color(enabled));
     if chevron {
         paint_chevron(ui, chevron_at, enabled);
     }
@@ -169,7 +195,20 @@ fn paint_large(ui: &Ui, rect: Rect, icon: Icon, label: &str, enabled: bool, chev
 /// Properties" is its "Properties" line plus about that), and never narrower than the icon
 /// with 5 px either side.
 fn large_width(ui: &Ui, label: &str) -> f32 {
-    (large_label(ui, label, true).size().x + 6.0).max(LARGE_ICON + 10.0)
+    (large_label(ui, label, true).size().x + 6.0).max(LARGE_MIN_W)
+}
+
+/// A large split button's width: its widest label line and room for the ▾ either side, whether
+/// the ▾ sits under a one-line label (Circle ▾) or right of the second line (Revision / Cloud ▾).
+fn large_split_width(ui: &Ui, label: &str) -> f32 {
+    (large_label(ui, label, true).size().x + LARGE_DROP_PAD).max(LARGE_MIN_W)
+}
+
+/// A large drop-down button's width: with a two-line label as a split's (Set / Location ▾);
+/// with a one-line label as a plain button's, its ▾ under the label (Insert's block gallery is
+/// 38 px).
+fn large_menu_width(ui: &Ui, label: &str) -> f32 {
+    if large_label(ui, label, true).rows.len() > 1 { large_split_width(ui, label) } else { large_width(ui, label) }
 }
 
 /// Paint a small face (16 px icon, optionally the label right of it) into `rect`.
@@ -198,12 +237,31 @@ pub fn small_button(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd:
 }
 
 /// A button that shows pressed while `state` is on. Clicking runs `cmd` without parameters,
-/// which flips the state (opens the palette, toggles PICKSTYLE, …).
+/// which flips the state (opens the palette, toggles PICKSTYLE, …); a toggle with no state yet
+/// starts its command like a button (COUNT). Clicking a pressed palette toggle runs the palette's
+/// close command instead.
 pub fn toggle(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd: &str, size: Size, state: Toggle) -> Response {
     let on = is_on(app, state);
-    plain_button(ui, app, icon, label, cmd, size, Some(on))
+    let resp = plain_button(ui, app, icon, label, cmd, size, Some(on));
+    if resp.clicked() {
+        app.cmd.buffer.clear();
+        match state.close_command().filter(|_| on) {
+            // Errors are echoed to the command history by `run`.
+            Some(close) => {
+                let _ = app.run(close, serde_json::Value::Null);
+            }
+            // No state to flip (COUNT, with no Count palette yet): start it like a button.
+            None if state == Toggle::NotBuilt => start(app, cmd),
+            None => {
+                let _ = app.run(cmd, serde_json::Value::Null);
+            }
+        }
+    }
+    resp
 }
 
+/// Draws a button; a plain one (`on: None`) starts `cmd` when clicked, a toggle's click is
+/// handled by [`toggle`].
 fn plain_button(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd: &str, size: Size, on: Option<bool>) -> Response {
     let why = availability(ui, app, cmd);
     let enabled = why.is_ready();
@@ -221,15 +279,8 @@ fn plain_button(ui: &mut Ui, app: &mut CadApp, icon: Icon, label: &str, cmd: &st
     }
     icons::describe_control(ui, &resp, label, on, false);
     let resp = tooltips(resp, shown, &why);
-    if resp.clicked() {
-        match on {
-            Some(_) => {
-                app.cmd.buffer.clear();
-                // Errors are echoed to the command history by `run`.
-                let _ = app.run(cmd, serde_json::Value::Null);
-            }
-            None => start(app, cmd),
-        }
+    if resp.clicked() && on.is_none() {
+        start(app, cmd);
     }
     resp
 }
@@ -256,7 +307,7 @@ pub fn split_button(ui: &mut Ui, app: &mut CadApp, key: &str, label: Option<&str
     let face_enabled = face_why.is_ready();
     let menu_enabled = menu.iter().any(|e| matches!(e, Entry::Command { cmd, .. } if availability(ui, app, cmd).is_known()));
     let (w, h) = match size {
-        Size::Large => (large_width(ui, shown), LARGE_H),
+        Size::Large => (large_split_width(ui, shown), LARGE_H),
         Size::Small { label } => (small_width(ui, label.then_some(shown)) + SMALL_SPLIT_ARROW_W, SMALL_H),
     };
     // Space only: the face and the ▾ part are the two interactive (and accessible) widgets.
@@ -291,29 +342,108 @@ pub fn split_button(ui: &mut Ui, app: &mut CadApp, key: &str, label: Option<&str
     let menu_label = crate::tf!("{label} options", label = shown);
     icons::describe_control(ui, &arrow, &menu_label, None, false);
     let arrow = tooltips(arrow, &menu_label, &Availability::Missing);
-    let mut chosen = None;
-    egui::Popup::from_toggle_button_response(&arrow).close_behavior(egui::PopupCloseBehavior::CloseOnClick).show(|ui| {
-        ui.set_min_width(MENU_W);
-        for (i, e) in menu.iter().enumerate() {
-            match e {
-                Entry::Separator => {
-                    ui.separator();
-                }
-                Entry::Command { icon, label, cmd } => {
-                    if menu_entry(ui, app, *icon, label, cmd).clicked() {
-                        chosen = Some((i, *cmd));
-                    }
-                }
-            }
-        }
-    });
-    if let Some((i, cmd)) = chosen {
+    if let Some((i, cmd)) = menu_popup(app, &arrow, menu, matches!(size, Size::Large)) {
         RibbonState::remember(ui.ctx(), key, i);
         start(app, cmd);
     } else if face.clicked() {
         start(app, cmd);
     }
     face
+}
+
+/// The menu `anchor` toggles open: `menu`'s entries; returns the one chosen (index, command).
+/// `large`: the menu of a large button, whose rows have large icons (AutoCAD's Circle, Set
+/// Location and URL Options lists: 40 px rows with 32 px icons, as wide as their longest entry).
+fn menu_popup(app: &CadApp, anchor: &Response, menu: &[Entry], large: bool) -> Option<(usize, &'static str)> {
+    let mut chosen = None;
+    let mut popup = egui::Popup::from_toggle_button_response(anchor).close_behavior(egui::PopupCloseBehavior::CloseOnClick);
+    if large {
+        // AutoCAD's large rows run edge to edge and follow each other with no gap.
+        popup = popup.frame(egui::Frame::popup(&anchor.ctx.global_style()).inner_margin(1.0));
+    }
+    popup.show(|ui| {
+        let row = if large { MenuRow::large(ui, menu) } else { MenuRow::SMALL };
+        ui.set_min_width(row.width);
+        if large {
+            ui.spacing_mut().item_spacing.y = 0.0;
+        }
+        for (i, e) in menu.iter().enumerate() {
+            match e {
+                Entry::Separator if large => {
+                    ui.add(egui::Separator::default().spacing(LARGE_MENU_SEPARATOR));
+                }
+                Entry::Separator => {
+                    ui.separator();
+                }
+                Entry::Command { icon, label, cmd } => {
+                    if menu_entry(ui, app, row, *icon, label, cmd).clicked() {
+                        chosen = Some((i, *cmd));
+                    }
+                }
+            }
+        }
+    });
+    chosen
+}
+
+/// The geometry of a split menu's rows.
+#[derive(Clone, Copy)]
+struct MenuRow {
+    width: f32,
+    height: f32,
+    icon: f32,
+    /// Where the label starts, from the row's left edge.
+    text: f32,
+}
+
+impl MenuRow {
+    const SMALL: Self = Self { width: MENU_W, height: SMALL_H + 2.0, icon: SMALL_ICON, text: 30.0 };
+    /// A large row: 40 px tall, the 32 px icon 4 px from the left, the label 40 px in, 8 px
+    /// to spare after the longest label.
+    fn large(ui: &Ui, menu: &[Entry]) -> Self {
+        const TEXT: f32 = LARGE_ICON + 8.0;
+        let widest = menu
+            .iter()
+            .filter_map(|e| match e {
+                Entry::Command { label, .. } => Some(small_label(ui, crate::i18n::t(label), true).size().x),
+                Entry::Separator => None,
+            })
+            .fold(0.0_f32, f32::max);
+        Self { width: TEXT + widest + 8.0, height: LARGE_MENU_ROW_H, icon: LARGE_ICON, text: TEXT }
+    }
+}
+
+/// A large menu row's height, and the space a separator between two of them takes.
+const LARGE_MENU_ROW_H: f32 = 40.0;
+const LARGE_MENU_SEPARATOR: f32 = 6.0;
+
+/// A drop-down button: the whole button opens `menu`, whose entries start their commands. It is
+/// enabled while any entry's command exists; `key` keeps equal buttons apart.
+pub fn menu_button(ui: &mut Ui, app: &mut CadApp, key: &str, icon: Icon, label: &str, size: Size, menu: &[Entry]) -> Response {
+    let enabled = menu.iter().any(|e| matches!(e, Entry::Command { cmd, .. } if availability(ui, app, cmd).is_known()));
+    let shown = crate::i18n::t(label);
+    let (w, h) = match size {
+        Size::Large => (large_menu_width(ui, shown), LARGE_H),
+        Size::Small { label } => (small_width(ui, label.then_some(shown)) + SMALL_SPLIT_ARROW_W, SMALL_H),
+    };
+    let (_, rect) = ui.allocate_space(vec2(w, h));
+    let resp = ui.add_enabled_ui(enabled, |ui| ui.interact(rect, ui.id().with(("ribbon-menu", key)), Sense::click())).inner;
+    let open = egui::Popup::is_id_open(ui.ctx(), egui::Popup::default_response_id(&resp));
+    paint_state(ui, rect, &resp, open);
+    match size {
+        Size::Large => paint_large(ui, rect, icon, shown, enabled, true),
+        Size::Small { label } => {
+            let face = Rect::from_min_max(rect.min, pos2(rect.right() - SMALL_SPLIT_ARROW_W, rect.bottom()));
+            paint_small(ui, face, icon, label.then_some(shown), enabled);
+            paint_chevron(ui, pos2(rect.right() - SMALL_SPLIT_ARROW_W / 2.0, rect.center().y), enabled);
+        }
+    }
+    icons::describe_control(ui, &resp, label, None, false);
+    let resp = tooltips(resp, shown, &Availability::Missing);
+    if let Some((_, cmd)) = menu_popup(app, &resp, menu, matches!(size, Size::Large)) {
+        start(app, cmd);
+    }
+    resp
 }
 
 /// The entry a split's face shows and runs: its icon, label and command.
@@ -343,25 +473,44 @@ pub fn item_width(ui: &Ui, key: &str, item: &Item, compact: bool) -> f32 {
         Item::Button { label, size, .. } | Item::Toggle { label, size, .. } => width(size, label),
         Item::Split { label, size, menu, default, .. } => {
             let face = label.unwrap_or(split_face(ui.ctx(), key, menu, default).1);
-            let arrow = if matches!(size, Size::Small { .. }) { SMALL_SPLIT_ARROW_W } else { 0.0 };
-            width(size, face) + arrow
+            match shown_size(size, compact) {
+                Size::Large => large_split_width(ui, crate::i18n::t(face)),
+                Size::Small { .. } => width(size, face) + SMALL_SPLIT_ARROW_W,
+            }
         }
+        Item::Menu { label, size, .. } => match shown_size(size, compact) {
+            Size::Large => large_menu_width(ui, crate::i18n::t(label)),
+            Size::Small { .. } => width(size, label) + SMALL_SPLIT_ARROW_W,
+        },
         Item::Combo { width, .. } | Item::Slider { width, .. } => width,
+        Item::Separator => SEPARATOR_W,
     }
 }
 
+/// An in-panel separator's width; its line runs down the middle.
+const SEPARATOR_W: f32 = 10.0;
+
+/// A thin vertical line between two groups of a panel's columns, filling the item's rect.
+pub fn separator(ui: &mut Ui) -> Response {
+    let (rect, resp) = ui.allocate_exact_size(vec2(SEPARATOR_W, LARGE_H), Sense::hover());
+    let x = rect.center().x.round() + 0.5;
+    ui.painter().vline(x, rect.y_range().shrink(4.0), Stroke::new(1.0, Tokens::get().border));
+    resp
+}
+
 /// One row of a split button's menu: icon and label.
-fn menu_entry(ui: &mut Ui, app: &CadApp, icon: Icon, label: &str, cmd: &str) -> Response {
+fn menu_entry(ui: &mut Ui, app: &CadApp, row: MenuRow, icon: Icon, label: &str, cmd: &str) -> Response {
     let why = availability(ui, app, cmd);
     let enabled = why.is_ready();
     let shown = crate::i18n::t(label);
-    let resp = reserve(ui, vec2(MENU_W, SMALL_H + 2.0), enabled, Sense::click());
+    let resp = reserve(ui, vec2(row.width, row.height), enabled, Sense::click());
     paint_state(ui, resp.rect, &resp, false);
-    let icon_rect = Rect::from_center_size(pos2(resp.rect.left() + 14.0, resp.rect.center().y), Vec2::splat(SMALL_ICON));
+    let icon_x = resp.rect.left() + (row.text - row.icon) / 2.0;
+    let icon_rect = Rect::from_min_size(pos2(icon_x, resp.rect.center().y - row.icon / 2.0), Vec2::splat(row.icon));
     icons::paint(ui.painter(), icon_rect, icon, !enabled);
     let galley = small_label(ui, shown, enabled);
     let y = resp.rect.center().y - galley.size().y / 2.0;
-    ui.painter().galley(pos2(resp.rect.left() + 30.0, y), galley, text_color(enabled));
+    ui.painter().galley(pos2(resp.rect.left() + row.text, y), galley, text_color(enabled));
     icons::describe_control(ui, &resp, label, None, false);
     resp.on_disabled_hover_ui(|ui| {
         ui.label(why.disabled_text());

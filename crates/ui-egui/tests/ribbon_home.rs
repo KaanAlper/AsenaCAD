@@ -58,6 +58,24 @@ fn the_circle_menu_lists_autocads_variants_in_order_with_separators() {
 }
 
 #[test]
+fn a_large_splits_menu_has_large_rows_and_a_small_splits_small_ones() {
+    // AutoCAD's Circle list: 40 px rows with 32 px icons, about as wide as its longest entry.
+    let mut h = harness("Draw");
+    h.get_by_label("Circle options").click();
+    h.run_steps(3);
+    let row = h.get_by_label("Center, Radius").rect();
+    assert_eq!(row.height(), 40.0, "a large row: {row:?}");
+    assert!(row.width() > 110.0 && row.width() < 160.0, "as wide as its longest entry: {row:?}");
+    let circle = h.get_by_role_and_label(Role::Button, "Circle").rect();
+    assert!((row.left() - circle.left()).abs() < 12.0, "the list opens under the button: {row:?} {circle:?}");
+
+    let mut h = harness("Modify");
+    h.get_by_label("Trim options").click();
+    h.run_steps(3);
+    assert_eq!(h.get_by_label("Extend").rect().height(), 24.0, "a small split's list keeps small rows");
+}
+
+#[test]
 fn choosing_2_point_keeps_the_circle_label_and_starts_circle_2p() {
     let mut h = harness("Draw");
     h.get_by_label("Circle options").click();
@@ -286,7 +304,7 @@ fn item_labels(items: &[Item]) -> Vec<&'static str> {
     items
         .iter()
         .map(|it| match *it {
-            Item::Button { label, .. } | Item::Toggle { label, .. } => label,
+            Item::Button { label, .. } | Item::Toggle { label, .. } | Item::Menu { label, .. } => label,
             Item::Split { label: Some(l), .. } => l,
             Item::Split { label: None, menu, default, .. } => match menu.get(default) {
                 Some(Entry::Command { label, .. }) => label,
@@ -294,6 +312,7 @@ fn item_labels(items: &[Item]) -> Vec<&'static str> {
             },
             Item::Combo { kind, .. } => kind.label(),
             Item::Slider { kind, .. } => kind.label(),
+            Item::Separator => "|",
         })
         .collect()
 }
@@ -344,8 +363,7 @@ fn at_1280_px_the_rightmost_panels_collapse_into_panel_buttons() {
             let found = h.query_all_by_label(label).any(|n| n.rect().top() >= button.bottom() - 0.5);
             assert!(found, "{}'s popup shows {label}", p.label);
         }
-        if let Some(cmd) = p.launcher {
-            let label = cadcraft_engine::find_command(cmd).map_or(p.label, |c| c.label);
+        if let Some(label) = p.launcher_label() {
             assert!(h.query_all_by_label(label).any(|n| n.rect().width() <= 14.5), "{}: launcher", p.label);
         }
         assert!(h.query_all_by_label(p.label).count() >= 2, "{}: the popup has its title bar", p.label);
@@ -540,18 +558,20 @@ fn ribbon_visuals() {
 }
 
 #[test]
-fn the_tab_row_has_all_nine_tabs_and_unbuilt_ones_say_so() {
+fn the_tab_row_has_all_nine_tabs_and_each_shows_its_own_panels() {
     let mut h = ribbon(1906.0, 1026.0);
     let tabs = ["Home", "Insert", "Annotate", "Parametric", "View", "Manage", "Output", "Collaborate", "Express Tools"];
     let lefts: Vec<f32> = tabs.iter().map(|t| h.get_by_role_and_label(Role::Tab, t).rect().left()).collect();
     assert!(lefts.windows(2).all(|w| w[0] < w[1]), "AutoCAD's order: {lefts:?}");
-    assert!(h.query_by_label(ribbon::UNBUILT_TAB_NOTE).is_none(), "Home is built");
+    h.get_by_role_and_label(Role::Tab, "Express Tools").click();
+    h.run_steps(3);
+    assert_eq!(h.state().ui.ribbon_tab, "Express Tools");
+    assert_eq!(h.get_by_role_and_label(Role::Tab, "Express Tools").accesskit_node().is_selected(), Some(true));
+    assert!(h.query_by_label("Line").is_none() && h.query_by_label("Polyline").is_none(), "no Home panels");
+    assert!(h.query_by_label("Super Hatch").is_some(), "Express Tools' panels instead");
     h.get_by_role_and_label(Role::Tab, "Insert").click();
     h.run_steps(3);
-    assert_eq!(h.state().ui.ribbon_tab, "Insert");
-    assert_eq!(h.get_by_role_and_label(Role::Tab, "Insert").accesskit_node().is_selected(), Some(true));
-    assert!(h.query_by_label(ribbon::UNBUILT_TAB_NOTE).is_some(), "an unbuilt tab shows its note");
-    assert!(h.query_by_label("Line").is_none() && title_rect(&h, "Draw").is_none(), "and no Home panels");
+    assert!(h.query_by_label("Line").is_none() && h.query_by_label("Field").is_some(), "Insert's panels instead of Home's");
     h.get_by_role_and_label(Role::Tab, "Home").click();
     h.run_steps(3);
     assert!(h.query_by_label("Line").is_some());

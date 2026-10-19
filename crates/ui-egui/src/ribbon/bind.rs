@@ -93,7 +93,32 @@ fn current(app: &CadApp, kind: Combo) -> (String, bool) {
         Combo::Transparency => (crate::i18n::t("ByLayer").to_string(), false),
         // Model documentation (VIEWBASE) and its styles don't exist yet.
         Combo::SectionViewStyle | Combo::DetailViewStyle => (String::new(), false),
+        // FRAME and UOSNAP aren't modelled yet: AutoCAD's defaults, shown disabled.
+        Combo::XrefFrames => (crate::tl!("*Frames vary*").to_string(), false),
+        Combo::UnderlaySnap => (crate::tl!("Snap to Underlays ON").to_string(), false),
+        Combo::FindText => (String::new(), true),
+        Combo::TextHeight => (height_text(text_size(app)), true),
+        // TEXTLAYER, DIMLAYER, CENTERLAYER and the multileader layer aren't modelled yet: new
+        // annotations go on the current layer, which is what "Use Current" means.
+        Combo::TextLayer | Combo::DimLayer | Combo::CenterLayer | Combo::MLeaderLayer => (crate::tl!("Use Current").to_string(), false),
+        // The drawing doesn't record which view was restored last. Enabled with no views too, as
+        // in AutoCAD: the list then holds only the current entry.
+        Combo::NamedView => (crate::tl!("Unsaved View").to_string(), true),
+        // No action macros can be recorded yet.
+        Combo::ActionMacro | Combo::ActionTree => (String::new(), false),
+        // The export area and the page setup override aren't modelled yet: AutoCAD's defaults,
+        // shown disabled.
+        Combo::ExportArea => (crate::tl!("Export: Display").to_string(), false),
+        Combo::ExportPageSetup => (crate::tl!("Page Setup: Current").to_string(), false),
     }
+}
+
+/// The named views of the space shown: model space views in the Model tab, the layout's own in a
+/// layout.
+fn space_views<'d>(app: &CadApp, d: &'d Drawing) -> impl Iterator<Item = &'d str> {
+    let space = app.session.layout_space();
+    let layout = space.layout().map(str::to_string);
+    d.views.iter().filter(move |v| v.layout == layout).map(|v| v.name.as_str())
 }
 
 /// The entries of `kind`'s list, built only while the list is open.
@@ -128,13 +153,140 @@ fn choices(app: &CadApp, kind: Combo) -> Vec<Choice> {
                 names(BY.into_iter().chain(t.styles.iter().map(|s| s.name.as_str())), "plotstyle", |n| json!({ "name": n }))
             })
         }
+        Combo::NamedView => std::iter::once((crate::tl!("Unsaved View").to_string(), "ui.noop", Value::Null))
+            .chain(names(space_views(app, d), "view", |n| json!({ "option": "restore", "name": n })))
+            .collect(),
         Combo::AttributeDisplay => ATTMODES.iter().map(|(_, l, k)| (crate::i18n::t(l).to_string(), "attdisp", json!({ "mode": k }))).collect(),
-        Combo::Transparency | Combo::SectionViewStyle | Combo::DetailViewStyle => Vec::new(),
+        Combo::Transparency
+        | Combo::SectionViewStyle
+        | Combo::DetailViewStyle
+        | Combo::XrefFrames
+        | Combo::UnderlaySnap
+        | Combo::FindText
+        | Combo::TextHeight
+        | Combo::TextLayer
+        | Combo::DimLayer
+        | Combo::CenterLayer
+        | Combo::MLeaderLayer
+        | Combo::ActionMacro
+        | Combo::ActionTree
+        | Combo::ExportArea
+        | Combo::ExportPageSetup => Vec::new(),
     }
+}
+
+/// A text height as AutoCAD's box shows it: up to four decimals, no trailing zeros ("2.5").
+fn height_text(v: f64) -> String {
+    let text = format!("{v:.4}");
+    let text = text.trim_end_matches('0').trim_end_matches('.');
+    if text.is_empty() || text == "-" { "0".to_string() } else { text.to_string() }
+}
+
+/// TEXTSIZE, or the default for the drawing's units when the header has none.
+fn text_size(app: &CadApp) -> f64 {
+    cadcraft_engine::sysvars::get(&app.session, "TEXTSIZE").and_then(|v| v.as_f64()).filter(|v| v.is_finite()).unwrap_or(0.2)
+}
+
+/// Our own choice of common text heights for the height list: paper-like sizes in the drawing's
+/// units (ISO 3098's series in a metric drawing).
+const METRIC_HEIGHTS: [f64; 6] = [1.8, 2.5, 3.5, 5.0, 7.0, 10.0];
+const IMPERIAL_HEIGHTS: [f64; 6] = [0.1, 0.125, 0.1875, 0.25, 0.375, 0.5];
+/// The height list never grows past this many entries, however many heights the drawing uses.
+const MAX_HEIGHTS: usize = 24;
+
+/// The Annotation Text Height list: the current height, the heights the drawing's text and
+/// multiline text use, and the common sizes, smallest first, each once.
+fn heights(app: &CadApp) -> Vec<f64> {
+    let Ok(d) = app.session.doc() else { return Vec::new() };
+    let common = if d.header.i64("MEASUREMENT", 0) == 1 { METRIC_HEIGHTS } else { IMPERIAL_HEIGHTS };
+    let used = std::iter::once(&d.model).chain(d.layouts.iter().map(|l| &l.entities)).flat_map(|st| st.iter()).filter_map(|e| match &e.kind {
+        cadcraft_doc::EntityKind::Text(t) => Some(t.height),
+        cadcraft_doc::EntityKind::MText(t) => Some(t.height),
+        _ => None,
+    });
+    let mut out: Vec<f64> = std::iter::once(text_size(app)).chain(common).chain(used).filter(|h| h.is_finite() && *h > 0.0).collect();
+    out.sort_by(f64::total_cmp);
+    out.dedup_by(|a, b| height_text(*a) == height_text(*b));
+    out.truncate(MAX_HEIGHTS);
+    out
+}
+
+/// The ▾ part of an editable combo box.
+const COMBO_ARROW_W: f32 = 18.0;
+
+/// The editable boxes: Find Text (Enter finds the typed text with FIND, which selects the
+/// objects it is in) and Annotation Text Height, an editable combo box (Enter or an entry of its
+/// ▾ list sets TEXTSIZE). While it isn't being edited, the height box shows the drawing's value.
+fn text_field(ui: &mut Ui, app: &mut CadApp, kind: Combo, width: f32) -> Response {
+    let label = crate::i18n::t(kind.label());
+    let id = egui::Id::new(("ribbon-field", kind));
+    let buffer = id.with("text");
+    let (value, _) = current(app, kind);
+    let focused = ui.memory(|m| m.has_focus(id));
+    let mut text = match kind {
+        Combo::TextHeight if !focused => value.clone(),
+        _ => ui.data(|d| d.get_temp::<String>(buffer)).unwrap_or_default(),
+    };
+    let enabled = app.session.doc().is_ok();
+    let list = kind == Combo::TextHeight;
+    let hint = if kind == Combo::FindText { crate::tl!("Find text") } else { "" };
+    let edit = egui::TextEdit::singleline(&mut text).id(id).hint_text(hint);
+    let box_w = if list { width - COMBO_ARROW_W } else { width };
+    let (resp, arrow) = ui
+        .add_enabled_ui(enabled, |ui| {
+            ui.spacing_mut().item_spacing.x = 0.0;
+            let h = ui.available_height();
+            let resp = ui.add_sized(egui::vec2(box_w, h), edit);
+            let arrow = list.then(|| ui.allocate_exact_size(egui::vec2(COMBO_ARROW_W, h), egui::Sense::click()).1);
+            (resp, arrow)
+        })
+        .inner;
+    let entered = resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
+    resp.widget_info(|| {
+        let mut info = WidgetInfo::labeled(WidgetType::TextEdit, resp.enabled(), label);
+        info.current_text_value = Some(text.clone());
+        info
+    });
+    crate::control::record_widget(ui, &resp, label, "textbox", None);
+    let typed = text.trim().to_string();
+    ui.data_mut(|d| d.insert_temp(buffer, text));
+    let mut picked = None;
+    if let Some(arrow) = arrow {
+        let t = crate::theme::Tokens::get();
+        if arrow.hovered() && arrow.enabled() {
+            ui.painter().rect_filled(arrow.rect, 2.0, t.ribbon_hover);
+        }
+        let chevron = egui::Rect::from_center_size(arrow.rect.center(), egui::Vec2::splat(10.0));
+        crate::icons::paint(ui.painter(), chevron, crate::icons::Icon::ChevronDown, !arrow.enabled());
+        let options = crate::tf!("{label} options", label = label);
+        crate::icons::describe_control(ui, &arrow, &options, None, false);
+        egui::Popup::from_toggle_button_response(&arrow).close_behavior(egui::PopupCloseBehavior::CloseOnClick).show(|ui| {
+            ui.set_min_width(width - 8.0);
+            for h in heights(app) {
+                let shown = height_text(h);
+                if ui.selectable_label(shown == value, shown.as_str()).clicked() {
+                    picked = Some(h);
+                }
+            }
+        });
+    }
+    // Errors are echoed to the command history by `run`; a typed height that isn't a positive
+    // number is left alone and the box shows the drawing's value again.
+    let height = picked.or_else(|| (entered && list).then(|| typed.parse::<f64>().ok()).flatten().filter(|v| v.is_finite() && *v > 0.0));
+    if let Some(v) = height {
+        let _ = app.run("setvar", json!({ "name": "TEXTSIZE", "value": v }));
+    }
+    if entered && kind == Combo::FindText && !typed.is_empty() {
+        let _ = app.run("find", json!({ "find": typed }));
+    }
+    resp.on_hover_text(label)
 }
 
 /// A combo box of `width` showing the current value of `kind`; choosing an entry runs its command.
 pub fn combo(ui: &mut Ui, app: &mut CadApp, kind: Combo, width: f32) -> Response {
+    if matches!(kind, Combo::FindText | Combo::TextHeight) {
+        return text_field(ui, app, kind, width);
+    }
     let (current, editable) = current(app, kind);
     let label = crate::i18n::t(kind.label());
     let mut picked = None;
@@ -176,10 +328,11 @@ const fn slider_var(kind: Slider) -> (&'static str, f64) {
     match kind {
         Slider::LockedLayerFade => ("LAYLOCKFADECTL", 50.0),
         Slider::Transparency => ("CETRANSPARENCY", 0.0),
+        Slider::XrefFade => ("XDWGFADECTL", 50.0),
     }
 }
 
-/// A 0–90 slider with its value at the right. Neither variable is modelled by the engine yet,
+/// A 0–90 slider with its value at the right. None of the variables is modelled by the engine yet,
 /// so the slider shows the value (the drawing's, else AutoCAD's default) and is disabled.
 pub fn slider(ui: &mut Ui, app: &CadApp, kind: Slider, width: f32) -> Response {
     let (var, default) = slider_var(kind);

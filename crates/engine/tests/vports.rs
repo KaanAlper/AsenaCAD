@@ -153,3 +153,69 @@ fn menu_viewports_in_the_model_tab_and_limits() {
     assert_eq!(s.layout_space(), Space::Model);
     assert!(!tiles(&s).is_empty(), "the tiles come back with the Model tab");
 }
+
+/// The ribbon's Viewport Configuration list: each arrangement is a command of its own that
+/// gives -VPORTS 2 or 3 with that arrangement, typed or as JSON.
+const ARRANGED: [(&str, &str, &str); 8] = [
+    ("vports.2v", "2", "vertical"),
+    ("vports.2h", "2", "horizontal"),
+    ("vports.3r", "3", "right"),
+    ("vports.3l", "3", "left"),
+    ("vports.3a", "3", "above"),
+    ("vports.3b", "3", "below"),
+    ("vports.3v", "3", "vertical"),
+    ("vports.3h", "3", "horizontal"),
+];
+
+#[test]
+fn arrangement_commands_tile_as_vports_with_that_arrangement() {
+    for (id, option, arrangement) in ARRANGED {
+        let mut want = session();
+        want.execute("-vports", &json!({ "option": option, "arrangement": arrangement })).unwrap();
+        let mut json_form = session();
+        // A JSON caller's own arrangement doesn't change what the command is.
+        json_form.execute(id, &json!({ "arrangement": "nonsense" })).unwrap();
+        assert_eq!(rects(&json_form), rects(&want), "{id} (JSON)");
+        let mut typed_form = session();
+        typed(&mut typed_form, &[id]);
+        assert!(typed_form.running.is_none(), "{id} asks nothing in the Model tab: {}", typed_form.prompt_text());
+        assert_eq!(rects(&typed_form), rects(&want), "{id} (typed)");
+        assert_eq!(typed_form.state().unwrap().undo.len(), 2, "{id}: line + one undo step");
+    }
+}
+
+#[test]
+fn arrangement_commands_make_layout_viewports_in_a_layout() {
+    let layout_viewports =
+        |s: &Session| s.doc().unwrap().layout("Layout1").unwrap().entities.iter().filter(|e| matches!(e.kind, EntityKind::Viewport(_))).count();
+    let mut s = session();
+    s.execute("layout.set", &json!({ "name": "Layout1" })).unwrap();
+    let before = layout_viewports(&s);
+    s.execute("vports.3l", &json!({})).unwrap();
+    assert_eq!(layout_viewports(&s), before + 3);
+    // Typed: the corners of the area (Enter fits the printable area), no arrangement prompt.
+    typed(&mut s, &["vports.2h"]);
+    assert!(s.prompt_text().contains("first corner"), "{}", s.prompt_text());
+    typed(&mut s, &[""]);
+    assert!(s.running.is_none(), "{}", s.prompt_text());
+    assert_eq!(layout_viewports(&s), before + 5);
+}
+
+#[test]
+fn join_command_joins_two_tiles() {
+    let mut s = session();
+    s.execute("-vports", &json!({ "option": "2", "arrangement": "vertical" })).unwrap();
+    assert!(s.execute("vports.join", &json!({ "dominant": 1, "join": 2 })).is_ok());
+    assert!(tiles(&s).is_empty() || tiles(&s).len() == 1, "{:?}", rects(&s));
+    // Typed: the dominant tile (Enter: the current one), then the tile to join.
+    s.execute("-vports", &json!({ "option": "2", "arrangement": "horizontal" })).unwrap();
+    let other = 1 - current(&s);
+    typed(&mut s, &["vports.join", ""]);
+    assert!(s.prompt_text().contains("join"), "{}", s.prompt_text());
+    s.click_tile(other).unwrap();
+    assert!(s.running.is_none(), "{}", s.prompt_text());
+    assert!(tiles(&s).len() <= 1, "{:?}", rects(&s));
+    // Tiled viewports are for the Model tab.
+    s.execute("layout.set", &json!({ "name": "Layout1" })).unwrap();
+    assert!(s.execute("vports.join", &json!({})).is_err());
+}

@@ -77,6 +77,9 @@ pub struct UiState {
     pub show_palettes: bool,
     pub show_toolbar: bool,
     pub show_file_tabs: bool,
+    /// The layout tabs (Model, Layout1, …) at the status bar's left (View ▸ Interface ▸ Layout
+    /// Tabs).
+    pub show_layout_tabs: bool,
     pub show_status_bar: bool,
     pub show_command_line: bool,
     pub show_viewcube: bool,
@@ -181,6 +184,7 @@ impl Default for UiState {
             show_palettes: false,
             show_toolbar: false,
             show_file_tabs: true,
+            show_layout_tabs: true,
             show_status_bar: true,
             show_command_line: true,
             show_viewcube: true,

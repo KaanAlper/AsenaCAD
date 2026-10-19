@@ -3,7 +3,7 @@
 //!
 //! Numbers follow the observed AutoCAD ribbon: a 100 px strip of 97 px panels (72 px content and
 //! an 18 px title bar), large items at the content's top, small items in rows at +5/+29/+53,
-//! panels packed left to right with 1 px gaps between them. A narrow window first hides the labels of
+//! panels packed left to right with 1 px dividers between them. A narrow window first hides the labels of
 //! small items (panel by panel from the right), then collapses whole panels from the right into
 //! panel buttons that open the panel as a popup.
 
@@ -25,15 +25,22 @@ pub const PANEL_H: f32 = 97.0;
 pub const PANEL_TOP: f32 = 1.0;
 pub const TITLE_H: f32 = 18.0;
 /// Where a large item's top is, from the panel's top.
-const LARGE_TOP: f32 = 3.0;
+const LARGE_TOP: f32 = 4.0;
 /// Where small row 1 is, from the panel's (or slide-out's) top; later rows follow every 24 px.
 const SMALL_TOP: f32 = 5.0;
 pub const ROW_STEP: f32 = 24.0;
 /// The thin line between panels.
 pub const DIVIDER: f32 = 1.0;
-/// Space at a panel's left and right edges and between its columns and row items.
-pub const PAD: f32 = 4.0;
-const GAP: f32 = 2.0;
+/// Space at a panel's left and right edges (AutoCAD's first item starts 3 px into the panel,
+/// its last ends 2 px before the next one).
+pub const PAD_LEFT: f32 = 3.0;
+pub const PAD_RIGHT: f32 = 2.0;
+/// Space between a large item and a column of small items, and on either side of a separator.
+/// Items in one row stand side by side with no gap (Home ▸ Layers' tools, Annotate ▸
+/// Dimensions' Linear, Quick, Continue), as do two large items.
+const GAP: f32 = 1.0;
+/// Space between two columns of small items (Home ▸ Modify's Move, Rotate and Trim columns).
+const SMALL_COLUMNS_GAP: f32 = 5.0;
 /// A collapsed panel's button: at least this wide, wider when a word of its label needs it.
 pub const PANEL_BUTTON_W: f32 = 60.0;
 /// Space a collapsed panel's label keeps from the button's edges on each side.
@@ -113,10 +120,45 @@ pub fn fit(full: &[f32], compact: &[f32], buttons: &[f32], available: f32) -> Ve
 /// Small items' row (1-based), or None for a large item.
 pub fn small_row(item: &Item) -> Option<u8> {
     match *item {
-        Item::Button { size: Size::Large, .. } | Item::Toggle { size: Size::Large, .. } | Item::Split { size: Size::Large, .. } => None,
-        Item::Button { row, .. } | Item::Toggle { row, .. } | Item::Split { row, .. } | Item::Combo { row, .. } | Item::Slider { row, .. } => {
-            Some(row)
-        }
+        Item::Button { size: Size::Large, .. }
+        | Item::Toggle { size: Size::Large, .. }
+        | Item::Split { size: Size::Large, .. }
+        | Item::Menu { size: Size::Large, .. }
+        | Item::Separator => None,
+        Item::Button { row, .. }
+        | Item::Toggle { row, .. }
+        | Item::Split { row, .. }
+        | Item::Menu { row, .. }
+        | Item::Combo { row, .. }
+        | Item::Slider { row, .. } => Some(row),
+    }
+}
+
+/// What a column of the model is made of.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Kind {
+    Large,
+    Small,
+    Separator,
+}
+
+/// The space between a column of kind `prev` and the next one of kind `next`.
+fn column_gap(prev: Kind, next: Kind) -> f32 {
+    match (prev, next) {
+        (Kind::Large, Kind::Large) => 0.0,
+        (Kind::Small, Kind::Small) => SMALL_COLUMNS_GAP,
+        _ => GAP,
+    }
+}
+
+/// How far a panel's small rows move down from their usual places: a panel made only of small
+/// items in two rows has them centred in its height (Express Tools ▸ Modify); everything else
+/// keeps rows 1–3 at the top (two rows next to a large item stay up, as in Insert ▸ Import).
+pub fn rows_offset(items: &[Item]) -> f32 {
+    let rows: Option<Vec<u8>> = items.iter().map(small_row).collect();
+    match rows.and_then(|r| r.into_iter().max()) {
+        Some(2) => LARGE_TOP + (widgets::LARGE_H - (ROW_STEP + widgets::SMALL_H)) / 2.0 - SMALL_TOP,
+        _ => 0.0,
     }
 }
 
@@ -151,12 +193,19 @@ pub fn item_key(prefix: &str, i: usize) -> String {
 pub fn place(ui: &Ui, prefix: &str, list: &[Item], compact: bool, origin: Pos2) -> (Vec<(usize, Rect)>, f32) {
     let mut out = Vec::new();
     let mut x = origin.x;
-    for (n, column) in columns(list).iter().enumerate() {
-        if n > 0 {
-            x += GAP;
-        }
+    let mut prev: Option<Kind> = None;
+    for column in &columns(list) {
         let mut column_w: f32 = 0.0;
         let rows = column.iter().filter_map(|(_, r)| *r).max().unwrap_or(0);
+        let kind = match column.first().and_then(|(i, _)| list.get(*i)) {
+            Some(Item::Separator) => Kind::Separator,
+            _ if rows == 0 => Kind::Large,
+            _ => Kind::Small,
+        };
+        if let Some(prev) = prev {
+            x += column_gap(prev, kind);
+        }
+        prev = Some(kind);
         if rows == 0 {
             for (i, _) in column {
                 if let Some(it) = list.get(*i) {
@@ -171,9 +220,6 @@ pub fn place(ui: &Ui, prefix: &str, list: &[Item], compact: bool, origin: Pos2) 
             let mut rx = x;
             for (i, _) in column.iter().filter(|(_, row)| *row == Some(r)) {
                 if let Some(it) = list.get(*i) {
-                    if rx > x {
-                        rx += GAP;
-                    }
                     let w = widgets::item_width(ui, &item_key(prefix, *i), it, compact);
                     out.push((*i, Rect::from_min_size(pos2(rx, top), vec2(w, widgets::SMALL_H))));
                     rx += w;
@@ -195,7 +241,7 @@ pub fn slideout_rows(list: &[Item]) -> u8 {
 pub fn slideout_size(ui: &Ui, prefix: &str, list: &[Item], min_w: f32) -> egui::Vec2 {
     let (_, w) = place(ui, prefix, list, false, Pos2::ZERO);
     let rows = f32::from(slideout_rows(list));
-    vec2((w + 2.0 * PAD).max(min_w), SMALL_TOP + rows * ROW_STEP + SLIDEOUT_BAR_H)
+    vec2((w + PAD_LEFT + PAD_RIGHT).max(min_w), SMALL_TOP + rows * ROW_STEP + SLIDEOUT_BAR_H)
 }
 
 /// The width a panel's title bar needs: its label, the slide-out "▾" and the launcher.
@@ -209,12 +255,12 @@ pub fn title_width(ui: &Ui, panel: &Panel) -> f32 {
 /// A panel's natural width (without its divider): its columns, or its title if wider.
 pub fn panel_width(ui: &Ui, tab: &str, panel: &Panel, compact: bool) -> f32 {
     let (_, content) = place(ui, &format!("{tab}/{}", panel.label), panel.items, compact, Pos2::ZERO);
-    (content + 2.0 * PAD).max(title_width(ui, panel))
+    (content + PAD_LEFT + PAD_RIGHT).max(title_width(ui, panel))
 }
 
 /// The left edge of a panel's content, centred when the title is wider than the columns.
 pub fn content_left(rect: Rect, content_w: f32) -> f32 {
-    rect.left() + ((rect.width() - content_w) / 2.0).max(PAD)
+    rect.left() + ((rect.width() - content_w) / 2.0).max(PAD_LEFT)
 }
 
 #[cfg(test)]
@@ -230,6 +276,113 @@ mod tests {
 
     fn fit(full: &[f32], compact: &[f32], available: f32) -> Vec<Fit> {
         super::fit(full, compact, &BUTTONS[..full.len()], available)
+    }
+
+    /// `list` laid out from the origin in a fresh context: the items' rects in list order.
+    fn placed(list: &[Item]) -> Vec<Rect> {
+        let mut out = Vec::new();
+        let ctx = egui::Context::default();
+        for _ in 0..2 {
+            let mut frame = ctx.run_ui(egui::RawInput::default(), |ui| {
+                let (mut rects, _) = place(ui, "Test/Panel", list, false, Pos2::ZERO);
+                rects.sort_by_key(|(i, _)| *i);
+                out = rects.into_iter().map(|(_, r)| r).collect();
+            });
+            // The font atlas isn't uploaded anywhere: drop it so the next frame doesn't complain.
+            frame.textures_delta.clear();
+        }
+        out
+    }
+
+    use crate::icons::Icon;
+    use crate::ribbon::build::{GROUP_SEP, icon, labeled, large};
+
+    #[test]
+    fn adjacent_large_items_stand_side_by_side() {
+        let r = placed(&[large(Icon::Line, "Line", "line"), large(Icon::Circle, "Circle", "circle")]);
+        assert_eq!(r.len(), 2);
+        assert_eq!(r[1].left(), r[0].right(), "no gap between two large buttons");
+    }
+
+    #[test]
+    fn a_small_column_after_a_large_item_keeps_its_gap() {
+        let r = placed(&[large(Icon::Line, "Line", "line"), labeled(Icon::Move, "Move", "move", 1)]);
+        assert_eq!(r[1].left(), r[0].right() + GAP);
+    }
+
+    #[test]
+    fn a_separator_next_to_large_items_keeps_its_gaps() {
+        let r = placed(&[large(Icon::Line, "Line", "line"), GROUP_SEP, large(Icon::Circle, "Circle", "circle")]);
+        assert_eq!(r[1].left(), r[0].right() + GAP, "gap before the separator");
+        assert_eq!(r[2].left(), r[1].right() + GAP, "gap after the separator");
+    }
+
+    #[test]
+    fn items_of_one_row_stand_side_by_side() {
+        // Home ▸ Layers' tools and Parametric ▸ Geometric's constraints are 24 px apart in AutoCAD.
+        let r = placed(&[icon(Icon::Line, "Line", "line", 1), icon(Icon::Circle, "Circle", "circle", 1), labeled(Icon::Move, "Move", "move", 1)]);
+        assert_eq!(r[1].left(), r[0].right(), "no gap between two icons");
+        assert_eq!(r[2].left(), r[1].right(), "no gap before a labelled item");
+        assert_eq!(r[1].left() - r[0].left(), 24.0);
+    }
+
+    #[test]
+    fn two_columns_of_small_items_are_five_points_apart() {
+        // Home ▸ Modify: Move/Copy/Stretch, then Rotate/Mirror/Scale 5 px to their right.
+        let r =
+            placed(&[labeled(Icon::Move, "Move", "move", 1), labeled(Icon::Copy, "Copy", "copy", 2), labeled(Icon::Rotate, "Rotate", "rotate", 1)]);
+        let column = r[0].right().max(r[1].right());
+        assert_eq!(r[2].left(), column + SMALL_COLUMNS_GAP);
+        assert_eq!(SMALL_COLUMNS_GAP, 5.0);
+    }
+
+    #[test]
+    fn a_large_item_and_a_small_column_are_one_point_apart() {
+        let r = placed(&[large(Icon::Line, "Line", "line"), icon(Icon::Move, "Move", "move", 1), large(Icon::Circle, "Circle", "circle")]);
+        assert_eq!(r[1].left(), r[0].right() + 1.0, "large, then small");
+        assert_eq!(r[2].left(), r[1].right() + 1.0, "small, then large");
+    }
+
+    #[test]
+    fn large_items_have_autocads_widths() {
+        const MENU: &[crate::ribbon::model::Entry] = &[crate::ribbon::build::e(Icon::Circle, "Center, Radius", "circle")];
+        let r = placed(&[
+            large(Icon::Line, "Line", "line"),
+            crate::ribbon::build::large_split(Some("Circle"), MENU),
+            crate::ribbon::build::large_menu(Icon::Insert, "Insert", MENU),
+            crate::ribbon::build::large_menu(Icon::Insert, "Set Location", MENU),
+        ]);
+        // A short label: 3 px either side of the 32 px icon (Line is 38 px).
+        assert_eq!(r[0].width(), 38.0, "Line");
+        // A split leaves room for its ▾ either side of the label (Circle is 52 px in AutoCAD).
+        assert!(r[1].width() >= 48.0 && r[1].width() <= 56.0, "Circle: {}", r[1].width());
+        // A drop-down with a one-line label is as wide as a button (Insert's gallery, 38 px);
+        // with two lines it is as wide as a split (Set Location, 64 px).
+        assert_eq!(r[2].width(), 38.0, "Insert");
+        assert!(r[3].width() >= 60.0 && r[3].width() <= 68.0, "Set Location: {}", r[3].width());
+    }
+
+    #[test]
+    fn only_a_panel_of_two_small_rows_is_centred() {
+        let two = [labeled(Icon::Move, "Move", "move", 1), labeled(Icon::Copy, "Copy", "copy", 2)];
+        let (top, height) = (LARGE_TOP, widgets::LARGE_H);
+        let offset = rows_offset(&two);
+        let middle = SMALL_TOP + offset + (ROW_STEP + widgets::SMALL_H) / 2.0;
+        assert!((middle - (top + height / 2.0)).abs() < 0.01, "two rows centred in the content: offset {offset}");
+        let three = [labeled(Icon::Move, "Move", "move", 1), labeled(Icon::Copy, "Copy", "copy", 2), labeled(Icon::Erase, "Erase", "erase", 3)];
+        assert_eq!(rows_offset(&three), 0.0, "three rows fill the height");
+        let with_large = [large(Icon::Line, "Line", "line"), two[0], two[1]];
+        assert_eq!(rows_offset(&with_large), 0.0, "next to a large item two rows stay at the top (Insert ▸ Import)");
+        assert_eq!(rows_offset(&[]), 0.0);
+    }
+
+    #[test]
+    fn of_the_ribbon_only_express_tools_modify_has_centred_rows() {
+        let centred: Vec<String> = crate::ribbon::model::tabs()
+            .iter()
+            .flat_map(|t| t.panels.iter().filter(|p| rows_offset(p.items) != 0.0).map(move |p| format!("{}/{}", t.label, p.label)))
+            .collect();
+        assert_eq!(centred, ["Express Tools/Modify"]);
     }
 
     #[test]

@@ -56,6 +56,7 @@ fn snapshot(ui: &UiState) -> Result<Value, String> {
         "showPalettes": ui.show_palettes,
         "showToolbar": ui.show_toolbar,
         "showFileTabs": ui.show_file_tabs,
+        "showLayoutTabs": ui.show_layout_tabs,
         "showStatusBar": ui.show_status_bar,
         "showCommandLine": ui.show_command_line,
         "showViewcube": ui.show_viewcube,
@@ -303,6 +304,22 @@ mod tests {
         assert_eq!((older.ribbon_tab.as_str(), older.ribbon_min), ("Home", cadcraft_ui_egui::ribbon::RibbonMin::Full));
         assert!(older.show_toolbar && older.in_window_menu, "saved shell choices still load");
         assert!(snapshot(&UiState { ribbon_tab: "x".repeat(300), ..Default::default() }).is_err());
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn hidden_layout_tabs_survive_and_older_files_show_them() {
+        let directory = temp_dir();
+        let path = directory.join("workspace.json");
+        let (mut store, _, _) = Workspace::at(Some(path.clone()));
+        store.save_if_changed(&UiState { show_layout_tabs: false, ..Default::default() }).unwrap();
+        let value: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        assert_eq!(value["workspace"]["showLayoutTabs"], false);
+        assert!(!read(&path).unwrap().unwrap().show_layout_tabs);
+        // A workspace saved before View ▸ Interface ▸ Layout Tabs existed shows the layout tabs.
+        fs::write(&path, br#"{"version":1,"workspace":{"showFileTabs":false}}"#).unwrap();
+        let older = read(&path).unwrap().unwrap();
+        assert!(older.show_layout_tabs && !older.show_file_tabs);
         fs::remove_dir_all(directory).unwrap();
     }
 
