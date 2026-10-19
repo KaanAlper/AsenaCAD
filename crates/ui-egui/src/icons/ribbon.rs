@@ -13,6 +13,7 @@ mod express;
 mod insert;
 mod manage;
 mod output;
+mod palette;
 mod panels;
 mod parametric;
 mod view;
@@ -37,7 +38,8 @@ pub(super) fn paint(pen: &Pen, icon: Icon) {
         || view::paint(pen, icon)
         || manage::paint(pen, icon)
         || output::paint(pen, icon)
-        || express::paint(pen, icon))
+        || express::paint(pen, icon)
+        || palette::paint(pen, icon))
     {
         panels::paint(pen, icon);
     }

@@ -478,6 +478,16 @@ pub enum Icon {
     ZoomAll,
     ZoomPrevious,
     ZoomRealtime,
+    // Palette tools drawn in `icons/ribbon/palette.rs`.
+    LayerNew,
+    LayerNewVpFrozen,
+    PropertyFilter,
+    GroupFilter,
+    LayerStates,
+    Refresh,
+    AutoHide,
+    DoubleChevronLeft,
+    DoubleChevronRight,
 }
 
 /// Paint `icon` into `rect` (square), with `dim` for disabled.
