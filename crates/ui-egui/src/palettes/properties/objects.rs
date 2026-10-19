@@ -45,6 +45,8 @@ pub(super) fn show(app: &mut CadApp, ui: &mut egui::Ui) {
     let (lu, lp) = (h.i64("LUNITS", 2), h.i64("LUPREC", 4));
     let len = |v: f64| asenacad_engine::units::format_distance(v, lu, lp);
     let real = |v: f64| format!("{v:.4}");
+    // Rotations show as the drawing measures directions (ANGBASE, ANGDIR).
+    let angles = app.session.angle_settings();
     let mut bad: Option<String> = None;
     let first = sel.first().and_then(|h| d.entity(*h)).map(|e| (**e).clone());
     let Some(e) = first else { return };
@@ -204,7 +206,7 @@ pub(super) fn show(app: &mut CadApp, ui: &mut egui::Ui) {
                         }
                     });
                     num(ui, "Height", "height", len(tx.height), &mut set, &mut bad, &ids);
-                    num(ui, "Rotation", "rotation", real(tx.rotation.to_degrees()), &mut set, &mut bad, &ids);
+                    num(ui, "Rotation", "rotation", real(angles.shown(tx.rotation).to_degrees()), &mut set, &mut bad, &ids);
                     num(ui, "Width factor", "widthFactor", real(tx.width_factor), &mut set, &mut bad, &ids);
                 }
             }
@@ -286,7 +288,7 @@ pub(super) fn show(app: &mut CadApp, ui: &mut egui::Ui) {
                     // block's (`*U12`), and its custom properties below.
                     let name = custom.as_ref().map_or_else(|| i.block.clone(), |(n, _)| n.clone());
                     read_only_row(ui, "Name", &name);
-                    num(ui, "Rotation", "rotation", real(i.rotation.to_degrees()), &mut set, &mut bad, &ids);
+                    num(ui, "Rotation", "rotation", real(angles.shown(i.rotation).to_degrees()), &mut set, &mut bad, &ids);
                 }
                 if let Some((_, props)) = custom.as_ref().filter(|(_, p)| !p.is_empty())
                     && rows.group(ui, collapsed, "Custom")
@@ -311,7 +313,14 @@ pub(super) fn show(app: &mut CadApp, ui: &mut egui::Ui) {
             _ => {}
         }
     }
-    if let Some(p) = set {
+    if let Some(mut p) = set {
+        // A rotation is typed as shown (from ANGBASE, in the ANGDIR sense); properties.set takes it
+        // from +X counterclockwise.
+        if let Some(r) = p.get_mut("rotation")
+            && let Some(v) = r.as_f64()
+        {
+            *r = json!(app.session.angle_settings().unshown(v.to_radians()).to_degrees());
+        }
         let _ = app.run("properties.set", p);
     }
     report_bad(app, bad);
