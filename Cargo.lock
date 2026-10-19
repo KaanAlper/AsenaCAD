@@ -363,6 +363,7 @@ dependencies = [
 name = "asenacad-io"
 version = "0.8.0"
 dependencies = [
+ "acadrust",
  "asenacad-color",
  "asenacad-doc",
  "asenacad-dwg",
