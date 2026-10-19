@@ -38,8 +38,7 @@ files are not read; we haven't found a public specification of that format.
 
 ## Files
 
-`<name>.plotter.json`, UTF-8 JSON with a format marker (`cadcraftPlotter` in files written before
-the rename: still read, saved with the new marker):
+`<name>.plotter.json`, UTF-8 JSON with a format marker:
 
 ```json
 {

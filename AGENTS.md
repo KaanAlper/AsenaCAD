@@ -75,10 +75,9 @@ use it with synthetic drawings, take screenshots and command-line logs. Details:
 - Library crates are `asenacad-*` (`asenacad-geom` … `asenacad-mcp`, `asenacad_*` in paths;
   their directories under `crates/` have no prefix). Environment variables and the names AsenaCAD
   persists in drawings and files are `ASENACAD_*` (xdata application `ASENACAD`, XRECORD keys,
-  header snapshots; plot file markers `asenacad*`). Legacy `CADCRAFT*` drawing data (saved before
-  the rename, or by CADCraft) is still read and is saved under the new names only: keep that
-  working (`crates/io/src/dxf_ext.rs`). Product, apps and app id are AsenaCAD (`asenacad`,
-  `asenacad-cli`, `asenacad-web`, `io.github.kaanalper.asenacad`).
+  header snapshots; plot file markers `asenacad*`; see `crates/io/src/dxf_ext.rs`). Product,
+  apps and app id are AsenaCAD (`asenacad`, `asenacad-cli`, `asenacad-web`,
+  `io.github.kaanalper.asenacad`).
 
 ## The parity loop
 Every feature is done the same way (details in

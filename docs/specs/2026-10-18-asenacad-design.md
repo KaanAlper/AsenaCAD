@@ -30,14 +30,16 @@ yasak, `unsafe` yasak, `catch_unwind` koruması), clean-room, "her şey bir komu
 
 - Ürün adı **AsenaCAD**; binary'ler `asenacad`, `asenacad-cli`, `asenacad-web`; app id
   `io.github.kaanalper.asenacad`.
-- Kütüphane crate'leri (`crates/geom` … `crates/mcp`, paket adları `cadcraft-geom` …
-  `cadcraft-mcp`) **değişmez**: upstream'den cherry-pick'i kolay tutar.
+- Kütüphane crate'leri (`crates/geom` … `crates/mcp`) `asenacad-geom` … `asenacad-mcp` olarak
+  yeniden adlandırıldı (2026-10-19; ilk kararda upstream adları korunacaktı); cherry-pick'te
+  upstream'in crate adları çatışma çözülürken çevrilir (`.claude/rules/cherry-pick.md`).
 - Çıkarılanlar: `docs/brand/` (ArtCraft ticari markası, MIT değil), About ekranındaki ve macOS
   menüsündeki ArtCraft site/Discord bağlantıları, private `craftrules` reposuna yapılan atıflar.
-- Korunanlar: `contributors/` (About ▸ Contributors'ta CADCraft katkıcılarının künyesi),
-  isteğe bağlı public `storytold/craft-fonts` build girdisi, kütüphane crate adları
-  (`cadcraft-geom` …) ve büyük harfli `CADCRAFT*` tanımlayıcıları (env değişkenleri, DXF xdata
-  adları; CADCraft çizimleriyle uyum için).
+- Korunanlar: `contributors/` (About ▸ Contributors'ta CADCraft katkıcılarının künyesi) ve
+  isteğe bağlı public `storytold/craft-fonts` build girdisi.
+- Env değişkenleri ve çizimlerde/dosyalarda saklanan adlar (DXF xdata uygulaması, XRECORD
+  anahtarları, plot dosyası işaretleri) `ASENACAD*`/`asenacad*`; CADCraft'ın eski adlarıyla
+  kaydedilmiş veri okunmaz (2026-10-19 kararı).
 - Eklenenler: AsenaCAD'in kendi ikonu (kodla/SVG ile, orijinal), `NOTICE` ve `ATTRIBUTION.md`'de
   CADCraft'a kaynak gösterimi (MIT/Apache gereği).
 - `craftrules` (private, erişilemez) yerine geçen standartlar `docs/standards/` altına yazılır.
