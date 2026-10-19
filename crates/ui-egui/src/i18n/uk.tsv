@@ -1681,3 +1681,8 @@
 	Close External References	Закрити зовнішні посилання
 	Close Blocks Palette	Закрити палітру блоків
 	Action Tree	Дерево дій
+	Current layer: {layer}	Поточний шар: {layer}
+	Invert	Інвертувати
+	Layer States Manager	Диспетчер станів шарів
+	Rename	Перейменувати
+	{filter}: {shown} layers displayed of {total} total layers	{filter}: показано шарів: {shown} із {total}

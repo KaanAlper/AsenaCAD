@@ -1249,3 +1249,8 @@ menu	Modify	수정
 	Collaborate	공동 작업
 	Express Tools	익스프레스 도구
 	File Tabs	파일 탭
+	Current layer: {layer}	Current layer: {layer}
+	Invert	Invert
+	Layer States Manager	Layer States Manager
+	Rename	Rename
+	{filter}: {shown} layers displayed of {total} total layers	{filter}: {shown} layers displayed of {total} total layers

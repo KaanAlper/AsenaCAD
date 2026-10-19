@@ -104,6 +104,8 @@ fn missing_marked_ui_literals(language: &str) -> BTreeSet<String> {
         include_str!("../hatchdlg.rs"),
         include_str!("../mtext_editor.rs"),
         include_str!("../layers.rs"),
+        include_str!("../layers/grid.rs"),
+        include_str!("../layers/pickers.rs"),
         include_str!("../palettes/properties.rs"),
         include_str!("../palettes/properties/objects.rs"),
         include_str!("../palettes/strip.rs"),
@@ -382,7 +384,8 @@ fn dialogs_render_in_ukrainian_and_keep_their_source_ids() {
         let ctx = egui::Context::default();
         app.logic(&ctx);
         let text = render(&mut app, &ctx);
-        assert!(text.contains(heading), "{dialog}: {text}");
+        // Palettes write their name in capitals on their title strip.
+        assert!(text.contains(heading) || text.contains(&heading.to_uppercase()), "{dialog}: {text}");
         assert_eq!(app.ui.dialog.as_deref(), Some(dialog));
     }
 }
@@ -532,7 +535,8 @@ fn czech_dialogs_render_with_stable_ids() {
         let ctx = egui::Context::default();
         app.logic(&ctx);
         let text = render(&mut app, &ctx);
-        assert!(text.contains(heading), "{dialog}: {text}");
+        // Palettes write their name in capitals on their title strip.
+        assert!(text.contains(heading) || text.contains(&heading.to_uppercase()), "{dialog}: {text}");
         assert_eq!(app.ui.dialog.as_deref(), Some(dialog));
     }
 }
@@ -758,7 +762,7 @@ fn korean_dialogs_keep_source_ids() {
         let ctx = egui::Context::default();
         app.logic(&ctx);
         let text = render(&mut app, &ctx);
-        assert!(text.contains(tr("ko", source)), "{dialog}: {text}");
+        assert!(text.contains(tr("ko", source)) || text.contains(&tr("ko", source).to_uppercase()), "{dialog}: {text}");
         if dialog == "language" {
             assert!(text.contains("한국어"), "{dialog}: {text}");
         }
@@ -886,7 +890,8 @@ fn swedish_dialogs_render_with_stable_ids() {
         let ctx = egui::Context::default();
         app.logic(&ctx);
         let text = render(&mut app, &ctx);
-        assert!(text.contains(heading), "{dialog}: {text}");
+        // Palettes write their name in capitals on their title strip.
+        assert!(text.contains(heading) || text.contains(&heading.to_uppercase()), "{dialog}: {text}");
         assert_eq!(app.ui.dialog.as_deref(), Some(dialog));
     }
 }
