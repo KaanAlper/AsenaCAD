@@ -8,6 +8,7 @@
 //! over the clipboard.
 
 mod annotate;
+mod appmenu;
 mod draw;
 mod express;
 mod insert;
@@ -37,7 +38,8 @@ pub(super) fn paint(pen: &Pen, icon: Icon) {
         || view::paint(pen, icon)
         || manage::paint(pen, icon)
         || output::paint(pen, icon)
-        || express::paint(pen, icon))
+        || express::paint(pen, icon)
+        || appmenu::paint(pen, icon))
     {
         panels::paint(pen, icon);
     }
