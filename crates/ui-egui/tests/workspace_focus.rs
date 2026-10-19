@@ -10,7 +10,7 @@ fn harness() -> Harness<'static, CadApp> {
     let mut app = CadApp::new(Session::default(), Services::default());
     app.integrated_titlebar = true;
     app.ui.in_window_menu = false;
-    // The Mac-style shell AsenaCAD inherited from CADCraft: the Tool Bar and the Tool Sets palette (off by default).
+    // The inherited Mac-style shell: the Tool Bar and the Tool Sets palette (off by default).
     app.ui.show_toolbar = true;
     app.ui.show_toolsets = true;
     // The ribbon down to its tabs: its Home panels repeat the palette's labels (Line, Circle).

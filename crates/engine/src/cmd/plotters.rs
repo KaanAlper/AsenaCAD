@@ -142,11 +142,6 @@ const BUILTIN: [(&str, PlotOutput, &str); 3] = [
     ("AsenaCAD SVG", PlotOutput::Svg, "Vector SVG image"),
 ];
 
-/// Earlier names of the built-in devices (legacy name, current name), still found in page
-/// setups saved before the rename. They find the built-in device; only its current name is
-/// ever listed or stored.
-const LEGACY_BUILTIN: [(&str, &str); 3] = [("CADCraft PDF", "AsenaCAD PDF"), ("CADCraft PNG", "AsenaCAD PNG"), ("CADCraft SVG", "AsenaCAD SVG")];
-
 /// A page setup's "no device" name.
 const NO_DEVICE: &str = "None";
 
@@ -171,10 +166,9 @@ fn builtins() -> Vec<PlotterConfig> {
     BUILTIN.iter().map(|(n, o, d)| builtin(n, *o, d)).collect()
 }
 
-/// The built-in device called `name` (any case), by its current or a legacy name.
+/// The built-in device called `name` (any case).
 fn builtin_entry(name: &str) -> Option<&'static (&'static str, PlotOutput, &'static str)> {
     let n = name.trim();
-    let n = LEGACY_BUILTIN.iter().find(|(old, _)| old.eq_ignore_ascii_case(n)).map_or(n, |(_, new)| *new);
     BUILTIN.iter().find(|(b, _, _)| b.eq_ignore_ascii_case(n))
 }
 

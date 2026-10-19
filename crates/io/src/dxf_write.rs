@@ -1947,8 +1947,7 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
         w.i(71, if s.backwards { 2 } else { 0 } | if s.upside_down { 4 } else { 0 });
         w.f(42, 0.2);
         // The built-in font goes out as `txt`, which every reader has; its name travels in
-        // `ASENACAD` xdata (`1000 FONT`, name) so the style reopens with it. A legacy name of
-        // the built-in font (a drawing saved by CADCraft) goes out as the current name.
+        // `ASENACAD` xdata (`1000 FONT`, name) so the style reopens with it.
         let builtin = asenacad_fonts::is_builtin_font(&s.font);
         w.s(3, if builtin { "txt" } else { s.font.as_str() });
         w.s(4, &s.big_font);

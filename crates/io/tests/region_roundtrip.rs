@@ -77,23 +77,20 @@ fn foreign_region_stays_unknown() {
 
 #[test]
 fn hostile_region_xdata_does_not_panic() {
-    // AsenaCAD's current application name and its legacy (pre-rename) one.
-    for app in ["ASENACAD", "CADCRAFT"] {
-        let mut t = String::from("0\nSECTION\n2\nENTITIES\n");
-        t.push_str(&format!("0\nLWPOLYLINE\n5\n30\n8\n0\n90\n2\n70\n1\n10\n0\n20\n0\n10\n1\n20\n1\n1001\n{app}\n1000\nREGION\n1002\n{{\n"));
-        for _ in 0..12_000 {
-            t.push_str("1000\nLOOP\n1070\n7\n1071\n-1\n1010\nnan\n1020\ninf\n1040\n1e308\n1010\n1\n1020\n2\n");
-        }
-        t.push_str(&format!("0\nLWPOLYLINE\n5\n31\n8\n0\n90\n1\n10\nnan\n1001\n{app}\n1000\nREGION\n"));
-        t.push_str(&format!("0\nLWPOLYLINE\n5\n32\n8\n0\n90\n1\n10\n0\n1001\n{app}\n1000\nREGIONPART\n"));
-        t.push_str("0\nENDSEC\n0\nEOF\n");
-        let d = asenacad_io::read_dxf(t.as_bytes()).unwrap();
-        for r in regions(&d) {
-            assert!(r.loops.len() <= asenacad_doc::MAX_REGION_LOOPS);
-            let _ = r.area();
-            let _ = r.props();
-        }
-        let _ = asenacad_io::write_dxf(&d);
-        let _ = asenacad_render::build(&d, &Space::Model, &asenacad_render::Options::default());
+    let mut t = String::from("0\nSECTION\n2\nENTITIES\n");
+    t.push_str("0\nLWPOLYLINE\n5\n30\n8\n0\n90\n2\n70\n1\n10\n0\n20\n0\n10\n1\n20\n1\n1001\nASENACAD\n1000\nREGION\n1002\n{\n");
+    for _ in 0..12_000 {
+        t.push_str("1000\nLOOP\n1070\n7\n1071\n-1\n1010\nnan\n1020\ninf\n1040\n1e308\n1010\n1\n1020\n2\n");
     }
+    t.push_str("0\nLWPOLYLINE\n5\n31\n8\n0\n90\n1\n10\nnan\n1001\nASENACAD\n1000\nREGION\n");
+    t.push_str("0\nLWPOLYLINE\n5\n32\n8\n0\n90\n1\n10\n0\n1001\nASENACAD\n1000\nREGIONPART\n");
+    t.push_str("0\nENDSEC\n0\nEOF\n");
+    let d = asenacad_io::read_dxf(t.as_bytes()).unwrap();
+    for r in regions(&d) {
+        assert!(r.loops.len() <= asenacad_doc::MAX_REGION_LOOPS);
+        let _ = r.area();
+        let _ = r.props();
+    }
+    let _ = asenacad_io::write_dxf(&d);
+    let _ = asenacad_render::build(&d, &Space::Model, &asenacad_render::Options::default());
 }
