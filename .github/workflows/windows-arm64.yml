@@ -1,11 +1,9 @@
-# Windows on ARM: package the ARM64 release the way release.yml does (cross-compiled on an x64
-# runner, unsigned here), then install that MSI on a Windows 11 ARM64 runner, check the installed
-# binaries are ARM64, run the CLI natively, and uninstall.
+# Windows on ARM, natively on a Windows 11 ARM64 runner: the workspace tests, then the ARM64
+# installer built with packaging/windows/package.ps1 (unsigned here), installed, its binaries
+# checked to be ARM64, the CLI run, and the installer removed again.
 name: Windows ARM64
 
 on:
-  push:
-    branches: [release]
   pull_request:
     paths:
       - .github/workflows/windows-arm64.yml
@@ -14,19 +12,94 @@ on:
     - cron: "41 3 * * 1"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: windows-arm64-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
+env:
+  # storytold/craft-fonts, the optional font build input (CRAFT_FONTS_DIR, crates/fonts/build.rs).
+  CRAFT_FONTS_REF: 3d9ab3a132ed0eff457e424226a435a901da30d3
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
+  CARGO_INCREMENTAL: "0"
+  CARGO_TERM_COLOR: always
 
 jobs:
-  windows-arm64:
-    # Pinned to a commit: AsenaCAD is a fork and pins third-party workflows, so upstream changes
-    # reach our CI only when we bump the SHA (review the diff first). The workflow's own
-    # storytold/craft-common-actions/actions/*@main steps still follow upstream main.
-    uses: storytold/craft-common-actions/.github/workflows/windows-arm64.yml@c6f87c1cc0f119445db687033da6560d5d34c9e1 # reviewed 2026-10-19
-    with:
-      app-name: asenacad
-      app-dir: AsenaCAD
+  test:
+    runs-on: windows-11-arm
+    timeout-minutes: 180
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check out craft-fonts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: storytold/craft-fonts
+          ref: ${{ env.CRAFT_FONTS_REF }}
+          path: craft-fonts
+          persist-credentials: false
+      - name: Rust (stable, aarch64-pc-windows-msvc)
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          if (-not (Get-Command rustup -ErrorAction SilentlyContinue)) {
+            $init = Join-Path $env:RUNNER_TEMP 'rustup-init.exe'
+            Invoke-WebRequest 'https://static.rust-lang.org/rustup/dist/aarch64-pc-windows-msvc/rustup-init.exe' -OutFile $init
+            & $init -y --profile minimal --default-toolchain none
+            $bin = Join-Path $env:USERPROFILE '.cargo\bin'
+            Add-Content -Path $env:GITHUB_PATH -Value $bin
+            $env:PATH = "$bin;$env:PATH"
+          }
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          $hostTriple = (rustc -vV | Select-String '^host: (.+)$').Matches[0].Groups[1].Value
+          if ($hostTriple -ne 'aarch64-pc-windows-msvc') { throw "rustc host is $hostTriple, expected aarch64-pc-windows-msvc" }
+          rustc --version
+          cargo --version
+      - name: cargo test
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $env:CRAFT_FONTS_DIR = Join-Path $env:GITHUB_WORKSPACE 'craft-fonts'
+          cargo test --workspace --locked
+      - name: WiX
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          dotnet tool install --global wix --version 5.0.2
+          wix extension add -g WixToolset.UI.wixext/5.0.2
+      - name: Package (MSI and portable zip)
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $env:CRAFT_FONTS_DIR = Join-Path $env:GITHUB_WORKSPACE 'craft-fonts'
+          ./packaging/windows/package.ps1 -Arch arm64
+      - name: Install, run and uninstall
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $msi = (Get-ChildItem -Path dist/release -Filter '*-windows-arm64.msi' | Select-Object -First 1).FullName
+          if (-not $msi) { throw 'no ARM64 MSI in dist/release' }
+          function Invoke-Msi([string] $What, [string[]] $MsiArgs) {
+            $log = Join-Path $env:RUNNER_TEMP "msi-$What.log"
+            $p = Start-Process msiexec.exe -ArgumentList ($MsiArgs + @('/qn', '/norestart', '/l*v', "`"$log`"")) -Wait -PassThru
+            if ($p.ExitCode -ne 0) { Get-Content $log -Tail 80; throw "msiexec $What failed with exit code $($p.ExitCode)" }
+          }
+          Invoke-Msi 'install' @('/i', "`"$msi`"")
+          $dir = Join-Path $env:ProgramFiles 'AsenaCAD'
+          foreach ($exe in 'asenacad.exe', 'asenacad-cli.exe') {
+            $path = Join-Path $dir $exe
+            if (-not (Test-Path $path)) { throw "$path is not installed" }
+            $bytes = [System.IO.File]::ReadAllBytes($path)
+            $machine = [BitConverter]::ToUInt16($bytes, [BitConverter]::ToInt32($bytes, 0x3C) + 4)
+            if ($machine -ne 0xAA64) { throw "$exe is for machine 0x$('{0:X}' -f $machine), not ARM64" }
+            Write-Output "ok $exe is ARM64"
+          }
+          $cli = Join-Path $dir 'asenacad-cli.exe'
+          & $cli --version
+          $png = Join-Path $env:RUNNER_TEMP 'smoke.png'
+          & $cli run --sample --script 'LINE 0,0 10,10\n' --export $png
+          if (-not (Test-Path $png) -or (Get-Item $png).Length -eq 0) { throw 'asenacad-cli wrote no PNG' }
+          Invoke-Msi 'uninstall' @('/x', "`"$msi`"")
+          if (Test-Path (Join-Path $dir 'asenacad.exe')) { throw 'asenacad.exe is still installed after the uninstall' }

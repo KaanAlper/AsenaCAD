@@ -15,6 +15,34 @@ use egui_wgpu::{CallbackTrait, ScreenDescriptor};
 const SIZE: u32 = 64;
 const STENCIL: wgpu::TextureFormat = wgpu::TextureFormat::Stencil8;
 
+/// Runs a future wgpu completes on its own (native instance, adapter and device requests).
+fn block_on<F: std::future::Future>(f: F) -> F::Output {
+    let mut f = std::pin::pin!(f);
+    let mut cx = std::task::Context::from_waker(std::task::Waker::noop());
+    loop {
+        if let std::task::Poll::Ready(v) = f.as_mut().poll(&mut cx) {
+            return v;
+        }
+        std::thread::yield_now();
+    }
+}
+
+/// egui_kittest's headless render state (software rasterizers first), or `None` when the
+/// machine has no adapter at all (a CI VM without Mesa): the test is then skipped.
+fn render_state() -> Option<egui_wgpu::RenderState> {
+    let setup = egui_kittest::wgpu::default_wgpu_setup();
+    let instance = block_on(setup.new_instance());
+    let config = egui_wgpu::WgpuConfiguration { wgpu_setup: setup, ..Default::default() };
+    match block_on(egui_wgpu::RenderState::create(&config, &instance, None, Default::default())) {
+        Ok(rs) => Some(rs),
+        Err(e @ (egui_wgpu::WgpuError::RequestAdapterError(_) | egui_wgpu::WgpuError::CustomNativeAdapterSelectionError(_))) => {
+            eprintln!("skipped: no GPU adapter ({e})");
+            None
+        }
+        Err(e) => panic!("render state: {e}"),
+    }
+}
+
 /// A display list of one black filled polygon given as triangles.
 fn tris(pts: Vec<Vec2>) -> DisplayList {
     let len = pts.len() as u32;
@@ -118,7 +146,7 @@ fn dark(px: &[bool], x: u32, y: u32) -> bool {
 
 #[test]
 fn clipped_viewport_contents_draw_only_inside_their_outline() {
-    let rs = egui_kittest::wgpu::create_render_state(egui_kittest::wgpu::default_wgpu_setup(), Default::default());
+    let Some(rs) = render_state() else { return };
     let faults = Arc::new(GpuFaults::default());
     let target = gpu::install(&rs, &faults, Some(STENCIL));
     assert_eq!(target.stencil, Some(STENCIL));

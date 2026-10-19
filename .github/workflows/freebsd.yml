@@ -1,35 +1,66 @@
-# Builds and tests the workspace on FreeBSD, inside a FreeBSD VM on a Linux runner
-# (GitHub has no FreeBSD runners). GPU tests skip themselves when the VM has no adapter.
+# Builds and tests the workspace on FreeBSD 15 (x86_64), in a FreeBSD VM on a Linux runner
+# (GitHub has no FreeBSD runners). Rust is FreeBSD's own package (lang/rust), so the build uses
+# the toolchain FreeBSD users get. The UI tests embed craft-fonts as the other CI builds do, find
+# DejaVu Sans where FreeBSD's dejavu package puts it, and render with Mesa's software rasterizer
+# (a test that needs a GPU adapter skips itself when there is none).
 name: FreeBSD
 
 on:
-  push:
-    branches: [release]
   pull_request:
     paths:
       - .github/workflows/freebsd.yml
       - packaging/freebsd/**
-      - packaging/env.sh
+      - crates/**
+      - apps/**
+      - Cargo.*
   schedule:
-    - cron: "27 3 * * *"
+    - cron: "27 3 * * 1"
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: freebsd-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
+env:
+  # storytold/craft-fonts, the optional font build input (CRAFT_FONTS_DIR, crates/fonts/build.rs).
+  CRAFT_FONTS_REF: 3d9ab3a132ed0eff457e424226a435a901da30d3
 
 jobs:
-  freebsd:
-    # Pinned to a commit: AsenaCAD is a fork and pins third-party workflows, so upstream changes
-    # reach our CI only when we bump the SHA (review the diff first). The workflow's own
-    # storytold/craft-common-actions/actions/*@main steps still follow upstream main.
-    uses: storytold/craft-common-actions/.github/workflows/freebsd.yml@c6f87c1cc0f119445db687033da6560d5d34c9e1 # reviewed 2026-10-19
-    with:
-      # x86_64 only: the aarch64 job fails or hangs. aarch64-unknown-freebsd is a tier-3 Rust
-      # target with no rustup installer, so it builds with FreeBSD's lang/rust package in an
-      # emulated VM. Without this input, pushes and the nightly run build both architectures.
-      architectures: '["x86_64"]'
-      craft-fonts-ref: 3d9ab3a132ed0eff457e424226a435a901da30d3
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check out craft-fonts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: storytold/craft-fonts
+          ref: ${{ env.CRAFT_FONTS_REF }}
+          path: craft-fonts
+          persist-credentials: false
+      - name: cargo test in a FreeBSD VM
+        uses: vmactions/freebsd-vm@c46abacb49f09938ca4e1702d15d836285d694cc # v1.5.9
+        env:
+          CARGO_PROFILE_DEV_DEBUG: line-tables-only
+          CARGO_INCREMENTAL: "0"
+          CARGO_TERM_COLOR: always
+        with:
+          release: "15"
+          arch: x86_64
+          mem: 12288
+          copyback: false
+          envs: CARGO_PROFILE_DEV_DEBUG CARGO_INCREMENTAL CARGO_TERM_COLOR
+          prepare: |
+            set -eu
+            env ASSUME_ALWAYS_YES=yes pkg install -y rust git pkgconf dejavu mesa-libs mesa-dri
+          run: |
+            set -eu
+            freebsd-version
+            rustc --version
+            cargo --version
+            CRAFT_FONTS_DIR="$PWD/craft-fonts" cargo test --workspace --locked

@@ -1,6 +1,6 @@
 # Where AsenaCAD falls short of AutoCAD
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-19 · **Change:** minor (U14 restated after the side-by-side pass of all nine ribbon tabs; E3 restated; U15: the ribbon's Dimension button; U16: GRIDDISPLAY) · **Target:** Autodesk AutoCAD 2027
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-19 · **Change:** minor (S7 added: no release workflow; S1 restated; U14 restated after the side-by-side pass of all nine ribbon tabs; E3 restated; U15: the ribbon's Dimension button; U16: GRIDDISPLAY) · **Target:** Autodesk AutoCAD 2027
 
 Every known shortfall, one row each, ranked within each section by user impact. This is the work
 list: agents pick from here (top of a section first), and remove or update a row in the same PR
@@ -113,11 +113,12 @@ Detail: [localization-parity.md](localization-parity.md).
 
 | # | Gap | Evidence | Est. |
 |---|---|---|---|
-| S1 | No CI runs `cargo xtask ci` on pull requests (only packaging lint and release builds) | `.github/workflows/` | 2–3 |
+| S1 | No CI runs `cargo xtask ci` on pull requests (only packaging lint, Nix evaluation, and `cargo test` on FreeBSD and Windows ARM64) | `.github/workflows/` | 2–3 |
 | S2 | ~~`cargo fmt --check` fails on main~~ fixed on main (8fceaaf) | — | 0 |
 | S3 | 40 open PRs, many community bug fixes awaiting review | `gh pr list` | 10–20 |
 | S4 | Open correctness issues: extents union far-apart geometry (#166), lines not visible mid-command (#44), browser plot shows raw PDF bytes (#134) (closing a tab and browser saves fixed, #76, #133) | issues | 4–6 |
 | S5 | No smoke test of every command through the UI (PR #42 proposes one) | — | 6–10 |
+| S7 | Own release workflow (packages, signing, notarization): not built. The shared release workflow was removed; the packaging scripts in `packaging/` build packages locally, nothing builds, signs or publishes a release | `.github/workflows/`, [releasing.md](releasing.md) | 8–12 (est.) |
 
 ## Platforms
 
@@ -148,6 +149,7 @@ Detail: [localization-parity.md](localization-parity.md).
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | S7 added: AsenaCAD has no release workflow of its own (packages, signing, notarization); the shared one was removed. S1 restated: pull requests get packaging lint, Nix evaluation and `cargo test` on FreeBSD and Windows ARM64, not `cargo xtask ci` |
 | 2026-10-19 | trivial | FF5: the corpus is a separate test-corpus repo (planned), not yet named |
 | 2026-10-19 | minor | U14 restated after the side-by-side pass of all nine ribbon tabs at 1906 px (item widths, spacing and large lists now match): the icons and swatches in front of some lists, Find Text's search button, Annotation Text Height's ▾, Base's ▾, three panels a few pixels narrow, the reference drawing's metric defaults |
 | 2026-10-19 | minor | U14: Express Tools ▸ Modify's rows are centred now |

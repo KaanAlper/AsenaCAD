@@ -107,10 +107,10 @@ Windows ribbon/command catalog (M1).
 - Headless: `asenacad-cli run --sample --script 'LINE 0,0 10,10\n' --export out.png`;
   `asenacad-cli info file.dxf`; `asenacad-cli mcp`.
 - **UI tests as CI runs them:** CI embeds craft-fonts, so run the UI tests with and without it.
-  The ref is `craft-fonts-ref` in `.github/workflows/freebsd.yml`:
+  The ref is `CRAFT_FONTS_REF` in `.github/workflows/freebsd.yml` (and `windows-arm64.yml`):
   ```sh
   git clone https://github.com/storytold/craft-fonts /tmp/craft-fonts
-  git -C /tmp/craft-fonts checkout <craft-fonts-ref>
+  git -C /tmp/craft-fonts checkout <CRAFT_FONTS_REF>
   CRAFT_FONTS_DIR=/tmp/craft-fonts cargo test -p asenacad-ui-egui
   ```
   Changing `CRAFT_FONTS_DIR` rebuilds `asenacad-fonts` and every crate above it. Layout must not
