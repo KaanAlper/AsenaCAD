@@ -23,8 +23,10 @@ permissions:
 
 jobs:
   windows-arm64:
-    # Intentionally tracked at @main (not SHA-pinned) so org-wide CI improvements, security fixes, and build optimizations propagate without PR churn across all craftapp repos.
-    uses: storytold/craft-common-actions/.github/workflows/windows-arm64.yml@main
+    # Pinned to a commit: AsenaCAD is a fork and pins third-party workflows, so upstream changes
+    # reach our CI only when we bump the SHA (review the diff first). The workflow's own
+    # storytold/craft-common-actions/actions/*@main steps still follow upstream main.
+    uses: storytold/craft-common-actions/.github/workflows/windows-arm64.yml@c6f87c1cc0f119445db687033da6560d5d34c9e1 # reviewed 2026-10-19
     with:
       app-name: asenacad
       app-dir: AsenaCAD
