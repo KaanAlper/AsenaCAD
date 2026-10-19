@@ -452,6 +452,7 @@ pub enum Icon {
     ExtendedPlan,
     MakeLinetype,
     MakeShape,
+    UrlOptions,
     ShowUrls,
     ChangeUrls,
     ReplaceUrls,

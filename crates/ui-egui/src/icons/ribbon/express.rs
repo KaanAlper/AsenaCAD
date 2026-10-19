@@ -280,6 +280,14 @@ fn dims_tools(pen: &Pen, icon: Icon) -> bool {
             pen.curve([(2.0, 14.0), (5.0, 2.0), (10.0, 20.0), (14.0, 4.0)], b);
             pen.pencil();
         }
+        UrlOptions => {
+            pen.globe(10.0, 10.0, 8.0, b);
+            pen.knock(12.0, 12.0, 12.0, 12.0);
+            pen.rect(13.0, 13.0, 10.0, 9.0, b);
+            for y in [16.0, 19.0] {
+                pen.la(15.0, y, 21.0, y);
+            }
+        }
         ShowUrls | ChangeUrls | ReplaceUrls => {
             pen.globe(10.0, 10.0, 8.0, b);
             pen.knock(12.0, 12.0, 12.0, 12.0);

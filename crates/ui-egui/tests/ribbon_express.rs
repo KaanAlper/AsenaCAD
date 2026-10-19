@@ -1,6 +1,7 @@
 //! The Express Tools ribbon's controls: the Express Tools commands AsenaCAD has (NCOPY, FLATTEN,
 //! ALIASEDIT) are enabled and start, the others are disabled, and the Modify Text, Annotation
-//! Attachment and URL Options splits keep their face's label and are disabled.
+//! Attachment splits keep their face's label and are disabled, URL Options is a drop-down button
+//! disabled until one of its entries has a command.
 
 use cadcraft_engine::Session;
 use cadcraft_ui_egui::ribbon::express::EXPRESS;
@@ -65,11 +66,22 @@ fn express_tools_without_a_command_are_disabled() {
 #[test]
 fn the_splits_keep_a_fixed_face_and_are_disabled_while_no_entry_has_a_command() {
     // Their entries (in AutoCAD's order) are checked by the ribbon_tabs spec test.
-    for (panel, face) in [("Text", "Modify Text"), ("Dimension", "Annotation Attachment"), ("Web", "URL Options")] {
+    for (panel, face) in [("Text", "Modify Text"), ("Dimension", "Annotation Attachment")] {
         let h = harness(panel);
         assert!(h.get_by_role_and_label(Role::Button, face).accesskit_node().is_disabled(), "{face}: its first entry has no command");
         assert!(disabled(&h, &format!("{face} options")), "{face}: no entry of its list has a command yet");
     }
+}
+
+#[test]
+fn url_options_is_one_drop_down_button_disabled_until_an_entry_has_a_command() {
+    let mut h = harness("Web");
+    assert!(h.query_by_label("URL Options options").is_none(), "no separate ▾ part");
+    let button = h.get_by_role_and_label(Role::Button, "URL Options");
+    assert!(button.accesskit_node().is_disabled(), "none of Show URLs, Change URLs, Find and Replace URLs exists yet");
+    button.click();
+    h.run_steps(3);
+    assert!(h.query_by_label("Show URLs").is_none(), "a disabled drop-down doesn't open");
 }
 
 #[test]

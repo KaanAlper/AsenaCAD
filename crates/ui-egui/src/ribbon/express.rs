@@ -139,8 +139,8 @@ const TOOLS: Panel = Panel {
 
 // ---- Web ----
 
-/// AutoCAD's URL Options has a ▾ whose list wasn't captured: these are the Express Tools'
-/// commands for the hyperlinks of the drawing's objects.
+/// The Express Tools' commands for the hyperlinks of the drawing's objects; AutoCAD's URL Options
+/// is a drop-down button listing them.
 const URL_OPTIONS: &[Entry] = &[
     e(Icon::ShowUrls, "Show URLs", "showurls"),
     e(Icon::ChangeUrls, "Change URLs", "churls"),
@@ -148,6 +148,6 @@ const URL_OPTIONS: &[Entry] = &[
 ];
 
 const WEB: Panel =
-    Panel { label: "Web", items: &[large_split(Some("URL Options"), URL_OPTIONS)], slideout: &[], launcher: None, launcher_name: None };
+    Panel { label: "Web", items: &[large_menu(Icon::UrlOptions, "URL Options", URL_OPTIONS)], slideout: &[], launcher: None, launcher_name: None };
 
 pub const EXPRESS: Tab = Tab { label: "Express Tools", panels: &[BLOCKS, TEXT, MODIFY, LAYOUT, DRAW, DIMENSION, TOOLS, WEB] };

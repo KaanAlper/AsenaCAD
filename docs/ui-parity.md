@@ -95,7 +95,7 @@ panels and a screenshot of each tab at 1906 px (layout and labels only).
 | Express Tools ▸ Draw | ◐ | Break-line Symbol, Super Hatch (large) | Same buttons, disabled: neither has a command yet |
 | Express Tools ▸ Dimension | ◐ | Annotation Attachment ▾ (Attach Leader to Annotation, Global Attach Leader to Annotation, Detach Leaders from Annotation) (large); Reset Text, Import Style, Export Style | Same layout and list; none of the tools has a command yet |
 | Express Tools ▸ Tools | ◐ | Command Aliases (large); Attach Xdata, List Xdata, System Variables; slide-out with Extended Plan, Make Linetype, Make Shape | Same layout and slide-out; Command Aliases runs ALIASEDIT, the other six have no command yet |
-| Express Tools ▸ Web | ◐ | URL Options ▾ (large) | Same split; its list wasn't captured, so it lists the Express Tools' Show URLs, Change URLs and Find and Replace URLs, none of which has a command yet |
+| Express Tools ▸ Web | ◐ | URL Options ▾ (large drop-down button: the whole button opens Show URLs, Change URLs, Find and Replace URLs) | Same drop-down button and list; none of the entries has a command yet, so it is disabled |
 | Ribbon collapse | ✅ | At 1906 px every Home panel is full. At 1280 px Modify, Annotation, Layers and Block drop their small items' labels, and Properties, Groups, Utilities, Clipboard and View become panel buttons (icon, name on one line, ▾) that open the panel below them | Same panels shrink and collapse at both widths, at any display scale. Narrower windows collapse more panels from the right. A panel button never breaks a word of its name: it gets wider when a word doesn't fit (Annotation in a 900-point window) |
 | Document tab bar | ✅ | File-tabs menu ≡, Start (no close button), drawing tabs with × and a * while unsaved, + | Same controls in the same order |
 | Viewport controls | ✅ | [−][Top][2D Wireframe] menus at the top left; minimize, restore and close at the top right | Same controls and places |
@@ -472,6 +472,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-19 | minor | Express Tools ▸ Web ▸ URL Options is a drop-down button with Show URLs, Change URLs and Find and Replace URLs (observed) |
 | 2026-10-19 | minor | Express Tools ▸ Modify's two rows are centred in the panel as in AutoCAD; adjacent-large-button rule no longer treats separators as large buttons |
 | 2026-10-19 | trivial | Only large toggles are at least 38 px wide (AutoCAD's View Cube); other large buttons keep the 42 px minimum, which keeps Home, Insert and Annotate at their measured widths |
 | 2026-10-19 | minor | Manage ▸ Action Recorder has its slide-out (the Action Tree, disabled); the Named Views list stays enabled with no views; View Manager's row notes that VIEW asks on the command line |

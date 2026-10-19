@@ -185,14 +185,12 @@ fn express_tools_matches_autocad() {
             },
             WantPanel {
                 label: "Web",
-                // A split in AutoCAD's screenshot (▾ right of the label); its list wasn't
-                // captured: these are the Express Tools' URL commands.
-                items: &[sp(
+                // A drop-down button (the whole button opens the list), as observed in AutoCAD.
+                items: &[mn(
                     "URL Options",
                     "large",
                     0,
                     &[("Show URLs", "showurls"), ("Change URLs", "churls"), ("Find and Replace URLs", "repurls")],
-                    0,
                 )],
                 slideout: &[],
                 launcher: None,
