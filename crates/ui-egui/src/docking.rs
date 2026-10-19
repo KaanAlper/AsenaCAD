@@ -46,7 +46,7 @@ impl Panel {
             Self::ToolSets => Zone::Left,
             Self::QuickCalc => Zone::Right,
             Self::Layers => Zone::Right,
-            Self::Properties => Zone::Right,
+            Self::Properties => Zone::Left,
             Self::ExternalRefs => Zone::Right,
         }
     }
@@ -77,14 +77,31 @@ pub struct Workspace {
     pub hidden: Vec<(Panel, Location<Panel>)>,
 }
 
+/// The Properties palette's width where AutoCAD docks it, at the drawing's left.
+pub const PROPERTIES_WIDTH: f32 = 270.0;
+
 impl Default for Workspace {
     /// AutoCAD's default workspace: the drawing alone. The palettes are closed but keep the
-    /// places they open at: Tool Sets on the left, Layers above Properties on the right.
+    /// places they open at: Properties at the drawing's left, as AutoCAD docks it, Tool Sets on
+    /// the left and Layers on the right.
     fn default() -> Self {
         let mut workspace = Self::with_palettes();
         for panel in [Panel::ToolSets, Panel::Layers, Panel::Properties] {
             if workspace.set_visible(panel, false).is_err() {
                 return Self { layout: Layout { root: Some(tabs(Panel::Canvas)), floating: Vec::new() }, hidden: Vec::new() };
+            }
+        }
+        let left = Location {
+            floating: None,
+            anchor: Some(Panel::Canvas),
+            placement: Placement::Split(Zone::Left),
+            size: Some(SplitSize::FixedFirst(PROPERTIES_WIDTH)),
+            stack: None,
+            sibling: Vec::new(),
+        };
+        for (panel, location) in &mut workspace.hidden {
+            if *panel == Panel::Properties {
+                *location = left.clone();
             }
         }
         workspace
@@ -372,11 +389,7 @@ pub fn show(app: &mut crate::CadApp, ui: &mut egui::Ui) {
                     .auto_shrink([false, false])
                     .show(ui, |ui| crate::palettes::layers_section(app, ui));
             }
-            Panel::Properties => {
-                egui::ScrollArea::vertical().id_salt("dock-properties").auto_shrink([false, false]).show(ui, |ui| {
-                    crate::shortcut_menus::palette(app, ui, crate::palettes::properties_section, crate::shortcut_menus::properties_entries)
-                });
-            }
+            Panel::Properties => crate::palettes::properties::panel(app, ui),
             Panel::ExternalRefs => {
                 egui::ScrollArea::both().id_salt("dock-xrefs").auto_shrink([false, false]).show(ui, |ui| crate::xrefs::section(app, ui));
             }
